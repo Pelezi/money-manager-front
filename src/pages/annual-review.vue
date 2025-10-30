@@ -191,7 +191,7 @@ const lineChartSeries = computed(() => {
 
 const lineChartOptions = computed(() => ({
   chart: {
-    type: 'line',
+    type: 'line' as const,
     toolbar: { show: true }
   },
   xaxis: {
@@ -203,7 +203,7 @@ const lineChartOptions = computed(() => ({
     }
   },
   stroke: {
-    curve: 'smooth',
+    curve: 'smooth' as const,
     width: 2
   },
   colors: ['#1976d2', '#43a047']
@@ -215,11 +215,11 @@ const pieChartSeries = computed(() => {
 
 const pieChartOptions = computed(() => ({
   chart: {
-    type: 'pie'
+    type: 'pie' as const
   },
   labels: expenseAggregations.value.map(agg => agg.categoryName),
   legend: {
-    position: 'bottom'
+    position: 'bottom' as const
   }
 }))
 
@@ -258,13 +258,13 @@ const barChartOptions = computed(() => {
 
   return {
     chart: {
-      type: 'bar'
+      type: 'bar' as const
     },
     plotOptions: {
       bar: {
         horizontal: false,
         dataLabels: {
-          position: 'top'
+          position: 'top' as const
         }
       }
     },
@@ -283,10 +283,10 @@ const barChartOptions = computed(() => {
 const performanceHeaders = [
   { title: 'Category', value: 'categoryName' },
   { title: 'Subcategory', value: 'subcategoryName' },
-  { title: 'Budgeted', value: 'budgeted', align: 'end' },
-  { title: 'Actual', value: 'actual', align: 'end' },
-  { title: 'Difference', value: 'difference', align: 'end' },
-  { title: 'Usage', value: 'percentage', align: 'end' }
+  { title: 'Budgeted', value: 'budgeted', align: 'end' as const },
+  { title: 'Actual', value: 'actual', align: 'end' as const },
+  { title: 'Difference', value: 'difference', align: 'end' as const },
+  { title: 'Usage', value: 'percentage', align: 'end' as const }
 ]
 
 const performanceData = computed(() => {
@@ -326,7 +326,7 @@ const loadData = async () => {
   )
 
   const comparisonResults = await Promise.all(comparisonPromises)
-  monthlyComparisons.value = comparisonResults.map(res => res.data.value || [])
+  monthlyComparisons.value = comparisonResults.map((res: any) => res.data.value || [])
 
   // Load aggregated transactions
   const [expenseRes, incomeRes] = await Promise.all([

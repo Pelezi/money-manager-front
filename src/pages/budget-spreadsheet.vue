@@ -212,7 +212,7 @@ const months = [
 ]
 
 const filteredCategories = computed(() => {
-  return categories.value.filter(c => c.type === activeTab.value)
+  return categories.value.filter((c: Category) => c.type === activeTab.value)
 })
 
 const filteredSubcategories = computed(() => {
@@ -399,9 +399,9 @@ const loadData = async () => {
   const comparisonResults = await Promise.all(comparisonPromises)
   const newComparisons = new Map<string, BudgetComparison>()
   
-  comparisonResults.forEach((result, idx) => {
+  comparisonResults.forEach((result: any, idx: number) => {
     if (result.data.value) {
-      result.data.value.forEach(comp => {
+      result.data.value.forEach((comp: BudgetComparison) => {
         const key = `${comp.subcategoryId}-${months[idx].value}`
         newComparisons.set(key, comp)
       })

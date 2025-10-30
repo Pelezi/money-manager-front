@@ -209,10 +209,10 @@ const form = ref<Partial<Transaction>>({
 const headers = [
   { title: 'Date', value: 'date', sortable: true },
   { title: 'Description', value: 'description' },
-  { title: 'Amount', value: 'amount', align: 'end' },
+  { title: 'Amount', value: 'amount', align: 'end' as const },
   { title: 'Type', value: 'type' },
   { title: 'Subcategory', value: 'subcategory' },
-  { title: 'Actions', value: 'actions', sortable: false, align: 'end' }
+  { title: 'Actions', value: 'actions', sortable: false, align: 'end' as const }
 ]
 
 const formatDate = (date: string) => {

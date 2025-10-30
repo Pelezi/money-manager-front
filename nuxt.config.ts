@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   srcDir: 'src/',
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/tailwindcss'],
   build: { transpile: ['vuetify'] },
-  css: ['vuetify/styles', 'toastify-js/src/toastify.css'],
+  css: ['vuetify/styles'],
   runtimeConfig: {
     public: {
       VITE_ENV: process.env.VITE_ENV || 'DEV',
