@@ -33,7 +33,6 @@
     "@tsconfig/node18": "^2.0.1",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^18.16.8",
-    "@types/toastify-js": "^1.12.4",
     "@vitejs/plugin-vue": "^4.6.2",
     "@vue/eslint-config-prettier": "^7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
