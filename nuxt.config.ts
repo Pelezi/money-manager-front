@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineNuxtConfig({
   srcDir: 'src/',
-  modules: ['@pinia/nuxt', '@vueuse/nuxt'],
+  modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/tailwindcss'],
   build: { transpile: ['vuetify'] },
   css: ['vuetify/styles', 'toastify-js/src/toastify.css'],
   runtimeConfig: {

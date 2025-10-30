@@ -76,18 +76,14 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    // Simulate login - replace with your actual auth logic
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const { login } = useAuth()
+    const { data, error } = await login(form.value)
     
-    // Mock user data
-    const mockUser = {
-      id: '1',
-      email: form.value.email,
-      name: 'Test User'
+    if (data.value) {
+      router.push('/dashboard')
+    } else {
+      console.error('Login failed:', error.value)
     }
-    
-    userStore.setUser(mockUser)
-    router.push('/dashboard')
   } catch (error) {
     console.error('Login failed:', error)
   } finally {
