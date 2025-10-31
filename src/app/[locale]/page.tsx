@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { authService } from '@/services/authService';
-
-export const dynamic = 'force-dynamic';
 
 export default function LocaleHomePage() {
   const router = useRouter();
@@ -16,11 +15,11 @@ export default function LocaleHomePage() {
     const isAuthenticated = authService.isAuthenticated();
     
     if (isAuthenticated) {
-      router.push(`/${locale}/transactions`);
+      router.push('/transactions');
     } else {
-      router.push(`/${locale}/auth/login`);
+      router.push('/auth/login');
     }
-  }, [locale, router]);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

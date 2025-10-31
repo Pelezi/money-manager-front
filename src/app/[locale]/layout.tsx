@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Providers from '@/components/Providers';
+import { routing } from '@/i18n/routing';
 import '../globals.css';
 
-const locales = ['en', 'pt'];
-
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 export const metadata = {
@@ -25,7 +24,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   
   // Ensure that the incoming `locale` is valid
-  if (!locales.includes(locale)) {
+  if (!routing.locales.includes(locale as any)) {
     notFound();
   }
 
