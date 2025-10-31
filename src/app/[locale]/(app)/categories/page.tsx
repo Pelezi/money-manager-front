@@ -22,7 +22,7 @@ export default function CategoriesPage() {
   const [categoryFormData, setCategoryFormData] = useState({ name: '', type: activeTab });
   const [subcategoryFormData, setSubcategoryFormData] = useState({
     name: '',
-    categoryId: '',
+    categoryId: 0,
     type: activeTab,
   });
 
@@ -46,7 +46,7 @@ export default function CategoriesPage() {
   });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Category> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<Category> }) =>
       categoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -76,7 +76,7 @@ export default function CategoriesPage() {
   });
 
   const updateSubcategoryMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Subcategory> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<Subcategory> }) =>
       subcategoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
@@ -98,7 +98,7 @@ export default function CategoriesPage() {
   };
 
   const resetSubcategoryForm = () => {
-    setSubcategoryFormData({ name: '', categoryId: selectedCategory?.id || '', type: activeTab });
+    setSubcategoryFormData({ name: '', categoryId: selectedCategory?.id || 0, type: activeTab });
   };
 
   const handleCategorySubmit = (e: React.FormEvent) => {
@@ -125,7 +125,7 @@ export default function CategoriesPage() {
     setIsCategoryModalOpen(true);
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = (id: number) => {
     if (confirm('Are you sure you want to delete this category?')) {
       deleteCategoryMutation.mutate(id);
     }
@@ -141,7 +141,7 @@ export default function CategoriesPage() {
     setIsSubcategoryModalOpen(true);
   };
 
-  const handleDeleteSubcategory = (id: string) => {
+  const handleDeleteSubcategory = (id: number) => {
     if (confirm('Are you sure you want to delete this subcategory?')) {
       deleteSubcategoryMutation.mutate(id);
     }

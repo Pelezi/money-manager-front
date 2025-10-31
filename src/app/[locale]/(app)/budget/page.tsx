@@ -20,7 +20,7 @@ export default function BudgetPage() {
   const { selectedYear, setSelectedYear } = useAppStore();
   
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
-  const [editingCell, setEditingCell] = useState<{ subcategoryId: string; month: number } | null>(null);
+  const [editingCell, setEditingCell] = useState<{ subcategoryId: number; month: number } | null>(null);
   const [editValue, setEditValue] = useState('');
 
   const { data: categories = [] } = useQuery({
@@ -44,7 +44,7 @@ export default function BudgetPage() {
   });
 
   const updateBudgetMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Budget> }) => budgetService.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<Budget> }) => budgetService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
@@ -60,13 +60,13 @@ export default function BudgetPage() {
   const filteredCategories = categories.filter((cat) => cat.type === activeTab);
   const filteredSubcategories = subcategories.filter((sub) => sub.type === activeTab);
 
-  const getBudget = (subcategoryId: string, month: number) => {
+  const getBudget = (subcategoryId: number, month: number) => {
     return budgets.find(
       (budget) => budget.subcategoryId === subcategoryId && budget.month === month && budget.year === selectedYear
     );
   };
 
-  const getActualAmount = (subcategoryId: string, month: number) => {
+  const getActualAmount = (subcategoryId: number, month: number) => {
     const transaction = aggregatedTransactions.find(
       (trans) => trans.subcategoryId === subcategoryId && trans.month === month && trans.year === selectedYear
     );
@@ -81,7 +81,7 @@ export default function BudgetPage() {
     return 'bg-red-50 text-red-700';
   };
 
-  const handleCellClick = (subcategoryId: string, month: number) => {
+  const handleCellClick = (subcategoryId: number, month: number) => {
     const budget = getBudget(subcategoryId, month);
     setEditingCell({ subcategoryId, month });
     setEditValue(budget?.amount.toString() || '');
@@ -116,7 +116,7 @@ export default function BudgetPage() {
     setEditValue('');
   };
 
-  const getCategoryTotal = (categoryId: string, month: number) => {
+  const getCategoryTotal = (categoryId: number, month: number) => {
     const categorySubs = filteredSubcategories.filter((sub) => sub.categoryId === categoryId);
     return categorySubs.reduce((sum, sub) => {
       const budget = getBudget(sub.id, month);
@@ -131,7 +131,7 @@ export default function BudgetPage() {
     }, 0);
   };
 
-  const getSubcategoryYearTotal = (subcategoryId: string) => {
+  const getSubcategoryYearTotal = (subcategoryId: number) => {
     let total = 0;
     for (let month = 1; month <= 12; month++) {
       const budget = getBudget(subcategoryId, month);
@@ -173,7 +173,7 @@ export default function BudgetPage() {
           className={`px-4 py-2 font-medium ${
             activeTab === 'EXPENSE'
               ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
+              : 'text-gray-800 hover:text-gray-900'
           }`}
         >
           {tCommon('expense')}
@@ -183,7 +183,7 @@ export default function BudgetPage() {
           className={`px-4 py-2 font-medium ${
             activeTab === 'INCOME'
               ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
+              : 'text-gray-800 hover:text-gray-900'
           }`}
         >
           {tCommon('income')}
@@ -195,18 +195,18 @@ export default function BudgetPage() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-50">
-              <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-200 w-48">
+              <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase border-r border-gray-200 w-48">
                 {t('category')} / {t('subcategory')}
               </th>
               {MONTHS.map((month) => (
                 <th
                   key={month}
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase border-r border-gray-200 min-w-[120px]"
+                  className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase border-r border-gray-200 min-w-[120px]"
                 >
                   {t(month)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase min-w-[120px]">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase min-w-[120px]">
                 {t('total')}
               </th>
             </tr>
@@ -230,7 +230,7 @@ export default function BudgetPage() {
                       return (
                         <td
                           key={index}
-                          className="px-4 py-2 text-center font-medium text-gray-700 border-r border-gray-200"
+                          className="px-4 py-2 text-center font-medium text-gray-900 border-r border-gray-200"
                         >
                           ${total.toFixed(2)}
                         </td>
@@ -247,7 +247,7 @@ export default function BudgetPage() {
                   {/* Subcategory Rows */}
                   {categorySubs.map((subcategory) => (
                     <tr key={subcategory.id} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="sticky left-0 bg-white hover:bg-gray-50 px-4 py-2 pl-8 text-gray-700 border-r border-gray-200">
+                      <td className="sticky left-0 bg-white hover:bg-gray-50 px-4 py-2 pl-8 text-gray-900 border-r border-gray-200">
                         {subcategory.name}
                       </td>
                       {MONTHS.map((_, index) => {

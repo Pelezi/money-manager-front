@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
-import { expenseService } from '@/services/expenseService';
+import { budgetService } from '@/services/budgetService';
 import { transactionService } from '@/services/transactionService';
 import { useAppStore } from '@/lib/store';
 import {
@@ -42,9 +42,9 @@ export default function AnnualReviewPage() {
     queryFn: () => subcategoryService.getAll(),
   });
 
-  const { data: expenses = [] } = useQuery({
-    queryKey: ['expenses', selectedYear],
-    queryFn: () => expenseService.getAll(selectedYear.toString()),
+  const { data: budgets = [] } = useQuery({
+    queryKey: ['budgets', selectedYear, 'EXPENSE'],
+    queryFn: () => budgetService.getAll({ year: selectedYear.toString(), type: 'EXPENSE' }),
   });
 
   const { data: aggregatedTransactions = [] } = useQuery({
@@ -109,9 +109,9 @@ export default function AnnualReviewPage() {
       const categorySubs = subcategories.filter((sub) => sub.categoryId === cat.id);
       
       const budgeted = categorySubs.reduce((sum, sub) => {
-        const subBudgeted = expenses
-          .filter((exp) => exp.subcategoryId === sub.id)
-          .reduce((s, exp) => s + exp.amount, 0);
+        const subBudgeted = budgets
+          .filter((budget) => budget.subcategoryId === sub.id)
+          .reduce((s, budget) => s + budget.amount, 0);
         return sum + subBudgeted;
       }, 0);
       

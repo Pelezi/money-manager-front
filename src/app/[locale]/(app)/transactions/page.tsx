@@ -18,12 +18,12 @@ export default function TransactionsPage() {
     startDate: '',
     endDate: '',
     type: '',
-    subcategoryId: '',
+    subcategoryId: undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
-    subcategoryId: '',
+    subcategoryId: 0,
     title: '',
     amount: '',
     description: '',
@@ -56,7 +56,7 @@ export default function TransactionsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Transaction> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<Transaction> }) =>
       transactionService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -75,7 +75,7 @@ export default function TransactionsPage() {
 
   const resetForm = () => {
     setFormData({
-      subcategoryId: '',
+      subcategoryId: 0,
       title: '',
       amount: '',
       description: '',
@@ -112,18 +112,18 @@ export default function TransactionsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
       deleteMutation.mutate(id);
     }
   };
 
-  const getSubcategoryName = (subcategoryId: string) => {
+  const getSubcategoryName = (subcategoryId: number) => {
     const subcategory = subcategories.find((s) => s.id === subcategoryId);
     return subcategory?.name || '-';
   };
 
-  const getCategoryName = (subcategoryId: string) => {
+  const getCategoryName = (subcategoryId: number) => {
     const subcategory = subcategories.find((s) => s.id === subcategoryId);
     const category = categories.find((c) => c.id === subcategory?.categoryId);
     return category?.name || '-';
@@ -154,7 +154,7 @@ export default function TransactionsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               {t('dateRange')}
             </label>
             <input
@@ -165,7 +165,7 @@ export default function TransactionsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               &nbsp;
             </label>
             <input
@@ -176,7 +176,7 @@ export default function TransactionsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               {t('filterByType')}
             </label>
             <select
@@ -190,12 +190,12 @@ export default function TransactionsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               {t('filterBySubcategory')}
             </label>
             <select
-              value={filters.subcategoryId}
-              onChange={(e) => setFilters({ ...filters, subcategoryId: e.target.value })}
+              value={filters.subcategoryId || ''}
+              onChange={(e) => setFilters({ ...filters, subcategoryId: e.target.value ? Number(e.target.value) : undefined })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All</option>
@@ -215,28 +215,28 @@ export default function TransactionsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('date')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('title')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('description')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('category')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('subcategory')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('type')}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {t('amount')}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -317,7 +317,7 @@ export default function TransactionsPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('date')}
                 </label>
                 <input
@@ -329,7 +329,7 @@ export default function TransactionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('title')}
                 </label>
                 <input
@@ -342,7 +342,7 @@ export default function TransactionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('type')}
                 </label>
                 <select
@@ -357,16 +357,16 @@ export default function TransactionsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('subcategory')}
                 </label>
                 <select
                   value={formData.subcategoryId}
-                  onChange={(e) => setFormData({ ...formData, subcategoryId: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select subcategory</option>
+                  <option value={0}>Select subcategory</option>
                   {subcategories
                     .filter((sub) => sub.type === formData.type)
                     .map((sub) => (
@@ -377,7 +377,7 @@ export default function TransactionsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('amount')}
                 </label>
                 <input
@@ -391,7 +391,7 @@ export default function TransactionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   {t('description')}
                 </label>
                 <textarea

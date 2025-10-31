@@ -18,7 +18,7 @@ export const budgetService = {
     return response.data;
   },
 
-  getById: async (id: string): Promise<Budget> => {
+  getById: async (id: number): Promise<Budget> => {
     const response = await api.get<Budget>(`/budgets/${id}`);
     return response.data;
   },
@@ -28,25 +28,25 @@ export const budgetService = {
     return response.data;
   },
 
-  update: async (id: string, data: Partial<Budget>): Promise<Budget> => {
+  update: async (id: number, data: Partial<Budget>): Promise<Budget> => {
     const response = await api.put<Budget>(`/budgets/${id}`, data);
     return response.data;
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number): Promise<void> => {
     await api.delete(`/budgets/${id}`);
   },
 
   getComparison: async (params: {
     year: string;
     month?: number;
-    subcategoryId?: string;
+    subcategoryId?: number;
     type?: string;
   }): Promise<BudgetComparison> => {
     const queryParams = new URLSearchParams();
     queryParams.append('year', params.year);
     if (params.month) queryParams.append('month', params.month.toString());
-    if (params.subcategoryId) queryParams.append('subcategoryId', params.subcategoryId);
+    if (params.subcategoryId) queryParams.append('subcategoryId', params.subcategoryId.toString());
     if (params.type) queryParams.append('type', params.type);
     
     const response = await api.get<BudgetComparison>(`/budgets/comparison?${queryParams.toString()}`);

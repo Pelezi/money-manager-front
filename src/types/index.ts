@@ -1,7 +1,7 @@
 export type EntityType = 'EXPENSE' | 'INCOME';
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   type: EntityType;
   createdAt?: string;
@@ -9,31 +9,31 @@ export interface Category {
 }
 
 export interface Subcategory {
-  id: string;
+  id: number;
   name: string;
-  categoryId: string;
+  categoryId: number;
   type: EntityType;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Budget {
-  id: string;
-  userId?: string;
+  id: number;
+  userId?: number;
   name: string;
   amount: number;
   type: EntityType;
   month: number;
   year: number;
-  subcategoryId: string;
+  subcategoryId: number;
   annual?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Expense {
-  id: string;
-  subcategoryId: string;
+  id: number;
+  subcategoryId: number;
   amount: number;
   month?: number;
   year: number;
@@ -43,8 +43,8 @@ export interface Expense {
 }
 
 export interface Transaction {
-  id: string;
-  subcategoryId: string;
+  id: number;
+  subcategoryId: number;
   title: string;
   amount: number;
   description?: string;
@@ -55,7 +55,7 @@ export interface Transaction {
 }
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
   name?: string;
 }
@@ -66,7 +66,7 @@ export interface AuthResponse {
 }
 
 export interface ExpenseComparison {
-  subcategoryId: string;
+  subcategoryId: number;
   budgeted: number;
   actual: number;
   difference: number;
@@ -81,7 +81,7 @@ export interface BudgetComparison {
 }
 
 export interface TransactionAggregated {
-  subcategoryId: string;
+  subcategoryId: number;
   total: number;
   count: number;
   month: number;

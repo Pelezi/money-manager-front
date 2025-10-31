@@ -7,12 +7,12 @@ export const subcategoryService = {
     return response.data;
   },
 
-  getByCategoryId: async (categoryId: string): Promise<Subcategory[]> => {
+  getByCategoryId: async (categoryId: number): Promise<Subcategory[]> => {
     const response = await api.get<Subcategory[]>(`/subcategories?categoryId=${categoryId}`);
     return response.data;
   },
 
-  getById: async (id: string): Promise<Subcategory> => {
+  getById: async (id: number): Promise<Subcategory> => {
     const response = await api.get<Subcategory>(`/subcategories/${id}`);
     return response.data;
   },
@@ -22,12 +22,12 @@ export const subcategoryService = {
     return response.data;
   },
 
-  update: async (id: string, data: Partial<Subcategory>): Promise<Subcategory> => {
+  update: async (id: number, data: Partial<Subcategory>): Promise<Subcategory> => {
     const response = await api.put<Subcategory>(`/subcategories/${id}`, data);
     return response.data;
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number): Promise<void> => {
     await api.delete(`/subcategories/${id}`);
   },
 };
