@@ -1,28 +1,24 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { authService } from '@/services/authService';
 
-export default function LocaleHomePage({ params }: { params: Promise<{ locale: string }> }) {
+export default function LocaleHomePage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
-    const initRedirect = async () => {
-      const { locale } = await params;
-      
-      // Check if user is authenticated
-      const isAuthenticated = authService.isAuthenticated();
-      
-      if (isAuthenticated) {
-        router.push(`/${locale}/transactions`);
-      } else {
-        router.push(`/${locale}/auth/login`);
-      }
-    };
-
-    initRedirect();
-  }, [params, router]);
+    // Check if user is authenticated
+    const isAuthenticated = authService.isAuthenticated();
+    
+    if (isAuthenticated) {
+      router.push(`/${locale}/transactions`);
+    } else {
+      router.push(`/${locale}/auth/login`);
+    }
+  }, [locale, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

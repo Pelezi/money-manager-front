@@ -231,8 +231,8 @@ export default function AnnualReviewPage() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={(props: { name: string; percent: number }) => {
-                  const { name, percent } = props;
+                label={(entry) => {
+                  const { name, percent } = entry as unknown as { name: string; percent: number };
                   return `${name}: ${(percent * 100).toFixed(0)}%`;
                 }}
                 outerRadius={100}
