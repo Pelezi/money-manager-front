@@ -23,6 +23,7 @@ export default function TransactionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
+    categoryId: '',
     subcategoryId: '',
     amount: '',
     description: '',
@@ -74,6 +75,7 @@ export default function TransactionsPage() {
 
   const resetForm = () => {
     setFormData({
+      categoryId: '',
       subcategoryId: '',
       amount: '',
       description: '',
@@ -86,8 +88,11 @@ export default function TransactionsPage() {
     e.preventDefault();
     
     const data = {
-      ...formData,
+      subcategoryId: formData.subcategoryId,
       amount: parseFloat(formData.amount),
+      description: formData.description,
+      date: formData.date,
+      type: formData.type,
     };
 
     if (editingTransaction) {
@@ -99,7 +104,9 @@ export default function TransactionsPage() {
 
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
+    const subcategory = subcategories.find((s) => s.id === transaction.subcategoryId);
     setFormData({
+      categoryId: subcategory?.categoryId || '',
       subcategoryId: transaction.subcategoryId,
       amount: transaction.amount.toString(),
       description: transaction.description || '',
@@ -158,7 +165,7 @@ export default function TransactionsPage() {
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
           </div>
           <div>
@@ -169,7 +176,7 @@ export default function TransactionsPage() {
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
           </div>
           <div>
@@ -179,11 +186,11 @@ export default function TransactionsPage() {
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             >
-              <option value="">All</option>
-              <option value="EXPENSE">{tCommon('expense')}</option>
-              <option value="INCOME">{tCommon('income')}</option>
+              <option value="" className="text-gray-500">All</option>
+              <option value="EXPENSE" className="text-gray-900">{tCommon('expense')}</option>
+              <option value="INCOME" className="text-gray-900">{tCommon('income')}</option>
             </select>
           </div>
           <div>
@@ -193,11 +200,11 @@ export default function TransactionsPage() {
             <select
               value={filters.subcategoryId}
               onChange={(e) => setFilters({ ...filters, subcategoryId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             >
-              <option value="">All</option>
+              <option value="" className="text-gray-500">All</option>
               {subcategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>
+                <option key={sub.id} value={sub.id} className="text-gray-900">
                   {sub.name}
                 </option>
               ))}
@@ -316,7 +323,7 @@ export default function TransactionsPage() {
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -326,12 +333,32 @@ export default function TransactionsPage() {
                 <select
                   value={formData.type}
                   onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value as EntityType })
+                    setFormData({ ...formData, type: e.target.value as EntityType, categoryId: '', subcategoryId: '' })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="EXPENSE">{tCommon('expense')}</option>
                   <option value="INCOME">{tCommon('income')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('category')}
+                </label>
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value, subcategoryId: '' })}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                >
+                  <option value="" className="text-gray-500">{t('selectCategory')}</option>
+                  {categories
+                    .filter((cat) => cat.type === formData.type)
+                    .map((cat) => (
+                      <option key={cat.id} value={cat.id} className="text-gray-900">
+                        {cat.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>
@@ -342,14 +369,15 @@ export default function TransactionsPage() {
                   value={formData.subcategoryId}
                   onChange={(e) => setFormData({ ...formData, subcategoryId: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={!formData.categoryId}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
                 >
-                  <option value="">Select subcategory</option>
+                  <option value="" className="text-gray-500">{t('selectSubcategory')}</option>
                   {subcategories
-                    .filter((sub) => sub.type === formData.type)
+                    .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
                     .map((sub) => (
-                      <option key={sub.id} value={sub.id}>
-                        {getCategoryName(sub.id)} - {sub.name}
+                      <option key={sub.id} value={sub.id} className="text-gray-900">
+                        {sub.name}
                       </option>
                     ))}
                 </select>
@@ -364,7 +392,7 @@ export default function TransactionsPage() {
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder="0.00"
                 />
               </div>
@@ -376,7 +404,7 @@ export default function TransactionsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
                   placeholder="Optional description..."
                 />
               </div>

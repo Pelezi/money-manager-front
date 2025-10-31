@@ -40,7 +40,9 @@
     "type": "Tipo",
     "dateRange": "Período",
     "filterByType": "Filtrar por Tipo",
-    "filterBySubcategory": "Filtrar por Subcategoria"
+    "filterBySubcategory": "Filtrar por Subcategoria",
+    "selectCategory": "Selecionar categoria",
+    "selectSubcategory": "Selecionar subcategoria"
   },
   "budget": {
     "title": "Planilha de Orçamento",

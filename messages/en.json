@@ -40,7 +40,9 @@
     "type": "Type",
     "dateRange": "Date Range",
     "filterByType": "Filter by Type",
-    "filterBySubcategory": "Filter by Subcategory"
+    "filterBySubcategory": "Filter by Subcategory",
+    "selectCategory": "Select category",
+    "selectSubcategory": "Select subcategory"
   },
   "budget": {
     "title": "Budget Spreadsheet",
