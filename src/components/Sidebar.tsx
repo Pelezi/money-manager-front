@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { 
   LayoutDashboard, 
@@ -36,23 +35,24 @@ const NavLink = ({ href, icon, label, isActive }: NavLinkProps) => (
   </Link>
 );
 
-export default function Sidebar({ locale }: { locale: string }) {
+export default function Sidebar() {
   const t = useTranslations('navigation');
   const tAuth = useTranslations('auth');
   const pathname = usePathname();
+  const router = useRouter();
   const { logout } = useAuth();
   const { isSidebarOpen, toggleSidebar } = useAppStore();
 
   const navItems = [
-    { href: `/${locale}/transactions`, icon: <Receipt size={20} />, label: t('transactions') },
-    { href: `/${locale}/categories`, icon: <FolderTree size={20} />, label: t('categories') },
-    { href: `/${locale}/budget`, icon: <LayoutDashboard size={20} />, label: t('budget') },
-    { href: `/${locale}/annual-review`, icon: <BarChart3 size={20} />, label: t('annualReview') },
+    { href: '/transactions', icon: <Receipt size={20} />, label: t('transactions') },
+    { href: '/categories', icon: <FolderTree size={20} />, label: t('categories') },
+    { href: '/budget', icon: <LayoutDashboard size={20} />, label: t('budget') },
+    { href: '/annual-review', icon: <BarChart3 size={20} />, label: t('annualReview') },
   ];
 
   const handleLogout = () => {
     logout();
-    window.location.href = `/${locale}/auth/login`;
+    router.push('/auth/login');
   };
 
   if (!isSidebarOpen) {
