@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { authService } from '@/services/authService';
 
+export const dynamic = 'force-dynamic';
+
 export default function LocaleHomePage() {
   const router = useRouter();
   const params = useParams();
