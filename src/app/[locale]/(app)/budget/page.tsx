@@ -143,23 +143,23 @@ export default function BudgetPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         
         {/* Year Selector */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSelectedYear(selectedYear - 1)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-900 dark:text-gray-100"
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100">
             <Calendar size={20} />
             <span className="font-medium">{selectedYear}</span>
           </div>
           <button
             onClick={() => setSelectedYear(selectedYear + 1)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-900 dark:text-gray-100"
           >
             <ChevronRight size={20} />
           </button>
@@ -167,13 +167,13 @@ export default function BudgetPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('EXPENSE')}
           className={`px-4 py-2 font-medium ${
             activeTab === 'EXPENSE'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-800 hover:text-gray-900'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
           {tCommon('expense')}
@@ -182,8 +182,8 @@ export default function BudgetPage() {
           onClick={() => setActiveTab('INCOME')}
           className={`px-4 py-2 font-medium ${
             activeTab === 'INCOME'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-800 hover:text-gray-900'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
           {tCommon('income')}
@@ -191,22 +191,22 @@ export default function BudgetPage() {
       </div>
 
       {/* Budget Spreadsheet */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase border-r border-gray-200 w-48">
+            <tr className="bg-gray-50 dark:bg-gray-700">
+              <th className="sticky left-0 bg-gray-50 dark:bg-gray-700 px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 w-48">
                 {t('category')} / {t('subcategory')}
               </th>
               {MONTHS.map((month) => (
                 <th
                   key={month}
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase border-r border-gray-200 min-w-[120px]"
+                  className="px-4 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 min-w-[120px]"
                 >
                   {t(month)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase min-w-[120px]">
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase min-w-[120px]">
                 {t('total')}
               </th>
             </tr>
@@ -221,8 +221,8 @@ export default function BudgetPage() {
               return (
                 <Fragment key={category.id}>
                   {/* Category Row */}
-                  <tr className="bg-blue-50 border-t border-gray-200">
-                    <td className="sticky left-0 bg-blue-50 px-4 py-2 font-semibold text-gray-900 border-r border-gray-200">
+                  <tr className="bg-blue-50 dark:bg-blue-900/30 border-t border-gray-200 dark:border-gray-600">
+                    <td className="sticky left-0 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {category.name}
                     </td>
                     {MONTHS.map((_, index) => {
@@ -230,13 +230,13 @@ export default function BudgetPage() {
                       return (
                         <td
                           key={index}
-                          className="px-4 py-2 text-center font-medium text-gray-900 border-r border-gray-200"
+                          className="px-4 py-2 text-center font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600"
                         >
                           ${total.toFixed(2)}
                         </td>
                       );
                     })}
-                    <td className="px-4 py-2 text-center font-semibold text-gray-900">
+                    <td className="px-4 py-2 text-center font-semibold text-gray-900 dark:text-gray-100">
                       $
                       {categorySubs
                         .reduce((sum, sub) => sum + getSubcategoryYearTotal(sub.id), 0)
@@ -246,8 +246,8 @@ export default function BudgetPage() {
                   
                   {/* Subcategory Rows */}
                   {categorySubs.map((subcategory) => (
-                    <tr key={subcategory.id} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="sticky left-0 bg-white hover:bg-gray-50 px-4 py-2 pl-8 text-gray-900 border-r border-gray-200">
+                    <tr key={subcategory.id} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="sticky left-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 px-4 py-2 pl-8 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                         {subcategory.name}
                       </td>
                       {MONTHS.map((_, index) => {
@@ -263,7 +263,7 @@ export default function BudgetPage() {
                         return (
                           <td
                             key={index}
-                            className={`px-2 py-2 text-center border-r border-gray-200 ${status}`}
+                            className={`px-2 py-2 text-center border-r border-gray-200 dark:border-gray-600 ${status}`}
                             onClick={() => !isEditing && handleCellClick(subcategory.id, month)}
                             title={`Budgeted: $${budgeted.toFixed(2)}, Actual: $${actual.toFixed(2)}`}
                           >
@@ -282,13 +282,13 @@ export default function BudgetPage() {
                                   }
                                 }}
                                 autoFocus
-                                className="w-full px-2 py-1 text-center border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1 text-center border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                               />
                             ) : (
                               <div className="cursor-pointer hover:bg-opacity-80">
-                                <div className="font-medium">${budgeted.toFixed(2)}</div>
+                                <div className="font-medium text-gray-900 dark:text-gray-100">${budgeted.toFixed(2)}</div>
                                 {actual > 0 && (
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     ${actual.toFixed(2)}
                                   </div>
                                 )}
@@ -297,7 +297,7 @@ export default function BudgetPage() {
                           </td>
                         );
                       })}
-                      <td className="px-4 py-2 text-center font-medium text-gray-900">
+                      <td className="px-4 py-2 text-center font-medium text-gray-900 dark:text-gray-100">
                         ${getSubcategoryYearTotal(subcategory.id).toFixed(2)}
                       </td>
                     </tr>
@@ -307,19 +307,19 @@ export default function BudgetPage() {
             })}
             
             {/* Total Row */}
-            <tr className="bg-gray-100 border-t-2 border-gray-300 font-semibold">
-              <td className="sticky left-0 bg-gray-100 px-4 py-3 text-gray-900 border-r border-gray-200">
+            <tr className="bg-gray-100 dark:bg-gray-700 border-t-2 border-gray-300 dark:border-gray-600 font-semibold">
+              <td className="sticky left-0 bg-gray-100 dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                 {t('total')}
               </td>
               {MONTHS.map((_, index) => {
                 const total = getMonthTotal(index + 1);
                 return (
-                  <td key={index} className="px-4 py-3 text-center text-gray-900 border-r border-gray-200">
+                  <td key={index} className="px-4 py-3 text-center text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                     ${total.toFixed(2)}
                   </td>
                 );
               })}
-              <td className="px-4 py-3 text-center text-gray-900">
+              <td className="px-4 py-3 text-center text-gray-900 dark:text-gray-100">
                 $
                 {MONTHS.reduce((sum, _, index) => sum + getMonthTotal(index + 1), 0).toFixed(2)}
               </td>
@@ -329,18 +329,18 @@ export default function BudgetPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 items-center text-sm">
+      <div className="flex gap-4 items-center text-sm text-gray-900 dark:text-gray-100">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-100 rounded"></div>
-          <span>{t('withinBudget')}</span>
+          <div className="w-4 h-4 bg-green-200 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded"></div>
+          <span className="font-medium">{t('withinBudget')}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-100 rounded"></div>
-          <span>{t('nearLimit')}</span>
+          <div className="w-4 h-4 bg-yellow-200 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded"></div>
+          <span className="font-medium">{t('nearLimit')}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-100 rounded"></div>
-          <span>{t('overBudget')}</span>
+          <div className="w-4 h-4 bg-red-200 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded"></div>
+          <span className="font-medium">{t('overBudget')}</span>
         </div>
       </div>
     </div>

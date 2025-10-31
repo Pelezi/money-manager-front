@@ -31,8 +31,31 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme') || 'light';
+                document.documentElement.classList.add(theme);
+                document.documentElement.classList.add('no-transition');
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className="antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Remove no-transition class after initial render
+              setTimeout(() => {
+                document.documentElement.classList.remove('no-transition');
+              }, 0);
+            `,
+          }}
+        />
         <NextIntlClientProvider messages={messages}>
           <Providers>
             {children}

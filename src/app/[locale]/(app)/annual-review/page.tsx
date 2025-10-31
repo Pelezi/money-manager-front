@@ -134,23 +134,23 @@ export default function AnnualReviewPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
         
         {/* Year Selector */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSelectedYear(selectedYear - 1)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-900 dark:text-gray-100"
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100">
             <Calendar size={20} />
             <span className="font-medium">{selectedYear}</span>
           </div>
           <button
             onClick={() => setSelectedYear(selectedYear + 1)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-900 dark:text-gray-100"
           >
             <ChevronRight size={20} />
           </button>
@@ -159,44 +159,44 @@ export default function AnnualReviewPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('totalIncome')}</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('totalIncome')}</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                 ${totalIncome.toFixed(2)}
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <TrendingUp className="text-green-600" size={24} />
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+              <TrendingUp className="text-green-600 dark:text-green-400" size={24} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('totalExpenses')}</p>
-              <p className="text-2xl font-bold text-red-600 mt-1">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('totalExpenses')}</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
                 ${totalExpenses.toFixed(2)}
               </p>
             </div>
-            <div className="p-3 bg-red-100 rounded-full">
-              <TrendingDown className="text-red-600" size={24} />
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+              <TrendingDown className="text-red-600 dark:text-red-400" size={24} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('netSavings')}</p>
-              <p className={`text-2xl font-bold mt-1 ${netSavings >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('netSavings')}</p>
+              <p className={`text-2xl font-bold mt-1 ${netSavings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
                 ${netSavings.toFixed(2)}
               </p>
             </div>
-            <div className={`p-3 rounded-full ${netSavings >= 0 ? 'bg-blue-100' : 'bg-red-100'}`}>
-              <DollarSign className={netSavings >= 0 ? 'text-blue-600' : 'text-red-600'} size={24} />
+            <div className={`p-3 rounded-full ${netSavings >= 0 ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
+              <DollarSign className={netSavings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'} size={24} />
             </div>
           </div>
         </div>
@@ -205,8 +205,8 @@ export default function AnnualReviewPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('monthlyTrends')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('monthlyTrends')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyTrends}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -222,8 +222,8 @@ export default function AnnualReviewPage() {
         </div>
 
         {/* Category Breakdown */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('categoryBreakdown')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('categoryBreakdown')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -249,8 +249,8 @@ export default function AnnualReviewPage() {
         </div>
 
         {/* Income vs Expense */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('incomeVsExpense')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('incomeVsExpense')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={incomeVsExpense}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -265,38 +265,38 @@ export default function AnnualReviewPage() {
         </div>
 
         {/* Yearly Performance Table */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('yearlyPerformance')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('yearlyPerformance')}</h2>
           <div className="overflow-y-auto max-h-[300px]">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0">
+              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Category
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Budgeted
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Actual
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Difference
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {yearlyPerformance.map((item) => (
                   <tr key={item.category}>
-                    <td className="px-3 py-2 text-gray-900">{item.category}</td>
-                    <td className="px-3 py-2 text-right text-gray-900">
+                    <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{item.category}</td>
+                    <td className="px-3 py-2 text-right text-gray-900 dark:text-gray-100">
                       ${item.budgeted.toFixed(2)}
                     </td>
-                    <td className="px-3 py-2 text-right text-gray-900">
+                    <td className="px-3 py-2 text-right text-gray-900 dark:text-gray-100">
                       ${item.actual.toFixed(2)}
                     </td>
                     <td className={`px-3 py-2 text-right font-medium ${
-                      item.difference >= 0 ? 'text-green-600' : 'text-red-600'
+                      item.difference >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}>
                       ${item.difference.toFixed(2)}
                     </td>

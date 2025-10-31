@@ -9,9 +9,12 @@ import {
   BarChart3,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAppStore } from '@/lib/store';
 
 interface NavLinkProps {
@@ -26,8 +29,8 @@ const NavLink = ({ href, icon, label, isActive }: NavLinkProps) => (
     href={href}
     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
       isActive
-        ? 'bg-blue-50 text-blue-600 font-medium'
-        : 'text-gray-700 hover:bg-gray-100'
+        ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium'
+        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
     }`}
   >
     {icon}
@@ -41,6 +44,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { isSidebarOpen, toggleSidebar } = useAppStore();
 
   const navItems = [
@@ -59,9 +63,9 @@ export default function Sidebar() {
     return (
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg hover:bg-gray-50 lg:hidden"
+        className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 lg:hidden"
       >
-        <Menu size={24} />
+        <Menu size={24} className="text-gray-900 dark:text-gray-100" />
       </button>
     );
   }
@@ -75,14 +79,14 @@ export default function Sidebar() {
       />
       
       {/* Sidebar */}
-      <aside className="fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 flex flex-col">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-800">Budget Manager</h1>
+      <aside className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 flex flex-col">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Budget Manager</h1>
           <button
             onClick={toggleSidebar}
-            className="p-1 hover:bg-gray-100 rounded lg:hidden"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded lg:hidden"
           >
-            <X size={20} />
+            <X size={20} className="text-gray-900 dark:text-gray-100" />
           </button>
         </div>
 
@@ -98,10 +102,17 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <LogOut size={20} />
             <span>{tAuth('logout')}</span>

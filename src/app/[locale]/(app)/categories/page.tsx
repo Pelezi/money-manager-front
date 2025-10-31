@@ -155,11 +155,11 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => {
             setActiveTab('EXPENSE');
@@ -167,8 +167,8 @@ export default function CategoriesPage() {
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'EXPENSE'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
           {tCommon('expense')}
@@ -180,8 +180,8 @@ export default function CategoriesPage() {
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'INCOME'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
           {tCommon('income')}
@@ -191,9 +191,9 @@ export default function CategoriesPage() {
       {/* Two-panel layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Categories Panel */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{t('categories')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('categories')}</h2>
             <button
               onClick={() => {
                 setEditingCategory(null);
@@ -201,7 +201,7 @@ export default function CategoriesPage() {
                 setCategoryFormData({ name: '', type: activeTab });
                 setIsCategoryModalOpen(true);
               }}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
             >
               <Plus size={16} />
               {t('addCategory')}
@@ -209,7 +209,7 @@ export default function CategoriesPage() {
           </div>
           <div className="p-4 space-y-2">
             {filteredCategories.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No categories found</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories found</p>
             ) : (
               filteredCategories.map((category) => (
                 <div
@@ -217,19 +217,19 @@ export default function CategoriesPage() {
                   onClick={() => setSelectedCategory(category)}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                     selectedCategory?.id === category.id
-                      ? 'bg-blue-50 border-blue-300'
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">{category.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{category.name}</span>
                     <div className="flex gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditCategory(category);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                       >
                         <Edit2 size={16} />
                       </button>
@@ -238,7 +238,7 @@ export default function CategoriesPage() {
                           e.stopPropagation();
                           handleDeleteCategory(category.id);
                         }}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -251,9 +251,9 @@ export default function CategoriesPage() {
         </div>
 
         {/* Subcategories Panel */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{t('subcategories')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('subcategories')}</h2>
             <button
               onClick={() => {
                 if (!selectedCategory) {
@@ -270,7 +270,7 @@ export default function CategoriesPage() {
                 setIsSubcategoryModalOpen(true);
               }}
               disabled={!selectedCategory}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
               {t('addSubcategory')}
@@ -278,27 +278,27 @@ export default function CategoriesPage() {
           </div>
           <div className="p-4 space-y-2">
             {!selectedCategory ? (
-              <p className="text-gray-500 text-center py-8">{t('selectCategory')}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('selectCategory')}</p>
             ) : filteredSubcategories.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No subcategories found</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No subcategories found</p>
             ) : (
               filteredSubcategories.map((subcategory) => (
                 <div
                   key={subcategory.id}
-                  className="p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+                  className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">{subcategory.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{subcategory.name}</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEditSubcategory(subcategory)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteSubcategory(subcategory.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -314,13 +314,13 @@ export default function CategoriesPage() {
       {/* Category Modal */}
       {isCategoryModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
               {editingCategory ? tCommon('edit') : t('addCategory')}
             </h2>
             <form onSubmit={handleCategorySubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('categoryName')}
                 </label>
                 <input
@@ -328,7 +328,7 @@ export default function CategoriesPage() {
                   value={categoryFormData.name}
                   onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                   placeholder="Enter category name"
                 />
               </div>
@@ -340,14 +340,14 @@ export default function CategoriesPage() {
                     setEditingCategory(null);
                     resetCategoryForm();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   {tCommon('cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
                 >
                   {createCategoryMutation.isPending || updateCategoryMutation.isPending
                     ? tCommon('loading')
@@ -362,13 +362,13 @@ export default function CategoriesPage() {
       {/* Subcategory Modal */}
       {isSubcategoryModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
               {editingSubcategory ? tCommon('edit') : t('addSubcategory')}
             </h2>
             <form onSubmit={handleSubcategorySubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('subcategoryName')}
                 </label>
                 <input
@@ -378,7 +378,7 @@ export default function CategoriesPage() {
                     setSubcategoryFormData({ ...subcategoryFormData, name: e.target.value })
                   }
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                   placeholder="Enter subcategory name"
                 />
               </div>
@@ -390,7 +390,7 @@ export default function CategoriesPage() {
                     setEditingSubcategory(null);
                     resetSubcategoryForm();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   {tCommon('cancel')}
                 </button>
@@ -399,7 +399,7 @@ export default function CategoriesPage() {
                   disabled={
                     createSubcategoryMutation.isPending || updateSubcategoryMutation.isPending
                   }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
                 >
                   {createSubcategoryMutation.isPending || updateSubcategoryMutation.isPending
                     ? tCommon('loading')
