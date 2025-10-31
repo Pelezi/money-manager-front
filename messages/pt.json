@@ -1,0 +1,86 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "income": "Receita",
+    "expense": "Despesa"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "email": "E-mail",
+    "password": "Senha",
+    "signIn": "Entrar"
+  },
+  "categories": {
+    "title": "Gerenciador de Categorias",
+    "categories": "Categorias",
+    "subcategories": "Subcategorias",
+    "addCategory": "Adicionar Categoria",
+    "addSubcategory": "Adicionar Subcategoria",
+    "categoryName": "Nome da Categoria",
+    "subcategoryName": "Nome da Subcategoria",
+    "selectCategory": "Selecione uma categoria para ver as subcategorias"
+  },
+  "transactions": {
+    "title": "Gerenciador de Transações",
+    "addTransaction": "Adicionar Transação",
+    "date": "Data",
+    "description": "Descrição",
+    "amount": "Valor",
+    "category": "Categoria",
+    "subcategory": "Subcategoria",
+    "type": "Tipo",
+    "dateRange": "Período",
+    "filterByType": "Filtrar por Tipo",
+    "filterBySubcategory": "Filtrar por Subcategoria"
+  },
+  "budget": {
+    "title": "Planilha de Orçamento",
+    "monthly": "Orçamento Mensal",
+    "annual": "Orçamento Anual",
+    "category": "Categoria",
+    "subcategory": "Subcategoria",
+    "january": "Janeiro",
+    "february": "Fevereiro",
+    "march": "Março",
+    "april": "Abril",
+    "may": "Maio",
+    "june": "Junho",
+    "july": "Julho",
+    "august": "Agosto",
+    "september": "Setembro",
+    "october": "Outubro",
+    "november": "Novembro",
+    "december": "Dezembro",
+    "total": "Total",
+    "withinBudget": "Dentro do orçamento",
+    "nearLimit": "Próximo ao limite",
+    "overBudget": "Acima do orçamento",
+    "distributeAnnual": "Distribuir Orçamento Anual"
+  },
+  "annualReview": {
+    "title": "Revisão Anual",
+    "summary": "Resumo",
+    "totalIncome": "Receita Total",
+    "totalExpenses": "Despesas Totais",
+    "netSavings": "Economia Líquida",
+    "monthlyTrends": "Tendências Mensais",
+    "categoryBreakdown": "Detalhamento por Categoria",
+    "incomeVsExpense": "Receita vs Despesa",
+    "yearlyPerformance": "Desempenho Anual"
+  },
+  "navigation": {
+    "transactions": "Transações",
+    "categories": "Categorias",
+    "budget": "Orçamento",
+    "annualReview": "Revisão Anual"
+  }
+}

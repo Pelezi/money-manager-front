@@ -1,0 +1,33 @@
+import api from '@/lib/apiClient';
+import { Subcategory } from '@/types';
+
+export const subcategoryService = {
+  getAll: async (): Promise<Subcategory[]> => {
+    const response = await api.get<Subcategory[]>('/subcategories');
+    return response.data;
+  },
+
+  getByCategoryId: async (categoryId: string): Promise<Subcategory[]> => {
+    const response = await api.get<Subcategory[]>(`/subcategories?categoryId=${categoryId}`);
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<Subcategory> => {
+    const response = await api.get<Subcategory>(`/subcategories/${id}`);
+    return response.data;
+  },
+
+  create: async (data: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
+    const response = await api.post<Subcategory>('/subcategories', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: Partial<Subcategory>): Promise<Subcategory> => {
+    const response = await api.put<Subcategory>(`/subcategories/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/subcategories/${id}`);
+  },
+};

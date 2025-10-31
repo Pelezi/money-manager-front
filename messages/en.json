@@ -1,0 +1,86 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In"
+  },
+  "categories": {
+    "title": "Category Manager",
+    "categories": "Categories",
+    "subcategories": "Subcategories",
+    "addCategory": "Add Category",
+    "addSubcategory": "Add Subcategory",
+    "categoryName": "Category Name",
+    "subcategoryName": "Subcategory Name",
+    "selectCategory": "Select a category to view subcategories"
+  },
+  "transactions": {
+    "title": "Transaction Manager",
+    "addTransaction": "Add Transaction",
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "type": "Type",
+    "dateRange": "Date Range",
+    "filterByType": "Filter by Type",
+    "filterBySubcategory": "Filter by Subcategory"
+  },
+  "budget": {
+    "title": "Budget Spreadsheet",
+    "monthly": "Monthly Budget",
+    "annual": "Annual Budget",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December",
+    "total": "Total",
+    "withinBudget": "Within budget",
+    "nearLimit": "Near limit",
+    "overBudget": "Over budget",
+    "distributeAnnual": "Distribute Annual Budget"
+  },
+  "annualReview": {
+    "title": "Annual Review",
+    "summary": "Summary",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netSavings": "Net Savings",
+    "monthlyTrends": "Monthly Trends",
+    "categoryBreakdown": "Category Breakdown",
+    "incomeVsExpense": "Income vs Expense",
+    "yearlyPerformance": "Yearly Performance"
+  },
+  "navigation": {
+    "transactions": "Transactions",
+    "categories": "Categories",
+    "budget": "Budget",
+    "annualReview": "Annual Review"
+  }
+}
