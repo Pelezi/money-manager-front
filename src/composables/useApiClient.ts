@@ -1,28 +1,46 @@
 import { ref } from 'vue'
-import type { UseFetchOptions } from 'nuxt/app'
+import type { FetchOptions } from 'ofetch'
 
 export function useApiClient() {
-  const config = useRuntimeConfig()
-  const baseURL = config.public.VITE_API_HOST || '/api/v1'
+  // Use relative path to leverage Nuxt's proxy
+  const baseURL = '/api'
 
-  function getAuthHeaders() {
+  function getAuthHeaders(): Record<string, string> {
     const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : ''
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
   async function apiRequest<T>(
     url: string,
-    options: UseFetchOptions<T> = {}
+    options: FetchOptions<'json'> = {}
   ) {
-    const headers = {
+    const headers: Record<string, string> = {
       ...getAuthHeaders(),
-      ...(options.headers || {})
+      ...(options.headers as Record<string, string> || {})
     }
 
-    return await useFetch<T>(`${baseURL}${url}`, {
-      ...options,
-      headers
-    })
+    // Only add Content-Type header if there's a body
+    if (options.body) {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    try {
+      const response = await $fetch<T>(`${baseURL}${url}`, {
+        method: options.method as any || 'GET',
+        body: options.body,
+        headers
+      })
+
+      return { 
+        data: ref(response), 
+        error: ref(null) 
+      }
+    } catch (error: any) {
+      return { 
+        data: ref(null), 
+        error: ref(error) 
+      }
+    }
   }
 
   return {

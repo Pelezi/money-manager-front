@@ -15,6 +15,20 @@ export default defineNuxtConfig({
       VITE_API_HOST_NODE: process.env.VITE_API_HOST_NODE
     }
   },
+  // Proxy configuration to avoid CORS issues
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: process.env.VITE_API_HOST || 'http://localhost:3001',
+        changeOrigin: true,
+        prependPath: true
+      }
+    },
+    esbuild: {
+      options: { target: 'esnext' }
+    },
+    experimental: { wasm: true }
+  },
   vite: {
     plugins: [
       tsconfigPaths({ loose: true, ignoreConfigErrors: true })
@@ -30,12 +44,6 @@ export default defineNuxtConfig({
     optimizeDeps: { exclude: ['form-data'] }
   },
   ssr: false,
-  nitro: {
-    esbuild: {
-      options: { target: 'esnext' }
-    },
-    experimental: { wasm: true }
-  },
   experimental: { payloadExtraction: false },
   compatibilityDate: '2024-04-03'
 })
