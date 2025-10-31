@@ -104,6 +104,12 @@
             <v-card-text>
               <v-form ref="formRef">
                 <v-text-field
+                  v-model="form.title"
+                  label="Title"
+                  :rules="[v => !!v || 'Required']"
+                  variant="outlined"
+                />
+                <v-text-field
                   v-model="form.description"
                   label="Description"
                   :rules="[v => !!v || 'Required']"
