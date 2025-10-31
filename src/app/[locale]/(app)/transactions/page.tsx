@@ -7,7 +7,7 @@ import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Transaction, EntityType } from '@/types';
-import { Plus, Search, Filter, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Filter, Edit2, Trash2 } from 'lucide-react';
 
 export default function TransactionsPage() {
   const t = useTranslations('transactions');

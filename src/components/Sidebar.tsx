@@ -38,6 +38,7 @@ const NavLink = ({ href, icon, label, isActive }: NavLinkProps) => (
 
 export default function Sidebar({ locale }: { locale: string }) {
   const t = useTranslations('navigation');
+  const tAuth = useTranslations('auth');
   const pathname = usePathname();
   const { logout } = useAuth();
   const { isSidebarOpen, toggleSidebar } = useAppStore();
@@ -103,7 +104,7 @@ export default function Sidebar({ locale }: { locale: string }) {
             className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <LogOut size={20} />
-            <span>{useTranslations('auth')('logout')}</span>
+            <span>{tAuth('logout')}</span>
           </button>
         </div>
       </aside>

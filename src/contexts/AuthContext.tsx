@@ -19,10 +19,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
+    // Check if user is already logged in from localStorage
+    // This is intentionally done in useEffect to initialize state on mount
+    const initUser = authService.getCurrentUser();
+    if (initUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUser(initUser);
     }
     setIsLoading(false);
   }, []);

@@ -22,8 +22,9 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
     try {
       await login(email, password);
       router.push(`/${params.locale}/transactions`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }

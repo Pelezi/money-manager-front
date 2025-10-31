@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
@@ -8,7 +8,7 @@ import { subcategoryService } from '@/services/subcategoryService';
 import { expenseService } from '@/services/expenseService';
 import { transactionService } from '@/services/transactionService';
 import { useAppStore } from '@/lib/store';
-import { EntityType } from '@/types';
+import { EntityType, Expense } from '@/types';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -22,13 +22,6 @@ export default function BudgetPage() {
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
   const [editingCell, setEditingCell] = useState<{ subcategoryId: string; month: number } | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [isAnnualModalOpen, setIsAnnualModalOpen] = useState(false);
-  const [annualDistribution, setAnnualDistribution] = useState({
-    subcategoryId: '',
-    amount: '',
-    distribution: 'even' as 'even' | 'custom',
-    customAmounts: Array(12).fill(''),
-  });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -51,7 +44,7 @@ export default function BudgetPage() {
   });
 
   const updateExpenseMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => expenseService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Expense> }) => expenseService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
@@ -120,62 +113,6 @@ export default function BudgetPage() {
 
     setEditingCell(null);
     setEditValue('');
-  };
-
-  const handleAnnualDistribute = async () => {
-    if (!annualDistribution.subcategoryId) return;
-
-    const totalAmount = parseFloat(annualDistribution.amount) || 0;
-    const subcategory = subcategories.find((sub) => sub.id === annualDistribution.subcategoryId);
-    if (!subcategory) return;
-
-    if (annualDistribution.distribution === 'even') {
-      const monthlyAmount = totalAmount / 12;
-      for (let month = 1; month <= 12; month++) {
-        const expense = getExpense(annualDistribution.subcategoryId, month);
-        if (expense) {
-          await updateExpenseMutation.mutateAsync({
-            id: expense.id,
-            data: { amount: monthlyAmount },
-          });
-        } else {
-          await createExpenseMutation.mutateAsync({
-            subcategoryId: annualDistribution.subcategoryId,
-            amount: monthlyAmount,
-            month,
-            year: selectedYear,
-            type: subcategory.type,
-          });
-        }
-      }
-    } else {
-      for (let month = 1; month <= 12; month++) {
-        const amount = parseFloat(annualDistribution.customAmounts[month - 1]) || 0;
-        const expense = getExpense(annualDistribution.subcategoryId, month);
-        if (expense) {
-          await updateExpenseMutation.mutateAsync({
-            id: expense.id,
-            data: { amount },
-          });
-        } else {
-          await createExpenseMutation.mutateAsync({
-            subcategoryId: annualDistribution.subcategoryId,
-            amount,
-            month,
-            year: selectedYear,
-            type: subcategory.type,
-          });
-        }
-      }
-    }
-
-    setIsAnnualModalOpen(false);
-    setAnnualDistribution({
-      subcategoryId: '',
-      amount: '',
-      distribution: 'even',
-      customAmounts: Array(12).fill(''),
-    });
   };
 
   const getCategoryTotal = (categoryId: string, month: number) => {
@@ -260,7 +197,7 @@ export default function BudgetPage() {
               <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-r border-gray-200 w-48">
                 {t('category')} / {t('subcategory')}
               </th>
-              {MONTHS.map((month, index) => (
+              {MONTHS.map((month) => (
                 <th
                   key={month}
                   className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase border-r border-gray-200 min-w-[120px]"
