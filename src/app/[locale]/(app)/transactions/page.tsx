@@ -24,6 +24,7 @@ export default function TransactionsPage() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
     subcategoryId: '',
+    title: '',
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
@@ -75,6 +76,7 @@ export default function TransactionsPage() {
   const resetForm = () => {
     setFormData({
       subcategoryId: '',
+      title: '',
       amount: '',
       description: '',
       date: new Date().toISOString().split('T')[0],
@@ -101,6 +103,7 @@ export default function TransactionsPage() {
     setEditingTransaction(transaction);
     setFormData({
       subcategoryId: transaction.subcategoryId,
+      title: transaction.title,
       amount: transaction.amount.toString(),
       description: transaction.description || '',
       date: transaction.date.split('T')[0],
@@ -216,6 +219,9 @@ export default function TransactionsPage() {
                   {t('date')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('title')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -238,13 +244,13 @@ export default function TransactionsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                     {tCommon('loading')}
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                     No transactions found
                   </td>
                 </tr>
@@ -253,6 +259,9 @@ export default function TransactionsPage() {
                   <tr key={transaction.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(transaction.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                      {transaction.title}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {transaction.description || '-'}
@@ -317,6 +326,19 @@ export default function TransactionsPage() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('title')}
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter transaction title..."
                 />
               </div>
               <div>

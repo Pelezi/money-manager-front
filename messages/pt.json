@@ -33,6 +33,7 @@
     "title": "Gerenciador de Transações",
     "addTransaction": "Adicionar Transação",
     "date": "Data",
+    "title": "Título",
     "description": "Descrição",
     "amount": "Valor",
     "category": "Categoria",

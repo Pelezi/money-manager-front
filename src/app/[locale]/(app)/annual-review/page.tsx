@@ -44,7 +44,7 @@ export default function AnnualReviewPage() {
 
   const { data: expenses = [] } = useQuery({
     queryKey: ['expenses', selectedYear],
-    queryFn: () => expenseService.getAll(selectedYear),
+    queryFn: () => expenseService.getAll(selectedYear.toString()),
   });
 
   const { data: aggregatedTransactions = [] } = useQuery({

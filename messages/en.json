@@ -33,6 +33,7 @@
     "title": "Transaction Manager",
     "addTransaction": "Add Transaction",
     "date": "Date",
+    "title": "Title",
     "description": "Description",
     "amount": "Amount",
     "category": "Category",

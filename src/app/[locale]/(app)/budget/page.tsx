@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
-import { expenseService } from '@/services/expenseService';
+import { budgetService } from '@/services/budgetService';
 import { transactionService } from '@/services/transactionService';
 import { useAppStore } from '@/lib/store';
-import { EntityType, Expense } from '@/types';
+import { EntityType, Budget } from '@/types';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -33,9 +33,9 @@ export default function BudgetPage() {
     queryFn: () => subcategoryService.getAll(),
   });
 
-  const { data: expenses = [] } = useQuery({
-    queryKey: ['expenses', selectedYear],
-    queryFn: () => expenseService.getAll(selectedYear),
+  const { data: budgets = [] } = useQuery({
+    queryKey: ['budgets', selectedYear],
+    queryFn: () => budgetService.getAll({ year: selectedYear.toString() }),
   });
 
   const { data: aggregatedTransactions = [] } = useQuery({
@@ -43,26 +43,26 @@ export default function BudgetPage() {
     queryFn: () => transactionService.getAggregated(selectedYear),
   });
 
-  const updateExpenseMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Expense> }) => expenseService.update(id, data),
+  const updateBudgetMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Budget> }) => budgetService.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 
-  const createExpenseMutation = useMutation({
-    mutationFn: expenseService.create,
+  const createBudgetMutation = useMutation({
+    mutationFn: budgetService.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 
   const filteredCategories = categories.filter((cat) => cat.type === activeTab);
   const filteredSubcategories = subcategories.filter((sub) => sub.type === activeTab);
 
-  const getExpense = (subcategoryId: string, month: number) => {
-    return expenses.find(
-      (exp) => exp.subcategoryId === subcategoryId && exp.month === month && exp.year === selectedYear
+  const getBudget = (subcategoryId: string, month: number) => {
+    return budgets.find(
+      (budget) => budget.subcategoryId === subcategoryId && budget.month === month && budget.year === selectedYear
     );
   };
 
@@ -82,27 +82,28 @@ export default function BudgetPage() {
   };
 
   const handleCellClick = (subcategoryId: string, month: number) => {
-    const expense = getExpense(subcategoryId, month);
+    const budget = getBudget(subcategoryId, month);
     setEditingCell({ subcategoryId, month });
-    setEditValue(expense?.amount.toString() || '');
+    setEditValue(budget?.amount.toString() || '');
   };
 
   const handleCellBlur = async () => {
     if (!editingCell) return;
 
     const value = parseFloat(editValue) || 0;
-    const expense = getExpense(editingCell.subcategoryId, editingCell.month);
+    const budget = getBudget(editingCell.subcategoryId, editingCell.month);
     const subcategory = subcategories.find((sub) => sub.id === editingCell.subcategoryId);
 
     if (!subcategory) return;
 
-    if (expense) {
-      await updateExpenseMutation.mutateAsync({
-        id: expense.id,
+    if (budget) {
+      await updateBudgetMutation.mutateAsync({
+        id: budget.id,
         data: { amount: value },
       });
     } else {
-      await createExpenseMutation.mutateAsync({
+      await createBudgetMutation.mutateAsync({
+        name: `${subcategory.name} - ${editingCell.month}/${selectedYear}`,
         subcategoryId: editingCell.subcategoryId,
         amount: value,
         month: editingCell.month,
@@ -118,23 +119,23 @@ export default function BudgetPage() {
   const getCategoryTotal = (categoryId: string, month: number) => {
     const categorySubs = filteredSubcategories.filter((sub) => sub.categoryId === categoryId);
     return categorySubs.reduce((sum, sub) => {
-      const expense = getExpense(sub.id, month);
-      return sum + (expense?.amount || 0);
+      const budget = getBudget(sub.id, month);
+      return sum + (budget?.amount || 0);
     }, 0);
   };
 
   const getMonthTotal = (month: number) => {
     return filteredSubcategories.reduce((sum, sub) => {
-      const expense = getExpense(sub.id, month);
-      return sum + (expense?.amount || 0);
+      const budget = getBudget(sub.id, month);
+      return sum + (budget?.amount || 0);
     }, 0);
   };
 
   const getSubcategoryYearTotal = (subcategoryId: string) => {
     let total = 0;
     for (let month = 1; month <= 12; month++) {
-      const expense = getExpense(subcategoryId, month);
-      total += expense?.amount || 0;
+      const budget = getBudget(subcategoryId, month);
+      total += budget?.amount || 0;
     }
     return total;
   };
@@ -251,8 +252,8 @@ export default function BudgetPage() {
                       </td>
                       {MONTHS.map((_, index) => {
                         const month = index + 1;
-                        const expense = getExpense(subcategory.id, month);
-                        const budgeted = expense?.amount || 0;
+                        const budget = getBudget(subcategory.id, month);
+                        const budgeted = budget?.amount || 0;
                         const actual = getActualAmount(subcategory.id, month);
                         const isEditing =
                           editingCell?.subcategoryId === subcategory.id &&
