@@ -328,18 +328,18 @@ export default function BudgetPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 items-center text-sm">
+      <div className="flex gap-4 items-center text-sm text-gray-900">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-green-100 rounded"></div>
-          <span>{t('withinBudget')}</span>
+          <span className="text-gray-900">{t('withinBudget')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-yellow-100 rounded"></div>
-          <span>{t('nearLimit')}</span>
+          <span className="text-gray-900">{t('nearLimit')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-red-100 rounded"></div>
-          <span>{t('overBudget')}</span>
+          <span className="text-gray-900">{t('overBudget')}</span>
         </div>
       </div>
     </div>
