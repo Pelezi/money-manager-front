@@ -88,8 +88,11 @@ export default function TransactionsPage() {
     e.preventDefault();
     
     const data = {
-      ...formData,
+      subcategoryId: formData.subcategoryId,
       amount: parseFloat(formData.amount),
+      description: formData.description,
+      date: formData.date,
+      type: formData.type,
     };
 
     if (editingTransaction) {
