@@ -1,36 +1,11 @@
 {
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "strict": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "~/*": ["src/*"]
-    },
-    "types": ["@types/node", "vitest/globals", "jsdom", "@pinia/testing" ]
-  },
-  "include": [
-    "nuxt.config.ts",
-    "app.config.ts",
-    "components/**/*.vue",
-    "pages/**/*.vue",
-    "layouts/**/*.vue",
-    "composables/**/*",
-    "vitest.config.ts",
-    "stores/**/*.ts",
-    "src/plugins/**/*",
-    "src/stores/**/*",
-    "src/utils/**/*",
-    "src/test/unit/**/*.ts",
-    "services/**/*",
-    "utils/**/*",
-    "middleware/**/*.ts",
-    "types/vue-shim.d.ts",
-    "src/**/*.vue",
-    "types/vue-shim.d.ts",
-    "nuxt.config.ts"
-  ],
-  "exclude": ["node_modules", ".nuxt", "dist"]
+    }
+  }
 }

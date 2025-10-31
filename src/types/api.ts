@@ -35,6 +35,7 @@ export interface Transaction {
   subcategoryId: string
   subcategory?: Subcategory
   amount: number
+  title: string
   description: string
   date: string
   type: TransactionType

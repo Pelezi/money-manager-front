@@ -106,34 +106,34 @@
                 <v-text-field
                   v-model="form.title"
                   label="Title"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[(v: string) => !!v || 'Required']"
                   variant="outlined"
                 />
                 <v-text-field
                   v-model="form.description"
                   label="Description"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[(v: string) => !!v || 'Required']"
                   variant="outlined"
                 />
                 <v-text-field
                   v-model.number="form.amount"
                   label="Amount"
                   type="number"
-                  :rules="[v => !!v || 'Required', v => v > 0 || 'Must be positive']"
+                  :rules="[(v: number) => !!v || 'Required', (v: number) => v > 0 || 'Must be positive']"
                   variant="outlined"
                 />
                 <v-text-field
                   v-model="form.date"
                   label="Date"
                   type="date"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[(v: string) => !!v || 'Required']"
                   variant="outlined"
                 />
                 <v-select
                   v-model="form.type"
                   :items="['EXPENSE', 'INCOME']"
                   label="Type"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[(v: string) => !!v || 'Required']"
                   variant="outlined"
                   @update:model-value="loadSubcategoriesByType"
                 />
@@ -143,7 +143,7 @@
                   item-title="name"
                   item-value="id"
                   label="Subcategory"
-                  :rules="[v => !!v || 'Required']"
+                  :rules="[(v: string) => !!v || 'Required']"
                   variant="outlined"
                 />
               </v-form>
@@ -205,6 +205,7 @@ const filters = ref({
 })
 
 const form = ref<Partial<Transaction>>({
+  title: '',
   description: '',
   amount: 0,
   date: '',
@@ -231,7 +232,12 @@ const formatCurrency = (amount: number) => {
 
 const loadTransactions = async () => {
   loading.value = true
-  const { data, error } = await getTransactions(filters.value)
+  const { data, error } = await getTransactions({
+    startDate: filters.value.startDate || undefined,
+    endDate: filters.value.endDate || undefined,
+    type: filters.value.type ?? undefined,
+    subcategoryId: filters.value.subcategoryId || undefined
+  })
   if (data.value) {
     transactions.value = data.value
   }

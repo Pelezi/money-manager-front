@@ -1,5 +1,14 @@
 import { ref } from 'vue'
-import type { FetchOptions } from 'ofetch'
+import type { Ref } from 'vue'
+
+interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
+  body?: Record<string, unknown> | unknown[]
+}
+
+interface ApiResponse<T> {
+  data: Ref<T | null>
+  error: Ref<Error | null>
+}
 
 export function useApiClient() {
   // Use relative path to leverage Nuxt's proxy
@@ -12,8 +21,8 @@ export function useApiClient() {
 
   async function apiRequest<T>(
     url: string,
-    options: FetchOptions<'json'> = {}
-  ) {
+    options: ApiRequestOptions = {}
+  ): Promise<ApiResponse<T>> {
     const headers: Record<string, string> = {
       ...getAuthHeaders(),
       ...(options.headers as Record<string, string> || {})
@@ -25,20 +34,27 @@ export function useApiClient() {
     }
 
     try {
-      const response = await $fetch<T>(`${baseURL}${url}`, {
-        method: options.method as any || 'GET',
-        body: options.body,
+      const response = await fetch(`${baseURL}${url}`, {
+        method: options.method || 'GET',
+        body: options.body ? JSON.stringify(options.body) : undefined,
         headers
       })
 
-      return { 
-        data: ref(response), 
-        error: ref(null) 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-    } catch (error: any) {
+
+      const data = await response.json() as T
+
       return { 
-        data: ref(null), 
-        error: ref(error) 
+        data: ref(data) as Ref<T | null>,
+        error: ref(null) as Ref<Error | null>
+      }
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      return { 
+        data: ref(null) as Ref<T | null>,
+        error: ref(errorObj) as Ref<Error | null>
       }
     }
   }
