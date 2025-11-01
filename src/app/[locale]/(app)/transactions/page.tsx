@@ -21,6 +21,7 @@ export default function TransactionsPage() {
     subcategoryId: undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
     categoryId: 0,
@@ -151,12 +152,36 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
-        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
-          <Filter size={20} />
-          <span>{tCommon('filter')}</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <button
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          className="w-full p-4 flex items-center justify-between lg:pointer-events-none"
+        >
+          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+            <Filter size={20} />
+            <span>{tCommon('filter')}</span>
+          </div>
+          <svg
+            className={`w-5 h-5 text-gray-700 dark:text-gray-300 transition-transform duration-300 lg:hidden ${
+              isFiltersOpen ? 'rotate-180' : ''
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div 
+          style={{
+            maxHeight: isFiltersOpen ? '500px' : '0',
+            opacity: isFiltersOpen ? 1 : 0,
+            transition: 'max-height 300ms ease-in-out, opacity 300ms ease-in-out'
+          }}
+          className="overflow-hidden lg:!max-h-[500px] lg:!opacity-100"
+        >
+          <div className="p-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
               {t('dateRange')}
@@ -210,6 +235,8 @@ export default function TransactionsPage() {
               ))}
             </select>
           </div>
+        </div>
+        </div>
         </div>
       </div>
 
