@@ -205,7 +205,7 @@ export default function AnnualReviewPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 lg:col-span-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('monthlyTrends')}</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyTrends}>

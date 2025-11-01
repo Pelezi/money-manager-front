@@ -76,9 +76,9 @@ export default function BudgetPage() {
   const getBudgetStatus = (budgeted: number, actual: number) => {
     if (budgeted === 0) return '';
     const percentage = (actual / budgeted) * 100;
-    if (percentage < 85) return 'bg-green-50 text-green-700';
-    if (percentage < 100) return 'bg-yellow-50 text-yellow-700';
-    return 'bg-red-50 text-red-700';
+    if (percentage < 85) return 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-700';
+    if (percentage < 100) return 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-700';
+    return 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-700';
   };
 
   const handleCellClick = (subcategoryId: number, month: number) => {
@@ -221,8 +221,8 @@ export default function BudgetPage() {
               return (
                 <Fragment key={category.id}>
                   {/* Category Row */}
-                  <tr className="bg-blue-50 dark:bg-blue-900/30 border-t border-gray-200 dark:border-gray-600">
-                    <td className="sticky left-0 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
+                  <tr className="bg-blue-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-600">
+                    <td className="sticky left-0 bg-blue-50 dark:bg-gray-900 px-4 py-2 font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {category.name}
                     </td>
                     {MONTHS.map((_, index) => {
