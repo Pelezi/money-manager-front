@@ -7,17 +7,23 @@ import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Transaction, EntityType } from '@/types';
-import { Plus, Filter, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Filter, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function TransactionsPage() {
   const t = useTranslations('transactions');
   const tCommon = useTranslations('common');
   const queryClient = useQueryClient();
 
+  // Get current date
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // JavaScript months are 0-indexed
+
   const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
+    year: currentYear,
+    month: currentMonth,
     type: '',
+    categoryId: undefined as number | undefined,
     subcategoryId: undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,9 +39,25 @@ export default function TransactionsPage() {
     type: 'EXPENSE' as EntityType,
   });
 
+  // Compute startDate and endDate from year and month for API
+  const getDateRange = () => {
+    const startDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`;
+    const lastDay = new Date(filters.year, filters.month, 0).getDate();
+    const endDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    return { startDate, endDate };
+  };
+
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', filters],
-    queryFn: () => transactionService.getAll(filters),
+    queryFn: () => {
+      const { startDate, endDate } = getDateRange();
+      return transactionService.getAll({
+        startDate,
+        endDate,
+        type: filters.type || undefined,
+        subcategoryId: filters.subcategoryId,
+      });
+    },
   });
 
   const { data: categories = [] } = useQuery({
@@ -181,29 +203,90 @@ export default function TransactionsPage() {
           className="overflow-hidden lg:!max-h-[500px] lg:!opacity-100"
         >
           <div className="p-4 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Year and Month filters - separate row on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('dateRange')}
+              {t('year')}
             </label>
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFilters({ ...filters, year: filters.year - 1 })}
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <select
+                value={filters.year}
+                onChange={(e) => setFilters({ ...filters, year: Number(e.target.value) })}
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+              >
+                {Array.from({ length: 21 }, (_, i) => currentYear + 10 - i).map((year) => (
+                  <option key={year} value={year} className="text-gray-900 dark:text-gray-100">
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setFilters({ ...filters, year: filters.year + 1 })}
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              &nbsp;
+              {t('month')}
             </label>
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const newMonth = filters.month - 1;
+                  if (newMonth < 1) {
+                    setFilters({ ...filters, month: 12, year: filters.year - 1 });
+                  } else {
+                    setFilters({ ...filters, month: newMonth });
+                  }
+                }}
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <select
+                value={filters.month}
+                onChange={(e) => setFilters({ ...filters, month: Number(e.target.value) })}
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                  <option key={month} value={month} className="text-gray-900 dark:text-gray-100">
+                    {new Date(2000, month - 1).toLocaleString('default', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const newMonth = filters.month + 1;
+                  if (newMonth > 12) {
+                    setFilters({ ...filters, month: 1, year: filters.year + 1 });
+                  } else {
+                    setFilters({ ...filters, month: newMonth });
+                  }
+                }}
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
+            </div>
+
+            {/* Other filters - second row on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
               {t('filterByType')}
@@ -220,6 +303,27 @@ export default function TransactionsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+              {t('filterByCategory')}
+            </label>
+            <select
+              value={filters.categoryId || ''}
+              onChange={(e) => setFilters({ 
+                ...filters, 
+                categoryId: e.target.value ? Number(e.target.value) : undefined,
+                subcategoryId: undefined // Reset subcategory when category changes
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+            >
+              <option value="" className="text-gray-500 dark:text-gray-400">All</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id} className="text-gray-900 dark:text-gray-100">
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
               {t('filterBySubcategory')}
             </label>
             <select
@@ -228,11 +332,13 @@ export default function TransactionsPage() {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
             >
               <option value="" className="text-gray-500 dark:text-gray-400">All</option>
-              {subcategories.map((sub) => (
-                <option key={sub.id} value={sub.id} className="text-gray-900 dark:text-gray-100">
-                  {sub.name}
-                </option>
-              ))}
+              {subcategories
+                .filter((sub) => !filters.categoryId || sub.categoryId === filters.categoryId)
+                .map((sub) => (
+                  <option key={sub.id} value={sub.id} className="text-gray-900 dark:text-gray-100">
+                    {sub.name}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -250,7 +356,7 @@ export default function TransactionsPage() {
                   {t('date')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('title')}
+                  {t('transactionTitle')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   {t('description')}
@@ -361,7 +467,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('title')}
+                  {t('transactionTitle')}
                 </label>
                 <input
                   type="text"

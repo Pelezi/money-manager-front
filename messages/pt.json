@@ -33,14 +33,17 @@
     "title": "Gerenciador de Transações",
     "addTransaction": "Adicionar Transação",
     "date": "Data",
-    "title": "Título",
+    "transactionTitle": "Título",
     "description": "Descrição",
     "amount": "Valor",
     "category": "Categoria",
     "subcategory": "Subcategoria",
     "type": "Tipo",
+    "year": "Ano",
+    "month": "Mês",
     "dateRange": "Período",
     "filterByType": "Filtrar por Tipo",
+    "filterByCategory": "Filtrar por Categoria",
     "filterBySubcategory": "Filtrar por Subcategoria"
   },
   "budget": {

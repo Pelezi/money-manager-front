@@ -76,9 +76,9 @@ export default function BudgetPage() {
   const getBudgetStatus = (budgeted: number, actual: number) => {
     if (budgeted === 0) return '';
     const percentage = (actual / budgeted) * 100;
-    if (percentage < 85) return 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-700';
-    if (percentage < 100) return 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-700';
-    return 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-700';
+    if (percentage < 85) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-700';
+    if (percentage < 100) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-700';
+    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-700';
   };
 
   const handleCellClick = (subcategoryId: number, month: number) => {

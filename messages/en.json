@@ -33,14 +33,17 @@
     "title": "Transaction Manager",
     "addTransaction": "Add Transaction",
     "date": "Date",
-    "title": "Title",
+    "transactionTitle": "Title",
     "description": "Description",
     "amount": "Amount",
     "category": "Category",
     "subcategory": "Subcategory",
     "type": "Type",
+    "year": "Year",
+    "month": "Month",
     "dateRange": "Date Range",
     "filterByType": "Filter by Type",
+    "filterByCategory": "Filter by Category",
     "filterBySubcategory": "Filter by Subcategory"
   },
   "budget": {
