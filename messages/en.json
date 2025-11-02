@@ -68,7 +68,8 @@
     "withinBudget": "Within budget",
     "nearLimit": "Near limit",
     "overBudget": "Over budget",
-    "distributeAnnual": "Distribute Annual Budget"
+    "distributeAnnual": "Distribute Annual Budget",
+    "average": "Average"
   },
   "annualReview": {
     "title": "Annual Review",

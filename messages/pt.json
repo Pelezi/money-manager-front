@@ -20,7 +20,7 @@
     "signIn": "Entrar"
   },
   "categories": {
-    "title": "Gerenciador de Categorias",
+    "title": "Categorias",
     "categories": "Categorias",
     "subcategories": "Subcategorias",
     "addCategory": "Adicionar Categoria",
@@ -30,7 +30,7 @@
     "selectCategory": "Selecione uma categoria para ver as subcategorias"
   },
   "transactions": {
-    "title": "Gerenciador de Transações",
+    "title": "Transações",
     "addTransaction": "Adicionar Transação",
     "date": "Data",
     "transactionTitle": "Título",
@@ -68,7 +68,8 @@
     "withinBudget": "Dentro do orçamento",
     "nearLimit": "Próximo ao limite",
     "overBudget": "Acima do orçamento",
-    "distributeAnnual": "Distribuir Orçamento Anual"
+    "distributeAnnual": "Distribuir Orçamento Anual",
+    "average": "Média"
   },
   "annualReview": {
     "title": "Revisão Anual",
