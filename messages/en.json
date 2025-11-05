@@ -87,6 +87,26 @@
     "transactions": "Transactions",
     "categories": "Categories",
     "budget": "Budget",
-    "annualReview": "Annual Review"
+    "annualReview": "Annual Review",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "setup": {
+    "title": "Welcome! Let's set up your categories",
+    "description": "Select the categories and subcategories you'd like to use. You can always add or remove them later.",
+    "selectLanguage": "Select category language",
+    "complete": "Complete Setup",
+    "manageCategories": "Manage Default Categories",
+    "manageCategoriesDescription": "Add more default categories and subcategories to your account",
+    "setupSuccess": "Categories set up successfully!",
+    "setupError": "Failed to set up categories. Please try again.",
+    "categoriesAdded": "New categories added successfully!"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "languageDescription": "Select your preferred language",
+    "updateSuccess": "Language updated successfully!",
+    "updateError": "Error updating language"
   }
 }

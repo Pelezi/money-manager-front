@@ -9,7 +9,7 @@
     "search": "Pesquisar",
     "filter": "Filtrar",
     "export": "Exportar",
-    "income": "Receita",
+    "income": "Renda",
     "expense": "Despesa"
   },
   "auth": {
@@ -75,18 +75,38 @@
   "annualReview": {
     "title": "Revisão Anual",
     "summary": "Resumo",
-    "totalIncome": "Receita Total",
+    "totalIncome": "Renda Total",
     "totalExpenses": "Despesas Totais",
     "netSavings": "Economia Líquida",
     "monthlyTrends": "Tendências Mensais",
     "categoryBreakdown": "Detalhamento por Categoria",
-    "incomeVsExpense": "Receita vs Despesa",
+    "incomeVsExpense": "Renda vs Despesa",
     "yearlyPerformance": "Desempenho Anual"
   },
   "navigation": {
     "transactions": "Transações",
     "categories": "Categorias",
     "budget": "Orçamento",
-    "annualReview": "Revisão Anual"
+    "annualReview": "Resumo Anual",
+    "settings": "Configurações",
+    "profile": "Perfil"
+  },
+  "setup": {
+    "title": "Bem-vindo! Vamos configurar suas categorias",
+    "description": "Selecione as categorias e subcategorias que você gostaria de usar. Você sempre pode adicionar ou remover depois.",
+    "selectLanguage": "Selecione o idioma das categorias",
+    "complete": "Concluir Configuração",
+    "manageCategories": "Gerenciar Categorias Padrão",
+    "manageCategoriesDescription": "Adicione mais categorias e subcategorias padrão à sua conta",
+    "setupSuccess": "Categorias configuradas com sucesso!",
+    "setupError": "Falha ao configurar as categorias. Por favor, tente novamente.",
+    "categoriesAdded": "Novas categorias adicionadas com sucesso!"
+  },
+  "profile": {
+    "title": "Perfil",
+    "language": "Idioma",
+    "languageDescription": "Selecione seu idioma preferido",
+    "updateSuccess": "Idioma atualizado com sucesso!",
+    "updateError": "Erro ao atualizar idioma"
   }
 }

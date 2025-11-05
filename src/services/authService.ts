@@ -34,4 +34,12 @@ export const authService = {
     }
     return false;
   },
+
+  completeSetup: async (categories: Array<{ name: string; type: 'EXPENSE' | 'INCOME'; subcategories: string[] }>) => {
+    const response = await api.post('/users/setup', { categories });
+    if (typeof window !== 'undefined' && response.data) {
+      localStorage.setItem('user', JSON.stringify(response.data));
+    }
+    return response.data;
+  },
 };

@@ -11,7 +11,9 @@ import {
   X,
   LogOut,
   Sun,
-  Moon
+  Moon,
+  Settings,
+  User
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -54,6 +56,7 @@ export default function Sidebar() {
     { href: '/categories', icon: <FolderTree size={20} />, label: t('categories') },
     { href: '/budget', icon: <LayoutDashboard size={20} />, label: t('budget') },
     { href: '/annual-review', icon: <BarChart3 size={20} />, label: t('annualReview') },
+    { href: '/settings', icon: <Settings size={20} />, label: t('settings') },
   ];
 
   const handleLogout = () => {
@@ -117,7 +120,14 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <NavLink
+            href="/profile"
+            icon={<User size={20} />}
+            label={t('profile')}
+            isActive={pathname === '/profile'}
+            onClick={handleNavClick}
+          />
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
