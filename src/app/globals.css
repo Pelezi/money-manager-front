@@ -26,6 +26,28 @@ body {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Allow specific elements to override with their own transitions */
+[style*="transition"],
+.transition,
+.transition-all,
+.transition-transform,
+.transition-opacity,
+.transition-colors {
+  transition-property: all !important;
+}
+
+.transition-all {
+  transition-property: all !important;
+}
+
+.transition-transform {
+  transition-property: transform !important;
+}
+
+.transition-opacity {
+  transition-property: opacity !important;
+}
+
 /* Prevent transitions on page load */
 .no-transition * {
   transition: none !important;
@@ -63,4 +85,20 @@ a:hover {
   .sidebar-closed {
     transform: translateX(0) !important;
   }
+}
+
+/* Slide-in animation for subcategories */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
 }

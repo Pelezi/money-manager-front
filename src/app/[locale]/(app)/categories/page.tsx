@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Category, Subcategory, EntityType } from '@/types';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function CategoriesPage() {
   const t = useTranslations('categories');
@@ -14,11 +14,12 @@ export default function CategoriesPage() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
+  const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState<Category | null>(null);
   const [categoryFormData, setCategoryFormData] = useState({ name: '', type: activeTab });
   const [subcategoryFormData, setSubcategoryFormData] = useState({
     name: '',
@@ -60,9 +61,7 @@ export default function CategoriesPage() {
     mutationFn: categoryService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      if (selectedCategory) {
-        setSelectedCategory(null);
-      }
+      queryClient.invalidateQueries({ queryKey: ['subcategories'] });
     },
   });
 
@@ -98,7 +97,7 @@ export default function CategoriesPage() {
   };
 
   const resetSubcategoryForm = () => {
-    setSubcategoryFormData({ name: '', categoryId: selectedCategory?.id || 0, type: activeTab });
+    setSubcategoryFormData({ name: '', categoryId: 0, type: activeTab });
   };
 
   const handleCategorySubmit = (e: React.FormEvent) => {
@@ -147,10 +146,32 @@ export default function CategoriesPage() {
     }
   };
 
+  const toggleCategory = (categoryId: number) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAddSubcategory = (category: Category) => {
+    setSelectedCategoryForSubcategory(category);
+    setEditingSubcategory(null);
+    setSubcategoryFormData({
+      name: '',
+      categoryId: category.id,
+      type: category.type,
+    });
+    setIsSubcategoryModalOpen(true);
+  };
+
   const filteredCategories = categories.filter((cat) => cat.type === activeTab);
-  const filteredSubcategories = selectedCategory
-    ? subcategories.filter((sub) => sub.categoryId === selectedCategory.id)
-    : [];
+  const getCategorySubcategories = (categoryId: number) =>
+    subcategories.filter((sub) => sub.categoryId === categoryId);
 
   return (
     <div className="space-y-6">
@@ -163,7 +184,7 @@ export default function CategoriesPage() {
         <button
           onClick={() => {
             setActiveTab('EXPENSE');
-            setSelectedCategory(null);
+            setExpandedCategories(new Set());
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'EXPENSE'
@@ -176,7 +197,7 @@ export default function CategoriesPage() {
         <button
           onClick={() => {
             setActiveTab('INCOME');
-            setSelectedCategory(null);
+            setExpandedCategories(new Set());
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'INCOME'
@@ -188,126 +209,133 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      {/* Two-panel layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Categories Panel */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('categories')}</h2>
-            <button
-              onClick={() => {
-                setEditingCategory(null);
-                resetCategoryForm();
-                setCategoryFormData({ name: '', type: activeTab });
-                setIsCategoryModalOpen(true);
-              }}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
-            >
-              <Plus size={16} />
-              {t('addCategory')}
-            </button>
-          </div>
-          <div className="p-4 space-y-2">
-            {filteredCategories.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories found</p>
-            ) : (
-              filteredCategories.map((category) => (
+      {/* Single Panel with Expandable Categories */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('categories')}</h2>
+          <button
+            onClick={() => {
+              setEditingCategory(null);
+              resetCategoryForm();
+              setCategoryFormData({ name: '', type: activeTab });
+              setIsCategoryModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+          >
+            <Plus size={16} />
+            {t('addCategory')}
+          </button>
+        </div>
+        <div className="p-4 space-y-2">
+          {filteredCategories.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories found</p>
+          ) : (
+            filteredCategories.map((category) => {
+              const categorySubcategories = getCategorySubcategories(category.id);
+              const isExpanded = expandedCategories.has(category.id);
+
+              return (
                 <div
                   key={category.id}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedCategory?.id === category.id
-                      ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{category.name}</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditCategory(category);
-                        }}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCategory(category.id);
-                        }}
-                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                  {/* Category Header */}
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1">
+                        <button
+                          onClick={() => toggleCategory(category.id)}
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          style={{
+                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.3s ease-in-out'
+                          }}
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          {category.name}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ({categorySubcategories.length} {categorySubcategories.length === 1 ? t('subcategory') : t('subcategories')})
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAddSubcategory(category)}
+                          className="flex items-center gap-1 px-2 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
+                          title="Add subcategory"
+                        >
+                          <Plus size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCategory(category.id);
+                          }}
+                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded transition-colors"
+                          title="Delete category"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
 
-        {/* Subcategories Panel */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('subcategories')}</h2>
-            <button
-              onClick={() => {
-                if (!selectedCategory) {
-                  alert('Please select a category first');
-                  return;
-                }
-                setEditingSubcategory(null);
-                resetSubcategoryForm();
-                setSubcategoryFormData({
-                  name: '',
-                  categoryId: selectedCategory.id,
-                  type: activeTab,
-                });
-                setIsSubcategoryModalOpen(true);
-              }}
-              disabled={!selectedCategory}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus size={16} />
-              {t('addSubcategory')}
-            </button>
-          </div>
-          <div className="p-4 space-y-2">
-            {!selectedCategory ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('selectCategory')}</p>
-            ) : filteredSubcategories.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No subcategories found</p>
-            ) : (
-              filteredSubcategories.map((subcategory) => (
-                <div
-                  key={subcategory.id}
-                  className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{subcategory.name}</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditSubcategory(subcategory)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSubcategory(subcategory.id)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                  {/* Subcategories List (Expanded) */}
+                  <div
+                    className="overflow-hidden transition-all duration-300 ease-in-out"
+                    style={{
+                      maxHeight: isExpanded ? '2000px' : '0',
+                      opacity: isExpanded ? 1 : 0,
+                    }}
+                  >
+                    <div className="bg-white dark:bg-gray-800">
+                      {categorySubcategories.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                          No subcategories yet
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {categorySubcategories.map((subcategory, index) => (
+                            <div
+                              key={subcategory.id}
+                              className="p-3 pl-12 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                              style={{
+                                animation: isExpanded ? `slideIn 0.3s ease-out ${index * 50}ms backwards` : 'none'
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-900 dark:text-gray-100">
+                                  {subcategory.name}
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleEditSubcategory(subcategory)}
+                                    className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded"
+                                    title="Edit subcategory"
+                                  >
+                                    <Edit2 size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSubcategory(subcategory.id)}
+                                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded"
+                                    title="Delete subcategory"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              );
+            })
+          )}
         </div>
       </div>
 

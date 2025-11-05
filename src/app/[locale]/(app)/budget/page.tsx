@@ -80,13 +80,13 @@ export default function BudgetPage() {
     // For INCOME: green when above budget, red when below
     // For EXPENSE: green when below budget, red when above
     if (type === 'INCOME') {
-      if (percentage >= 100) return 'bg-green-200/30 dark:bg-green-900/40';
-      if (percentage >= 85) return 'bg-yellow-200/30 dark:bg-yellow-900/40';
-      return 'bg-red-200/30 dark:bg-red-900/40';
+      if (percentage >= 100) return 'bg-green-200/40 dark:bg-green-900/40';
+      if (percentage >= 85) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
+      return 'bg-red-200/40 dark:bg-red-900/40';
     } else {
-      if (percentage < 85) return 'bg-green-200/30 dark:bg-green-900/40';
-      if (percentage < 100) return 'bg-yellow-200/30 dark:bg-yellow-900/40';
-      return 'bg-red-200/30 dark:bg-red-900/40';
+      if (percentage < 85) return 'bg-green-200/40 dark:bg-green-900/40';
+      if (percentage < 100) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
+      return 'bg-red-200/40 dark:bg-red-900/40';
     }
   };
 

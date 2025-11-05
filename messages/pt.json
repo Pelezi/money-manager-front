@@ -22,6 +22,7 @@
   "categories": {
     "title": "Categorias",
     "categories": "Categorias",
+    "subcategory": "Subcategoria",
     "subcategories": "Subcategorias",
     "addCategory": "Adicionar Categoria",
     "addSubcategory": "Adicionar Subcategoria",

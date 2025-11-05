@@ -22,6 +22,7 @@
   "categories": {
     "title": "Category Manager",
     "categories": "Categories",
+    "subcategory": "Subcategory",
     "subcategories": "Subcategories",
     "addCategory": "Add Category",
     "addSubcategory": "Add Subcategory",
