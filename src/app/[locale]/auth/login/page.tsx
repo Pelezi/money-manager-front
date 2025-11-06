@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from '@/i18n/routing';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations('auth');
   const { login } = useAuth();
 
@@ -20,8 +21,20 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/transactions');
+      const user = await login(email, password);
+      
+      // Get user's preferred locale
+      const userLocale = user.locale || 'en';
+      
+      // Get current locale from pathname
+      const currentLocale = pathname.split('/')[1];
+      
+      // Redirect to user's preferred locale
+      if (userLocale !== currentLocale) {
+        window.location.href = `/${userLocale}/transactions`;
+      } else {
+        router.push(`/${currentLocale}/transactions`);
+      }
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Invalid credentials');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from '@/i18n/routing';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProtectedRoute({ 
@@ -9,15 +9,25 @@ export default function ProtectedRoute({
 }: { 
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && !pathname.includes('/auth/login')) {
-      router.push('/auth/login');
+    if (!isLoading) {
+      // Get current locale from pathname
+      const currentLocale = pathname.split('/')[1];
+      
+      if (!isAuthenticated && !pathname.includes('/auth/login')) {
+        // Redirect to login if not authenticated
+        router.push(`/${currentLocale}/auth/login`);
+      } else if (isAuthenticated && user?.locale && user.locale !== currentLocale && !pathname.includes('/auth/')) {
+        // If user is authenticated and their preferred locale is different, redirect to their locale
+        const newPath = pathname.replace(`/${currentLocale}`, `/${user.locale}`);
+        window.location.href = newPath;
+      }
     }
-  }, [isAuthenticated, isLoading, router, pathname]);
+  }, [isAuthenticated, isLoading, user, router, pathname]);
 
   if (isLoading) {
     return (
