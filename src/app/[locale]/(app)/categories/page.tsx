@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Category, Subcategory, EntityType } from '@/types';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, X, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function CategoriesPage() {
   const t = useTranslations('categories');
@@ -15,17 +16,13 @@ export default function CategoriesPage() {
 
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
-  const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState<Category | null>(null);
-  const [categoryFormData, setCategoryFormData] = useState({ name: '', type: activeTab });
-  const [subcategoryFormData, setSubcategoryFormData] = useState({
-    name: '',
-    categoryId: 0,
-    type: activeTab,
-  });
+  const [editingCategoryId, setEditingCategoryId] = useState<number | 'new' | null>(null);
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<number | 'new' | null>(null);
+  const [editingSubcategoryCategory, setEditingSubcategoryCategory] = useState<number | null>(null);
+  const [categoryInputValue, setCategoryInputValue] = useState('');
+  const [subcategoryInputValue, setSubcategoryInputValue] = useState('');
+  const categoryInputRef = useRef<HTMLInputElement>(null);
+  const subcategoryInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -41,8 +38,9 @@ export default function CategoriesPage() {
     mutationFn: categoryService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      setIsCategoryModalOpen(false);
-      resetCategoryForm();
+      toast.success(t('categorySaved'));
+      setEditingCategoryId(null);
+      setCategoryInputValue('');
     },
   });
 
@@ -51,9 +49,9 @@ export default function CategoriesPage() {
       categoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      setIsCategoryModalOpen(false);
-      setEditingCategory(null);
-      resetCategoryForm();
+      toast.success(t('categorySaved'));
+      setEditingCategoryId(null);
+      setCategoryInputValue('');
     },
   });
 
@@ -62,6 +60,7 @@ export default function CategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      toast.success(t('categoryDeleted'));
     },
   });
 
@@ -69,8 +68,12 @@ export default function CategoriesPage() {
     mutationFn: subcategoryService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      setIsSubcategoryModalOpen(false);
-      resetSubcategoryForm();
+      toast.success(t('subcategorySaved'));
+      // Auto-continue: create another subcategory
+      setSubcategoryInputValue('');
+      setTimeout(() => {
+        subcategoryInputRef.current?.focus();
+      }, 50);
     },
   });
 
@@ -79,9 +82,10 @@ export default function CategoriesPage() {
       subcategoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      setIsSubcategoryModalOpen(false);
-      setEditingSubcategory(null);
-      resetSubcategoryForm();
+      toast.success(t('subcategorySaved'));
+      setEditingSubcategoryId(null);
+      setEditingSubcategoryCategory(null);
+      setSubcategoryInputValue('');
     },
   });
 
@@ -89,59 +93,108 @@ export default function CategoriesPage() {
     mutationFn: subcategoryService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
+      toast.success(t('subcategoryDeleted'));
     },
   });
 
-  const resetCategoryForm = () => {
-    setCategoryFormData({ name: '', type: activeTab });
-  };
-
-  const resetSubcategoryForm = () => {
-    setSubcategoryFormData({ name: '', categoryId: 0, type: activeTab });
-  };
-
-  const handleCategorySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingCategory) {
-      updateCategoryMutation.mutate({ id: editingCategory.id, data: categoryFormData });
-    } else {
-      createCategoryMutation.mutate(categoryFormData);
+  // Focus on input when editing starts
+  useEffect(() => {
+    if (editingCategoryId) {
+      categoryInputRef.current?.focus();
+      categoryInputRef.current?.select();
     }
-  };
+  }, [editingCategoryId]);
 
-  const handleSubcategorySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingSubcategory) {
-      updateSubcategoryMutation.mutate({ id: editingSubcategory.id, data: subcategoryFormData });
-    } else {
-      createSubcategoryMutation.mutate(subcategoryFormData);
+  useEffect(() => {
+    if (editingSubcategoryId) {
+      subcategoryInputRef.current?.focus();
+      subcategoryInputRef.current?.select();
     }
+  }, [editingSubcategoryId]);
+
+  const handleAddCategory = () => {
+    setEditingCategoryId('new');
+    setCategoryInputValue('');
   };
 
   const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
-    setCategoryFormData({ name: category.name, type: category.type });
-    setIsCategoryModalOpen(true);
+    setEditingCategoryId(category.id);
+    setCategoryInputValue(category.name);
+  };
+
+  const handleSaveCategory = () => {
+    const trimmedName = categoryInputValue.trim();
+    if (!trimmedName) {
+      setEditingCategoryId(null);
+      setCategoryInputValue('');
+      return;
+    }
+
+    if (editingCategoryId === 'new') {
+      createCategoryMutation.mutate({ name: trimmedName, type: activeTab });
+    } else if (typeof editingCategoryId === 'number') {
+      updateCategoryMutation.mutate({ id: editingCategoryId, data: { name: trimmedName } });
+    }
+  };
+
+  const handleCancelCategory = () => {
+    setEditingCategoryId(null);
+    setCategoryInputValue('');
   };
 
   const handleDeleteCategory = (id: number) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+    if (confirm(t('confirmDeleteCategory'))) {
       deleteCategoryMutation.mutate(id);
     }
   };
 
-  const handleEditSubcategory = (subcategory: Subcategory) => {
-    setEditingSubcategory(subcategory);
-    setSubcategoryFormData({
-      name: subcategory.name,
-      categoryId: subcategory.categoryId,
-      type: subcategory.type,
+  const handleAddSubcategory = (categoryId: number) => {
+    setEditingSubcategoryId('new');
+    setEditingSubcategoryCategory(categoryId);
+    setSubcategoryInputValue('');
+    // Ensure category is expanded
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(categoryId);
+      return newSet;
     });
-    setIsSubcategoryModalOpen(true);
+  };
+
+  const handleEditSubcategory = (subcategory: Subcategory) => {
+    setEditingSubcategoryId(subcategory.id);
+    setEditingSubcategoryCategory(subcategory.categoryId);
+    setSubcategoryInputValue(subcategory.name);
+  };
+
+  const handleSaveSubcategory = () => {
+    const trimmedName = subcategoryInputValue.trim();
+    if (!trimmedName || !editingSubcategoryCategory) {
+      setEditingSubcategoryId(null);
+      setEditingSubcategoryCategory(null);
+      setSubcategoryInputValue('');
+      return;
+    }
+
+    if (editingSubcategoryId === 'new') {
+      createSubcategoryMutation.mutate({
+        name: trimmedName,
+        categoryId: editingSubcategoryCategory,
+        type: activeTab,
+      });
+      // Note: editingSubcategoryId stays as 'new' for auto-continue
+    } else if (typeof editingSubcategoryId === 'number') {
+      updateSubcategoryMutation.mutate({ id: editingSubcategoryId, data: { name: trimmedName } });
+    }
+  };
+
+  const handleCancelSubcategory = () => {
+    setEditingSubcategoryId(null);
+    setEditingSubcategoryCategory(null);
+    setSubcategoryInputValue('');
   };
 
   const handleDeleteSubcategory = (id: number) => {
-    if (confirm('Are you sure you want to delete this subcategory?')) {
+    if (confirm(t('confirmDeleteSubcategory'))) {
       deleteSubcategoryMutation.mutate(id);
     }
   };
@@ -158,20 +211,35 @@ export default function CategoriesPage() {
     });
   };
 
-  const handleAddSubcategory = (category: Category) => {
-    setSelectedCategoryForSubcategory(category);
-    setEditingSubcategory(null);
-    setSubcategoryFormData({
-      name: '',
-      categoryId: category.id,
-      type: category.type,
-    });
-    setIsSubcategoryModalOpen(true);
+  const handleCategoryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveCategory();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelCategory();
+    }
   };
 
-  const filteredCategories = categories.filter((cat) => cat.type === activeTab);
+  const handleSubcategoryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveSubcategory();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelSubcategory();
+    }
+  };
+
+  // Sort categories and subcategories alphabetically
+  const filteredCategories = categories
+    .filter((cat) => cat.type === activeTab)
+    .sort((a, b) => a.name.localeCompare(b.name));
+    
   const getCategorySubcategories = (categoryId: number) =>
-    subcategories.filter((sub) => sub.categoryId === categoryId);
+    subcategories
+      .filter((sub) => sub.categoryId === categoryId)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="space-y-6">
@@ -185,6 +253,8 @@ export default function CategoriesPage() {
           onClick={() => {
             setActiveTab('EXPENSE');
             setExpandedCategories(new Set());
+            handleCancelCategory();
+            handleCancelSubcategory();
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'EXPENSE'
@@ -198,6 +268,8 @@ export default function CategoriesPage() {
           onClick={() => {
             setActiveTab('INCOME');
             setExpandedCategories(new Set());
+            handleCancelCategory();
+            handleCancelSubcategory();
           }}
           className={`px-4 py-2 font-medium ${
             activeTab === 'INCOME'
@@ -209,30 +281,52 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      {/* Single Panel with Expandable Categories */}
+      {/* Categories Panel */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('categories')}</h2>
           <button
-            onClick={() => {
-              setEditingCategory(null);
-              resetCategoryForm();
-              setCategoryFormData({ name: '', type: activeTab });
-              setIsCategoryModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+            onClick={handleAddCategory}
+            disabled={editingCategoryId === 'new'}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={16} />
             {t('addCategory')}
           </button>
         </div>
         <div className="p-4 space-y-2">
-          {filteredCategories.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories found</p>
+          {/* New Category Input */}
+          {editingCategoryId === 'new' && (
+            <div className="border-2 border-blue-500 dark:border-blue-400 rounded-lg p-3 bg-blue-50 dark:bg-blue-900/20 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={categoryInputRef}
+                  type="text"
+                  value={categoryInputValue}
+                  onChange={(e) => setCategoryInputValue(e.target.value)}
+                  onKeyDown={handleCategoryKeyDown}
+                  placeholder={t('categoryName')}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+                <button
+                  onClick={handleCancelCategory}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                  title="Cancel (Esc)"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('enterToSave')}</p>
+            </div>
+          )}
+
+          {filteredCategories.length === 0 && editingCategoryId !== 'new' ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('noCategories')}</p>
           ) : (
             filteredCategories.map((category) => {
               const categorySubcategories = getCategorySubcategories(category.id);
               const isExpanded = expandedCategories.has(category.id);
+              const isEditingThisCategory = editingCategoryId === category.id;
 
               return (
                 <div
@@ -245,40 +339,68 @@ export default function CategoriesPage() {
                       <div className="flex items-center gap-2 flex-1">
                         <button
                           onClick={() => toggleCategory(category.id)}
-                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-transform duration-200"
                           style={{
                             transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.3s ease-in-out'
                           }}
                         >
                           <ChevronRight size={20} />
                         </button>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {category.name}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          ({categorySubcategories.length} {categorySubcategories.length === 1 ? t('subcategory') : t('subcategories')})
-                        </span>
+                        {isEditingThisCategory ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              ref={categoryInputRef}
+                              type="text"
+                              value={categoryInputValue}
+                              onChange={(e) => setCategoryInputValue(e.target.value)}
+                              onKeyDown={handleCategoryKeyDown}
+                              className="flex-1 px-2 py-1 border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                            <button
+                              onClick={handleCancelCategory}
+                              className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                              title="Cancel (Esc)"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {category.name}
+                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              ({categorySubcategories.length}{' '}
+                              {categorySubcategories.length === 1 ? t('subcategory') : t('subcategories')})
+                            </span>
+                          </>
+                        )}
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleAddSubcategory(category)}
-                          className="flex items-center gap-1 px-2 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
-                          title="Add subcategory"
-                        >
-                          <Plus size={16} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCategory(category.id);
-                          }}
-                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded transition-colors"
-                          title="Delete category"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      {!isEditingThisCategory && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleAddSubcategory(category.id)}
+                            className="flex items-center gap-1 px-2 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
+                            title="Add subcategory"
+                          >
+                            <Plus size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleEditCategory(category)}
+                            className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded transition-colors"
+                            title="Edit category"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(category.id)}
+                            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded transition-colors"
+                            title="Delete category"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -291,43 +413,95 @@ export default function CategoriesPage() {
                     }}
                   >
                     <div className="bg-white dark:bg-gray-800">
-                      {categorySubcategories.length === 0 ? (
+                      {/* New Subcategory Input */}
+                      {editingSubcategoryId === 'new' && editingSubcategoryCategory === category.id && (
+                        <div className="p-3 pl-12 border-b-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20">
+                          <div className="flex items-center gap-2">
+                            <input
+                              ref={subcategoryInputRef}
+                              type="text"
+                              value={subcategoryInputValue}
+                              onChange={(e) => setSubcategoryInputValue(e.target.value)}
+                              onKeyDown={handleSubcategoryKeyDown}
+                              placeholder={t('subcategoryName')}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                            <button
+                              onClick={handleCancelSubcategory}
+                              className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                              title="Cancel (Esc)"
+                            >
+                              <X size={20} />
+                            </button>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('enterToSave')}</p>
+                        </div>
+                      )}
+
+                      {categorySubcategories.length === 0 && editingSubcategoryCategory !== category.id ? (
                         <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
                           No subcategories yet
                         </div>
                       ) : (
                         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                          {categorySubcategories.map((subcategory, index) => (
-                            <div
-                              key={subcategory.id}
-                              className="p-3 pl-12 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                              style={{
-                                animation: isExpanded ? `slideIn 0.3s ease-out ${index * 50}ms backwards` : 'none'
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-900 dark:text-gray-100">
-                                  {subcategory.name}
-                                </span>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleEditSubcategory(subcategory)}
-                                    className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded"
-                                    title="Edit subcategory"
-                                  >
-                                    <Edit2 size={16} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteSubcategory(subcategory.id)}
-                                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded"
-                                    title="Delete subcategory"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
+                          {categorySubcategories.map((subcategory, index) => {
+                            const isEditingThisSubcategory = editingSubcategoryId === subcategory.id;
+                            return (
+                              <div
+                                key={subcategory.id}
+                                className="p-3 pl-12 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                style={{
+                                  animation: isExpanded
+                                    ? `slideIn 0.3s ease-out ${index * 50}ms backwards`
+                                    : 'none',
+                                }}
+                              >
+                                <div className="flex items-center justify-between">
+                                  {isEditingThisSubcategory ? (
+                                    <div className="flex items-center gap-2 flex-1">
+                                      <input
+                                        ref={subcategoryInputRef}
+                                        type="text"
+                                        value={subcategoryInputValue}
+                                        onChange={(e) => setSubcategoryInputValue(e.target.value)}
+                                        onKeyDown={handleSubcategoryKeyDown}
+                                        className="flex-1 px-2 py-1 border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                      />
+                                      <button
+                                        onClick={handleCancelSubcategory}
+                                        className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                                        title="Cancel (Esc)"
+                                      >
+                                        <X size={16} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <span className="text-gray-900 dark:text-gray-100">
+                                        {subcategory.name}
+                                      </span>
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleEditSubcategory(subcategory)}
+                                          className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 p-1 rounded"
+                                          title="Edit subcategory"
+                                        >
+                                          <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteSubcategory(subcategory.id)}
+                                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 p-1 rounded"
+                                          title="Delete subcategory"
+                                        >
+                                          <Trash2 size={16} />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -339,105 +513,31 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      {/* Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-              {editingCategory ? tCommon('edit') : t('addCategory')}
-            </h2>
-            <form onSubmit={handleCategorySubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('categoryName')}
-                </label>
-                <input
-                  type="text"
-                  value={categoryFormData.name}
-                  onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  placeholder="Enter category name"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCategoryModalOpen(false);
-                    setEditingCategory(null);
-                    resetCategoryForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  {tCommon('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {createCategoryMutation.isPending || updateCategoryMutation.isPending
-                    ? tCommon('loading')
-                    : tCommon('save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Subcategory Modal */}
-      {isSubcategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-              {editingSubcategory ? tCommon('edit') : t('addSubcategory')}
-            </h2>
-            <form onSubmit={handleSubcategorySubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('subcategoryName')}
-                </label>
-                <input
-                  type="text"
-                  value={subcategoryFormData.name}
-                  onChange={(e) =>
-                    setSubcategoryFormData({ ...subcategoryFormData, name: e.target.value })
-                  }
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  placeholder="Enter subcategory name"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSubcategoryModalOpen(false);
-                    setEditingSubcategory(null);
-                    resetSubcategoryForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  {tCommon('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    createSubcategoryMutation.isPending || updateSubcategoryMutation.isPending
-                  }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {createSubcategoryMutation.isPending || updateSubcategoryMutation.isPending
-                    ? tCommon('loading')
-                    : tCommon('save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

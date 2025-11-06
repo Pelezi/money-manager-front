@@ -28,7 +28,15 @@
     "addSubcategory": "Adicionar Subcategoria",
     "categoryName": "Nome da Categoria",
     "subcategoryName": "Nome da Subcategoria",
-    "selectCategory": "Selecione uma categoria para ver as subcategorias"
+    "selectCategory": "Selecione uma categoria para ver as subcategorias",
+    "categorySaved": "Categoria salva com sucesso!",
+    "subcategorySaved": "Subcategoria salva com sucesso!",
+    "categoryDeleted": "Categoria excluída",
+    "subcategoryDeleted": "Subcategoria excluída",
+    "confirmDeleteCategory": "Tem certeza que deseja excluir esta categoria?",
+    "confirmDeleteSubcategory": "Tem certeza que deseja excluir esta subcategoria?",
+    "enterToSave": "Pressione Enter para salvar, Escape para cancelar",
+    "noCategories": "Nenhuma categoria encontrada. Clique em \"Adicionar Categoria\" para criar uma."
   },
   "transactions": {
     "title": "Transações",
