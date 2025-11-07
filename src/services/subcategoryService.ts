@@ -2,8 +2,9 @@ import api from '@/lib/apiClient';
 import { Subcategory } from '@/types';
 
 export const subcategoryService = {
-  getAll: async (): Promise<Subcategory[]> => {
-    const response = await api.get<Subcategory[]>('/subcategories');
+  getAll: async (groupId?: number): Promise<Subcategory[]> => {
+    const url = groupId ? `/subcategories?groupId=${groupId}` : '/subcategories';
+    const response = await api.get<Subcategory[]>(url);
     return response.data;
   },
 

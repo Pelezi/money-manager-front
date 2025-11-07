@@ -7,12 +7,14 @@ export const transactionService = {
     endDate?: string;
     type?: string;
     subcategoryId?: number;
+    groupId?: number;
   }): Promise<Transaction[]> => {
     const queryParams = new URLSearchParams();
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     if (params?.type) queryParams.append('type', params.type);
     if (params?.subcategoryId) queryParams.append('subcategoryId', params.subcategoryId.toString());
+    if (params?.groupId) queryParams.append('groupId', params.groupId.toString());
     
     const queryString = queryParams.toString();
     const url = queryString ? `/transactions?${queryString}` : '/transactions';
@@ -39,9 +41,12 @@ export const transactionService = {
     await api.delete(`/transactions/${id}`);
   },
 
-  getAggregated: async (year: number, month?: number): Promise<TransactionAggregated[]> => {
-    const params = month ? `?year=${year}&month=${month}` : `?year=${year}`;
-    const response = await api.get<TransactionAggregated[]>(`/transactions/aggregated${params}`);
+  getAggregated: async (year: number, month?: number, groupId?: number): Promise<TransactionAggregated[]> => {
+    const params = new URLSearchParams();
+    params.append('year', year.toString());
+    if (month) params.append('month', month.toString());
+    if (groupId) params.append('groupId', groupId.toString());
+    const response = await api.get<TransactionAggregated[]>(`/transactions/aggregated?${params.toString()}`);
     return response.data;
   },
 };

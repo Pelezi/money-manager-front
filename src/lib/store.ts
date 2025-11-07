@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Category, Subcategory, Expense, Transaction } from '@/types';
+import { Category, Subcategory, Expense, Transaction, Group, GroupPermissions } from '@/types';
 
 interface AppState {
   // Categories
@@ -22,6 +22,18 @@ interface AppState {
   selectedYear: number;
   setSelectedYear: (year: number) => void;
   
+  // Groups
+  groups: Group[];
+  setGroups: (groups: Group[]) => void;
+  
+  // Current context (null = personal, number = group id)
+  currentGroupId: number | null;
+  setCurrentGroupId: (groupId: number | null) => void;
+  
+  // Current group permissions
+  currentGroupPermissions: GroupPermissions | null;
+  setCurrentGroupPermissions: (permissions: GroupPermissions | null) => void;
+  
   // UI state
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -42,6 +54,15 @@ export const useAppStore = create<AppState>((set) => ({
   
   selectedYear: new Date().getFullYear(),
   setSelectedYear: (year) => set({ selectedYear: year }),
+  
+  groups: [],
+  setGroups: (groups) => set({ groups }),
+  
+  currentGroupId: null,
+  setCurrentGroupId: (groupId) => set({ currentGroupId: groupId }),
+  
+  currentGroupPermissions: null,
+  setCurrentGroupPermissions: (permissions) => set({ currentGroupPermissions: permissions }),
   
   isSidebarOpen: true,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),

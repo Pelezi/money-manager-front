@@ -6,11 +6,13 @@ export const budgetService = {
     year?: string;
     month?: number;
     type?: string;
+    groupId?: number;
   }): Promise<Budget[]> => {
     const queryParams = new URLSearchParams();
     if (params?.year) queryParams.append('year', params.year);
     if (params?.month) queryParams.append('month', params.month.toString());
     if (params?.type) queryParams.append('type', params.type);
+    if (params?.groupId) queryParams.append('groupId', params.groupId.toString());
     
     const queryString = queryParams.toString();
     const url = queryString ? `/budgets?${queryString}` : '/budgets';
@@ -42,12 +44,14 @@ export const budgetService = {
     month?: number;
     subcategoryId?: number;
     type?: string;
+    groupId?: number;
   }): Promise<BudgetComparison> => {
     const queryParams = new URLSearchParams();
     queryParams.append('year', params.year);
     if (params.month) queryParams.append('month', params.month.toString());
     if (params.subcategoryId) queryParams.append('subcategoryId', params.subcategoryId.toString());
     if (params.type) queryParams.append('type', params.type);
+    if (params.groupId) queryParams.append('groupId', params.groupId.toString());
     
     const response = await api.get<BudgetComparison>(`/budgets/comparison?${queryParams.toString()}`);
     return response.data;

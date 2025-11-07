@@ -2,8 +2,9 @@ import api from '@/lib/apiClient';
 import { Category } from '@/types';
 
 export const categoryService = {
-  getAll: async (): Promise<Category[]> => {
-    const response = await api.get<Category[]>('/categories');
+  getAll: async (groupId?: number): Promise<Category[]> => {
+    const url = groupId ? `/categories?groupId=${groupId}` : '/categories';
+    const response = await api.get<Category[]>(url);
     return response.data;
   },
 
