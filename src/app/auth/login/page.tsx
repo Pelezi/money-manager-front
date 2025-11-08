@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { translations } from '@/lib/translations';
 import { useAuth } from '@/contexts/AuthContext';
+
+const t = translations.auth;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,8 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
-  const t = useTranslations('auth');
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,20 +21,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const user = await login(email, password);
-      
-      // Get user's preferred locale
-      const userLocale = user.locale || 'en';
-      
-      // Get current locale from pathname
-      const currentLocale = pathname.split('/')[1];
-      
-      // Redirect to user's preferred locale
-      if (userLocale !== currentLocale) {
-        window.location.href = `/${userLocale}/transactions`;
-      } else {
-        router.push(`/${currentLocale}/transactions`);
-      }
+      await login(email, password);
+      router.push('/transactions');
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Invalid credentials');
@@ -51,7 +39,7 @@ export default function LoginPage() {
             Budget Manager
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {t('signIn')}
+            {t.signIn}
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -63,7 +51,7 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('email')}
+                {t.email}
               </label>
               <input
                 id="email"
@@ -79,7 +67,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('password')}
+                {t.password}
               </label>
               <input
                 id="password"
@@ -101,7 +89,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Loading...' : t('login')}
+              {isLoading ? 'Carregando...' : t.login}
             </button>
           </div>
         </form>

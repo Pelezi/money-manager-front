@@ -1,8 +1,11 @@
 'use client';
 
 import { Edit2, Trash2, User } from 'lucide-react';
-import { useTranslations, useLocale } from 'next-intl';
+import { translations } from '@/lib/translations';
 import { Transaction } from '@/types';
+
+const t = translations.transactions;
+const tCommon = translations.common;
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -21,16 +24,9 @@ export function TransactionsTable({
   canManage = true,
   showUser = false,
 }: TransactionsTableProps) {
-  const t = useTranslations('transactions');
-  const tCommon = useTranslations('common');
-  const locale = useLocale();
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (locale === 'pt') {
-      return date.toLocaleDateString('pt-BR');
-    }
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString('pt-BR');
   };
 
   const colSpan = showUser ? (canManage ? 7 : 6) : (canManage ? 6 : 5);
@@ -42,31 +38,31 @@ export function TransactionsTable({
           <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('date')}
+                {t.date}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('transactionTitle')}
+                {t.transactionTitle}
               </th>
               {showUser && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {tCommon('user')}
+                  {tCommon.user}
                 </th>
               )}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('category')}
+                {t.category}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('subcategory')}
+                {t.subcategory}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('type')}
+                {t.type}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t('amount')}
+                {t.amount}
               </th>
               {canManage && (
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {tCommon('actions')}
+                  {tCommon.actions}
                 </th>
               )}
             </tr>
@@ -75,13 +71,13 @@ export function TransactionsTable({
             {isLoading ? (
               <tr>
                 <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  {tCommon('loading')}
+                  {tCommon.loading}
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
                 <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  {t('noTransactions')}
+                  {t.noTransactions}
                 </td>
               </tr>
             ) : (
@@ -124,7 +120,7 @@ export function TransactionsTable({
                           : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                       }`}
                     >
-                      {transaction.type === 'INCOME' ? tCommon('income') : tCommon('expense')}
+                      {transaction.type === 'INCOME' ? tCommon.income : tCommon.expense}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-gray-100">
@@ -136,14 +132,14 @@ export function TransactionsTable({
                         <button
                           onClick={() => onEdit(transaction)}
                           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                          title={tCommon('edit')}
+                          title={tCommon.edit}
                         >
                           <Edit2 size={16} />
                         </button>
                         <button
                           onClick={() => onDelete(transaction.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                          title={tCommon('delete')}
+                          title={tCommon.delete}
                         >
                           <Trash2 size={16} />
                         </button>

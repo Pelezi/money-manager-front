@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-import { useLocale } from 'next-intl';
 
 interface MonthYearPickerProps {
   year: number;
@@ -14,7 +13,6 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
   const [isOpen, setIsOpen] = useState(false);
   const [tempYear, setTempYear] = useState(year);
   const [tempMonth, setTempMonth] = useState(month);
-  const locale = useLocale();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,7 +66,7 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
     const date = new Date(2000, i, 1);
     return {
       value: i + 1,
-      label: date.toLocaleDateString(locale === 'pt' ? 'pt-BR' : 'en-US', { month: 'long' })
+      label: date.toLocaleDateString('pt-BR', { month: 'long' })
     };
   });
 
@@ -76,7 +74,7 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
   const years = Array.from({ length: 21 }, (_, i) => currentYear + 10 - i);
 
   const displayText = new Date(year, month - 1).toLocaleDateString(
-    locale === 'pt' ? 'pt-BR' : 'en-US',
+    'pt-BR',
     { month: 'long', year: 'numeric' }
   );
 
@@ -118,7 +116,7 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
             {/* Year selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {locale === 'pt' ? 'Ano' : 'Year'}
+                Ano
               </label>
               <select
                 value={tempYear}
@@ -136,7 +134,7 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
             {/* Month grid */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {locale === 'pt' ? 'Mês' : 'Month'}
+                Mês
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {months.map((m) => (
@@ -161,13 +159,13 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
                 onClick={handleCancel}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                {locale === 'pt' ? 'Cancelar' : 'Cancel'}
+                Cancelar
               </button>
               <button
                 onClick={handleApply}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {locale === 'pt' ? 'Aplicar' : 'Apply'}
+                Aplicar
               </button>
             </div>
           </div>

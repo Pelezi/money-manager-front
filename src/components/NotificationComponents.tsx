@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Bell, Check, X } from 'lucide-react';
 import { notificationService, invitationService } from '@/services/notificationService';
 import { Notification, GroupInvitation } from '@/types';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from 'next/navigation';
 
 interface NotificationBellProps {
   onNavigate?: () => void;

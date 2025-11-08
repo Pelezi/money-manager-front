@@ -32,10 +32,7 @@ class ApiClient {
         if (error.response?.status === 401) {
           this.clearToken();
           if (typeof window !== 'undefined') {
-            // Get the current locale from the pathname
-            const pathParts = window.location.pathname.split('/');
-            const locale = pathParts[1] || 'en';
-            window.location.href = `/${locale}/auth/login`;
+            window.location.href = '/auth/login';
           }
         }
         return Promise.reject(error);

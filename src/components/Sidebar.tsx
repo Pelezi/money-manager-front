@@ -1,7 +1,8 @@
 'use client';
 
-import { Link, usePathname, useRouter } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { translations } from '@/lib/translations';
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -30,6 +31,9 @@ import { groupService } from '@/services/groupService';
 import { Group } from '@/types';
 import { NotificationBell } from './NotificationComponents';
 
+const t = translations.navigation;
+const tAuth = translations.auth;
+
 interface NavLinkProps {
   href: string;
   icon: React.ReactNode;
@@ -54,8 +58,6 @@ const NavLink = ({ href, icon, label, isActive, onClick }: NavLinkProps) => (
 );
 
 export default function Sidebar() {
-  const t = useTranslations('navigation');
-  const tAuth = useTranslations('auth');
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
@@ -81,17 +83,17 @@ export default function Sidebar() {
 
   // Navigation items that are context-dependent (personal vs group)
   const contextNavItems = [
-    { href: '/transactions', icon: <Receipt size={20} />, label: t('transactions') },
-    { href: '/categories', icon: <FolderTree size={20} />, label: t('categories') },
-    { href: '/budget', icon: <LayoutDashboard size={20} />, label: t('budget') },
-    { href: '/annual-review', icon: <BarChart3 size={20} />, label: t('annualReview') },
-    { href: '/settings', icon: <Settings size={20} />, label: t('settings') },
+    { href: '/transactions', icon: <Receipt size={20} />, label: t.transactions },
+    { href: '/categories', icon: <FolderTree size={20} />, label: t.categories },
+    { href: '/budget', icon: <LayoutDashboard size={20} />, label: t.budget },
+    { href: '/annual-review', icon: <BarChart3 size={20} />, label: t.annualReview },
+    { href: '/settings', icon: <Settings size={20} />, label: t.settings },
   ];
 
   // Global navigation items (always personal, never group-specific)
   const globalNavItems = [
-    { href: '/invitations', icon: <Mail size={20} />, label: t('invitations') },
-    { href: '/notifications', icon: <Bell size={20} />, label: t('notifications') },
+    { href: '/invitations', icon: <Mail size={20} />, label: t.invitations },
+    { href: '/notifications', icon: <Bell size={20} />, label: t.notifications },
   ];
 
   const handleLogout = () => {
@@ -172,7 +174,7 @@ export default function Sidebar() {
               }`}
             >
               <Home size={18} />
-              <span>{t('personal')}</span>
+              <span>{t.personal}</span>
             </button>
           </div>
 
@@ -184,7 +186,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center gap-2">
                 <Users size={18} />
-                <span>{t('groups')}</span>
+                <span>{t.groups}</span>
               </div>
               {showGroups ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
@@ -193,11 +195,11 @@ export default function Sidebar() {
               <div className="mt-2 space-y-1 ml-4">
                 {isLoadingGroups ? (
                   <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                    Loading...
+                    Carregando...
                   </div>
                 ) : groups.length === 0 ? (
                   <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                    No groups yet
+                    Nenhum grupo ainda
                   </div>
                 ) : (
                   groups.map((group) => (
@@ -222,7 +224,7 @@ export default function Sidebar() {
                   className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
                 >
                   <Plus size={16} />
-                  <span>Create Group</span>
+                  <span>Criar Grupo</span>
                 </Link>
               </div>
             )}
@@ -266,7 +268,7 @@ export default function Sidebar() {
           <NavLink
             href="/profile"
             icon={<User size={20} />}
-            label={t('profile')}
+            label={t.profile}
             isActive={pathname === '/profile'}
             onClick={handleNavClick}
           />
@@ -275,7 +277,7 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <LogOut size={20} />
-            <span>{tAuth('logout')}</span>
+            <span>{tAuth.logout}</span>
           </button>
         </div>
       </aside>

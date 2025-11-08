@@ -1,14 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useRouter } from '@/i18n/routing';
+import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 
-export default function LocaleHomePage() {
+export default function HomePage() {
   const router = useRouter();
-  const params = useParams();
-  const locale = params.locale as string;
 
   useEffect(() => {
     // Check if user is authenticated

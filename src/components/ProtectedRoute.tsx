@@ -1,34 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter as useNextRouter, usePathname } from 'next/navigation';
-import { useRouter } from '@/i18n/routing';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useParams } from 'next/navigation';
 
 export default function ProtectedRoute({ 
   children
 }: { 
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const nextRouter = useNextRouter();
   const pathname = usePathname();
-  const params = useParams();
-  const currentLocale = params.locale as string || 'pt'; // Get locale from params, fallback to default
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated && !pathname.includes('/auth/login')) {
         router.push('/auth/login');
-      } else if (isAuthenticated && user?.locale && user.locale !== currentLocale && !pathname.includes('/auth/')) {
-        // Use the next-intl router for locale switching
-        const pathWithoutLocale = pathname.replace(`/${currentLocale}`, '') || '/';
-        window.location.href = `/${user.locale}${pathWithoutLocale}`;
       }
     }
-  }, [isAuthenticated, isLoading, user, router, pathname, currentLocale]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   if (isLoading) {
     return (
