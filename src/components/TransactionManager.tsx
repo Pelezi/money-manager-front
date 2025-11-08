@@ -49,6 +49,7 @@ export default function TransactionManager({
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
+    time: new Date().toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
     type: 'EXPENSE' as EntityType,
     ...(groupId && { groupId }),
   });
@@ -122,6 +123,7 @@ export default function TransactionManager({
       amount: '',
       description: '',
       date: new Date().toISOString().split('T')[0],
+      time: new Date().toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
       type: 'EXPENSE',
       ...(groupId && { groupId }),
     });
@@ -133,6 +135,7 @@ export default function TransactionManager({
     const data = {
       ...formData,
       amount: parseFloat(formData.amount),
+      time: formData.time, // Send time to backend
     };
 
     if (editingTransaction) {
@@ -146,6 +149,7 @@ export default function TransactionManager({
     if (!canManage) return;
     setEditingTransaction(transaction);
     const subcategory = subcategories.find((s) => s.id === transaction.subcategoryId);
+    const transactionDate = new Date(transaction.date);
     setFormData({
       categoryId: subcategory?.categoryId || 0,
       subcategoryId: transaction.subcategoryId,
@@ -153,6 +157,7 @@ export default function TransactionManager({
       amount: transaction.amount.toString(),
       description: transaction.description || '',
       date: transaction.date.split('T')[0],
+      time: transactionDate.toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
       type: transaction.type,
       ...(groupId && { groupId }),
     });
@@ -243,17 +248,31 @@ export default function TransactionManager({
               {editingTransaction ? 'Editar' : 'Adicionar Transação'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Data
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                    Data
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                    Horário
+                  </label>
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
