@@ -68,8 +68,6 @@ export default function AnnualReviewPage() {
     };
   });
 
-  console.log('Monthly Trends Data:', monthlyTrends);
-
   // Calculate totals
   const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
   const totalExpenses = monthlyTrends.reduce((sum, m) => sum + m.expense, 0);
