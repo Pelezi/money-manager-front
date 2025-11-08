@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, Fragment } from 'react';
-import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
@@ -11,12 +10,10 @@ import { useAppStore } from '@/lib/store';
 import { EntityType, Budget } from '@/types';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
-const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 export default function BudgetPage() {
-  const t = useTranslations('budget');
-  const tCommon = useTranslations('common');
-  const queryClient = useQueryClient();
+      const queryClient = useQueryClient();
   const { selectedYear, setSelectedYear } = useAppStore();
   
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
@@ -186,7 +183,7 @@ export default function BudgetPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Planilha de Orçamento</h1>
         
         {/* Year Selector */}
         <div className="flex items-center gap-2">
@@ -219,7 +216,7 @@ export default function BudgetPage() {
               : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
-          {tCommon('expense')}
+          Despesa
         </button>
         <button
           onClick={() => setActiveTab('INCOME')}
@@ -229,7 +226,7 @@ export default function BudgetPage() {
               : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
-          {tCommon('income')}
+          Receita
         </button>
       </div>
 
@@ -239,21 +236,21 @@ export default function BudgetPage() {
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
               <th className="sticky left-0 bg-gray-50 dark:bg-gray-700 px-2 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 w-40">
-                {t('category')} / {t('subcategory')}
+                Categoria / Subcategoria
               </th>
               {MONTHS.map((month) => (
                 <th
                   key={month}
                   className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 min-w-[100px]"
                 >
-                  {t(month)}
+                  {month}
                 </th>
               ))}
               <th className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 min-w-[100px]">
-                {t('total')}
+                Total
               </th>
               <th className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase min-w-[100px]">
-                {t('average')}
+                Média
               </th>
             </tr>
           </thead>
@@ -398,7 +395,7 @@ export default function BudgetPage() {
             {/* Total Row */}
             <tr className="bg-gray-100 dark:bg-gray-700 border-t-2 border-gray-300 dark:border-gray-600 font-semibold">
               <td className="sticky left-0 bg-gray-100 dark:bg-gray-700 px-2 py-2 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
-                {t('total')}
+                Total
               </td>
               {MONTHS.map((_, index) => {
                 const total = getMonthTotal(index + 1);
@@ -454,15 +451,15 @@ export default function BudgetPage() {
       <div className="flex gap-4 items-center text-sm text-gray-900 dark:text-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-green-200 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded"></div>
-          <span className="font-medium">{t('withinBudget')}</span>
+          <span className="font-medium">Dentro do orçamento</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-yellow-200 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded"></div>
-          <span className="font-medium">{t('nearLimit')}</span>
+          <span className="font-medium">Próximo ao limite</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-red-200 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded"></div>
-          <span className="font-medium">{t('overBudget')}</span>
+          <span className="font-medium">Acima do orçamento</span>
         </div>
       </div>
     </div>

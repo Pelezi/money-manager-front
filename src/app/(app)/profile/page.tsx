@@ -1,9 +1,6 @@
 'use client';
 
 import { authService } from '@/services/authService';
-import { translations } from '@/lib/translations';
-
-const t = translations.profile;
 
 export default function ProfilePage() {
   const user = authService.getCurrentUser();
@@ -12,7 +9,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {t.title}
+          Perfil
         </h1>
       </div>
 

@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { groupService } from '@/services/groupService';
 import { Group, GroupMember, GroupRole, User } from '@/types';
-import { useTranslations } from 'next-intl';
 import { 
   Users, 
   UserPlus, 
@@ -21,8 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function GroupSettingsPage() {
-  const t = useTranslations('groups');
-  const params = useParams();
+    const params = useParams();
   const router = useRouter();
   const groupId = parseInt(params?.id as string);
   const { groups, currentGroupPermissions, setGroups } = useAppStore();
@@ -158,14 +156,14 @@ export default function GroupSettingsPage() {
   };
 
   const handleRemoveMember = async (memberId: number) => {
-    if (!confirm(t('removeMemberConfirm'))) return;
+    if (!confirm('Tem certeza que deseja remover este membro?')) return;
     
     try {
       await groupService.removeMember(groupId, memberId);
       const updatedMembers = await groupService.getMembers(groupId);
       setMembers(updatedMembers);
     } catch (error: any) {
-      alert(error.response?.data?.message || t('memberRemoveError'));
+      alert(error.response?.data?.message || 'Erro ao remover membro');
     }
   };
 
@@ -175,7 +173,7 @@ export default function GroupSettingsPage() {
       const updatedMembers = await groupService.getMembers(groupId);
       setMembers(updatedMembers);
     } catch (error: any) {
-      alert(error.response?.data?.message || t('memberRoleUpdateError'));
+      alert(error.response?.data?.message || 'Erro ao atualizar função do membro');
     }
   };
 
@@ -191,16 +189,16 @@ export default function GroupSettingsPage() {
       const updatedGroups = await groupService.getGroups();
       setGroups(updatedGroups);
       
-      alert(t('groupUpdated'));
+      alert('Grupo atualizado com sucesso!');
     } catch (error: any) {
-      alert(error.response?.data?.message || t('groupUpdateError'));
+      alert(error.response?.data?.message || 'Erro ao atualizar grupo');
     } finally {
       setUpdatingGroup(false);
     }
   };
 
   const handleDeleteGroup = async () => {
-    if (!confirm(t('deleteGroupConfirm'))) return;
+    if (!confirm('Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.')) return;
     
     try {
       await groupService.deleteGroup(groupId);
@@ -213,7 +211,7 @@ export default function GroupSettingsPage() {
   };
 
   const handleLeaveGroup = async () => {
-    if (!confirm(t('leaveGroupConfirm'))) return;
+    if (!confirm('Tem certeza que deseja sair deste grupo?')) return;
     
     try {
       await groupService.leaveGroup(groupId);
@@ -294,28 +292,28 @@ export default function GroupSettingsPage() {
       
       handleCloseRoleModal();
     } catch (error: any) {
-      alert(error.response?.data?.message || (editingRole ? t('roleUpdateError') : t('roleCreateError')));
+      alert(error.response?.data?.message || (editingRole ? 'Erro ao atualizar função' : 'Erro ao criar função'));
     } finally {
       setSavingRole(false);
     }
   };
 
   const handleDeleteRole = async (roleId: number) => {
-    if (!confirm(t('deleteRoleConfirm'))) return;
+    if (!confirm('Tem certeza que deseja excluir esta função?')) return;
     
     try {
       await groupService.deleteRole(groupId, roleId);
       const updatedRoles = await groupService.getRoles(groupId);
       setRoles(updatedRoles);
     } catch (error: any) {
-      alert(error.response?.data?.message || t('roleDeleteError'));
+      alert(error.response?.data?.message || 'Erro ao excluir função');
     }
   };
 
   if (!currentGroup) {
     return (
       <div className="p-6">
-        <p className="text-gray-600 dark:text-gray-400">{t('groupNotFound')}</p>
+        <p className="text-gray-600 dark:text-gray-400">Grupo não encontrado</p>
       </div>
     );
   }
@@ -327,10 +325,10 @@ export default function GroupSettingsPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          {t('groupSettings')}
+          Configurações do Grupo
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Manage {currentGroup.name} settings, members, and roles
+          Gerencie as configurações, membros e funções de {currentGroup.name}
         </p>
       </div>
 
@@ -346,7 +344,7 @@ export default function GroupSettingsPage() {
         >
           <div className="flex items-center gap-2">
             <SettingsIcon size={18} />
-            {t('general')}
+            Geral
           </div>
         </button>
         <button
@@ -359,7 +357,7 @@ export default function GroupSettingsPage() {
         >
           <div className="flex items-center gap-2">
             <Users size={18} />
-            {t('members')} ({members.length})
+            Membros ({members.length})
           </div>
         </button>
         <button
@@ -372,7 +370,7 @@ export default function GroupSettingsPage() {
         >
           <div className="flex items-center gap-2">
             <Shield size={18} />
-            {t('roles')} ({roles.length})
+            Funções ({roles.length})
           </div>
         </button>
       </div>
@@ -382,13 +380,13 @@ export default function GroupSettingsPage() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {t('groupInformation')}
+              Informações do Grupo
             </h2>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('groupName')}
+                  Nome do Grupo
                 </label>
                 <input
                   type="text"
@@ -401,7 +399,7 @@ export default function GroupSettingsPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('groupDescription')}
+                  Descrição do Grupo
                 </label>
                 <textarea
                   value={groupDescription}
@@ -418,7 +416,7 @@ export default function GroupSettingsPage() {
                   disabled={updatingGroup}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {updatingGroup ? t('saving') : t('saveChanges')}
+                  {updatingGroup ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               )}
             </div>
@@ -427,33 +425,33 @@ export default function GroupSettingsPage() {
           {/* Danger Zone */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 border-red-200 dark:border-red-800">
             <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
-              {t('dangerZone')}
+              Zona de Perigo
             </h2>
             
             {isOwner ? (
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {t('deleteGroupDescription')}
+                  Excluir este grupo permanentemente. Esta ação não pode ser desfeita.
                 </p>
                 <button
                   onClick={handleDeleteGroup}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
                 >
                   <Trash2 size={18} />
-                  {t('deleteGroup')}
+                  Excluir Grupo
                 </button>
               </div>
             ) : (
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {t('leaveGroupDescription')}
+                  Sair deste grupo. Você precisará de um novo convite para voltar.
                 </p>
                 <button
                   onClick={handleLeaveGroup}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
                 >
                   <LogOut size={18} />
-                  {t('leaveGroup')}
+                  Sair do Grupo
                 </button>
               </div>
             )}
@@ -466,7 +464,7 @@ export default function GroupSettingsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t('groupMembers')}
+              Membros do Grupo
             </h2>
             {canManageGroup && (
               <button
@@ -474,7 +472,7 @@ export default function GroupSettingsPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
               >
                 <UserPlus size={18} />
-                {t('inviteMember')}
+                Convidar Membro
               </button>
             )}
           </div>
@@ -495,7 +493,7 @@ export default function GroupSettingsPage() {
                       {member.user?.firstName} {member.user?.lastName}
                       {member.userId === currentGroup.ownerId && (
                         <span className="ml-2 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded">
-                          {t('owner')}
+                          Proprietário
                         </span>
                       )}
                     </div>
@@ -521,7 +519,7 @@ export default function GroupSettingsPage() {
                         <button
                           onClick={() => handleRemoveMember(member.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                          title={t('removeMember')}
+                          title="Remover Membro"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -544,7 +542,7 @@ export default function GroupSettingsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t('rolesAndPermissions')}
+              Funções e Permissões
             </h2>
             {canManageGroup && (
               <button
@@ -552,7 +550,7 @@ export default function GroupSettingsPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
               >
                 <Plus size={18} />
-                {t('createRole')}
+                Criar Função
               </button>
             )}
           </div>
@@ -598,39 +596,39 @@ export default function GroupSettingsPage() {
                     <div className="grid grid-cols-2 gap-2 text-sm mt-3">
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('viewTransactions')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Ver Transações</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('manageTransactions')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Transações</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewCategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('viewCategories')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Ver Categorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageCategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('manageCategories')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Categorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewSubcategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('viewSubcategories')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Ver Subcategorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageSubcategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('manageSubcategories')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Subcategorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewBudgets} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('viewBudgets')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Ver Orçamentos</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageBudgets} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('manageBudgets')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Orçamentos</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageGroup} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">{t('manageGroup')}</span>
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Grupo</span>
                       </div>
                     </div>
                   </div>
@@ -648,7 +646,7 @@ export default function GroupSettingsPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t('inviteMember')}
+                  Convidar Membro
                 </h3>
                 <button
                   onClick={() => {
@@ -667,14 +665,14 @@ export default function GroupSettingsPage() {
                 {/* Email Search */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('searchByEmail')}
+                    Buscar por E-mail
                   </label>
                   <div className="relative">
                     <input
                       type="email"
                       value={emailSearch}
                       onChange={(e) => setEmailSearch(e.target.value)}
-                      placeholder={t('enterEmail')}
+                      placeholder="Digite o e-mail"
                       className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -712,7 +710,7 @@ export default function GroupSettingsPage() {
 
                   {emailSearch.length >= 2 && searchResults.length === 0 && !isSearching && (
                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                      {t('noUsersFound')}
+                      Nenhum usuário encontrado
                     </p>
                   )}
                 </div>
@@ -721,7 +719,7 @@ export default function GroupSettingsPage() {
                 {selectedUser && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {t('selected')}: {selectedUser.firstName} {selectedUser.lastName}
+                      Selecionado: {selectedUser.firstName} {selectedUser.lastName}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {selectedUser.email}
@@ -732,14 +730,14 @@ export default function GroupSettingsPage() {
                 {/* Role Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('assignRole')}
+                    Atribuir Função
                   </label>
                   <select
                     value={selectedRoleId}
                     onChange={(e) => setSelectedRoleId(parseInt(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
-                    <option value={0}>{t('selectRole')}</option>
+                    <option value={0}>Selecione uma função</option>
                     {roles.map((role) => (
                       <option key={role.id} value={role.id}>
                         {role.name}
@@ -759,14 +757,14 @@ export default function GroupSettingsPage() {
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
-                    {t('cancel', { ns: 'common' })}
+                    Cancelar
                   </button>
                   <button
                     onClick={handleInviteMember}
                     disabled={!selectedUser || !selectedRoleId || inviting}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {inviting ? t('inviting') : t('inviteMember')}
+                    {inviting ? 'Convidando...' : 'Convidar Membro'}
                   </button>
                 </div>
               </div>
@@ -782,7 +780,7 @@ export default function GroupSettingsPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {editingRole ? t('editRole') : t('createRole')}
+                  {editingRole ? 'Editar Função' : 'Criar Função'}
                 </h3>
                 <button
                   onClick={handleCloseRoleModal}
@@ -796,7 +794,7 @@ export default function GroupSettingsPage() {
                 {/* Role Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('roleName')}
+                    Nome da Função
                   </label>
                   <input
                     type="text"
@@ -810,7 +808,7 @@ export default function GroupSettingsPage() {
                 {/* Role Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('roleDescription')}
+                    Descrição da Função
                   </label>
                   <textarea
                     value={roleDescription}
@@ -824,7 +822,7 @@ export default function GroupSettingsPage() {
                 {/* Permissions */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    {t('permissions')}
+                    Permissões
                   </label>
                   <div className="space-y-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                     <div className="flex items-center gap-3">
@@ -836,7 +834,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canViewTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('viewTransactions')}
+                        Ver Transações
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -848,7 +846,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canManageTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('manageTransactions')}
+                        Gerenciar Transações
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -860,7 +858,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canViewCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('viewCategories')}
+                        Ver Categorias
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -872,7 +870,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canManageCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('manageCategories')}
+                        Gerenciar Categorias
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -884,7 +882,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canViewSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('viewSubcategories')}
+                        Ver Subcategorias
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -896,7 +894,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canManageSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('manageSubcategories')}
+                        Gerenciar Subcategorias
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -908,7 +906,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canViewBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('viewBudgets')}
+                        Ver Orçamentos
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -920,7 +918,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canManageBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('manageBudgets')}
+                        Gerenciar Orçamentos
                       </label>
                     </div>
                     <div className="flex items-center gap-3">
@@ -932,7 +930,7 @@ export default function GroupSettingsPage() {
                         className="rounded"
                       />
                       <label htmlFor="canManageGroup" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        {t('manageGroup')}
+                        Gerenciar Grupo
                       </label>
                     </div>
                   </div>
@@ -944,14 +942,14 @@ export default function GroupSettingsPage() {
                     onClick={handleCloseRoleModal}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
-                    {t('cancel', { ns: 'common' })}
+                    Cancelar
                   </button>
                   <button
                     onClick={handleSaveRole}
                     disabled={!roleName.trim() || savingRole}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {savingRole ? t('saving') : t('save', { ns: 'common' })}
+                    {savingRole ? 'Salvando...' : 'Salvar'}
                   </button>
                 </div>
               </div>

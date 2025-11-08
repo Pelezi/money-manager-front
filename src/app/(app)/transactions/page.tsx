@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
@@ -13,10 +12,7 @@ import { TransactionFilterModal } from '@/components/TransactionFilterModal';
 import { TransactionsTable } from '@/components/TransactionsTable';
 
 export default function TransactionsPage() {
-  const t = useTranslations('transactions');
-  const tCommon = useTranslations('common');
-  const locale = useLocale();
-  const queryClient = useQueryClient();
+        const queryClient = useQueryClient();
 
   // Get current date
   const now = new Date();
@@ -103,10 +99,7 @@ export default function TransactionsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (locale === 'pt') {
-      return date.toLocaleDateString('pt-BR');
-    }
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString('pt-BR');
   };
 
   const resetForm = () => {
@@ -172,14 +165,14 @@ export default function TransactionsPage() {
     <div className="space-y-4">
       {/* Header with title and actions */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Transações</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsFilterModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Filter size={20} />
-            <span className="hidden sm:inline">{tCommon('filter')}</span>
+            <span className="hidden sm:inline">Filtrar</span>
           </button>
           <button
             onClick={() => {
@@ -190,7 +183,7 @@ export default function TransactionsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus size={20} />
-            <span className="hidden sm:inline">{t('addTransaction')}</span>
+            <span className="hidden sm:inline">Adicionar Transação</span>
           </button>
         </div>
       </div>
@@ -241,12 +234,12 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-              {editingTransaction ? tCommon('edit') : t('addTransaction')}
+              {editingTransaction ? 'Editar' : 'Adicionar Transação'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('date')}
+                  Data
                 </label>
                 <input
                   type="date"
@@ -258,7 +251,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('transactionTitle')}
+                  Título
                 </label>
                 <input
                   type="text"
@@ -271,7 +264,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('type')}
+                  Tipo
                 </label>
                 <select
                   value={formData.type}
@@ -286,13 +279,13 @@ export default function TransactionsPage() {
                   }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
                 >
-                  <option value="EXPENSE">{tCommon('expense')}</option>
-                  <option value="INCOME">{tCommon('income')}</option>
+                  <option value="EXPENSE">Despesa</option>
+                  <option value="INCOME">Receita</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('category')}
+                  Categoria
                 </label>
                 <select
                   value={formData.categoryId}
@@ -316,7 +309,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('subcategory')}
+                  Subcategoria
                 </label>
                 <select
                   value={formData.subcategoryId}
@@ -337,7 +330,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('amount')}
+                  Valor
                 </label>
                 <input
                   type="number"
@@ -351,7 +344,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  {t('description')}
+                  Descrição
                 </label>
                 <textarea
                   value={formData.description}
@@ -371,7 +364,7 @@ export default function TransactionsPage() {
                   }}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  {tCommon('cancel')}
+                  Cancelar
                 </button>
                 <button
                   type="submit"
@@ -379,8 +372,8 @@ export default function TransactionsPage() {
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
                 >
                   {createMutation.isPending || updateMutation.isPending
-                    ? tCommon('loading')
-                    : tCommon('save')}
+                    ? 'Carregando...'
+                    : 'Salvar'}
                 </button>
               </div>
             </form>

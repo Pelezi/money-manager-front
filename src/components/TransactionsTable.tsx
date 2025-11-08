@@ -1,11 +1,7 @@
 'use client';
 
 import { Edit2, Trash2, User } from 'lucide-react';
-import { translations } from '@/lib/translations';
 import { Transaction } from '@/types';
-
-const t = translations.transactions;
-const tCommon = translations.common;
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -38,31 +34,31 @@ export function TransactionsTable({
           <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.date}
+                Data
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.transactionTitle}
+                Título
               </th>
               {showUser && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {tCommon.user}
+                  Usuário
                 </th>
               )}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.category}
+                Categoria
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.subcategory}
+                Subcategoria
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.type}
+                Tipo
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                {t.amount}
+                Valor
               </th>
               {canManage && (
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {tCommon.actions}
+                  Ações
                 </th>
               )}
             </tr>
@@ -71,13 +67,13 @@ export function TransactionsTable({
             {isLoading ? (
               <tr>
                 <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  {tCommon.loading}
+                  Carregando...
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
                 <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  {t.noTransactions}
+                  Nenhuma transação encontrada
                 </td>
               </tr>
             ) : (
@@ -120,7 +116,7 @@ export function TransactionsTable({
                           : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                       }`}
                     >
-                      {transaction.type === 'INCOME' ? tCommon.income : tCommon.expense}
+                      {transaction.type === 'INCOME' ? 'Receita' : 'Despesa'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-gray-100">
@@ -132,14 +128,14 @@ export function TransactionsTable({
                         <button
                           onClick={() => onEdit(transaction)}
                           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                          title={tCommon.edit}
+                          title="Editar"
                         >
                           <Edit2 size={16} />
                         </button>
                         <button
                           onClick={() => onDelete(transaction.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                          title={tCommon.delete}
+                          title="Excluir"
                         >
                           <Trash2 size={16} />
                         </button>

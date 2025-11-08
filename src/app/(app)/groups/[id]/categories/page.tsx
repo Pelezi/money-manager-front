@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
@@ -14,10 +13,7 @@ import { useAppStore } from '@/lib/store';
 export default function GroupCategoriesPage() {
   const params = useParams();
   const groupId = parseInt(params?.id as string);
-  const t = useTranslations('categories');
-  const tCommon = useTranslations('common');
-  const tGroups = useTranslations('groups');
-  const queryClient = useQueryClient();
+        const queryClient = useQueryClient();
   const { currentGroupPermissions } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
@@ -49,7 +45,7 @@ export default function GroupCategoriesPage() {
     mutationFn: categoryService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success(t('categorySaved'));
+      toast.success('Categoria salva com sucesso!');
       setEditingCategoryId(null);
       setCategoryInputValue('');
     },
@@ -60,7 +56,7 @@ export default function GroupCategoriesPage() {
       categoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success(t('categorySaved'));
+      toast.success('Categoria salva com sucesso!');
       setEditingCategoryId(null);
       setCategoryInputValue('');
     },
@@ -71,7 +67,7 @@ export default function GroupCategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      toast.success(t('categoryDeleted'));
+      toast.success('Categoria excluída');
     },
   });
 
@@ -79,7 +75,7 @@ export default function GroupCategoriesPage() {
     mutationFn: subcategoryService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      toast.success(t('subcategorySaved'));
+      toast.success('Subcategoria salva com sucesso!');
       setSubcategoryInputValue('');
       setTimeout(() => {
         subcategoryInputRef.current?.focus();
@@ -92,7 +88,7 @@ export default function GroupCategoriesPage() {
       subcategoryService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      toast.success(t('subcategorySaved'));
+      toast.success('Subcategoria salva com sucesso!');
       setEditingSubcategoryId(null);
       setEditingSubcategoryCategory(null);
       setSubcategoryInputValue('');
@@ -103,7 +99,7 @@ export default function GroupCategoriesPage() {
     mutationFn: subcategoryService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subcategories'] });
-      toast.success(t('subcategoryDeleted'));
+      toast.success('Subcategoria excluída');
     },
   });
 
@@ -125,7 +121,7 @@ export default function GroupCategoriesPage() {
     return (
       <div className="p-6">
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 dark:text-yellow-200">{tGroups('noPermission')}</p>
+          <p className="text-yellow-800 dark:text-yellow-200">Você não tem permissão para visualizar as categorias deste grupo.</p>
         </div>
       </div>
     );
@@ -165,7 +161,7 @@ export default function GroupCategoriesPage() {
 
   const handleDeleteCategory = (id: number) => {
     if (!canManage) return;
-    if (confirm(t('confirmDeleteCategory'))) {
+    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
       deleteCategoryMutation.mutate(id);
     }
   };
@@ -218,7 +214,7 @@ export default function GroupCategoriesPage() {
 
   const handleDeleteSubcategory = (id: number) => {
     if (!canManage) return;
-    if (confirm(t('confirmDeleteSubcategory'))) {
+    if (confirm('Tem certeza que deseja excluir esta subcategoria?')) {
       deleteSubcategoryMutation.mutate(id);
     }
   };
@@ -267,7 +263,7 @@ export default function GroupCategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{tGroups('groupCategories')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Categorias do Grupo</h1>
       </div>
 
       <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
@@ -284,7 +280,7 @@ export default function GroupCategoriesPage() {
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          {tCommon('expense')}
+          Despesa
         </button>
         <button
           onClick={() => {
@@ -299,13 +295,13 @@ export default function GroupCategoriesPage() {
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          {tCommon('income')}
+          Receita
         </button>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('categories')}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Categorias</h2>
           {canManage && (
             <button
               onClick={handleAddCategory}
@@ -313,7 +309,7 @@ export default function GroupCategoriesPage() {
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
-              {t('addCategory')}
+              Adicionar Categoria
             </button>
           )}
         </div>
@@ -327,7 +323,7 @@ export default function GroupCategoriesPage() {
                   value={categoryInputValue}
                   onChange={(e) => setCategoryInputValue(e.target.value)}
                   onKeyDown={handleCategoryKeyDown}
-                  placeholder={t('categoryName')}
+                  placeholder="Nome da Categoria"
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
                 <button
@@ -338,12 +334,12 @@ export default function GroupCategoriesPage() {
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('enterToSave')}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Pressione Enter para salvar</p>
             </div>
           )}
 
           {filteredCategories.length === 0 && editingCategoryId !== 'new' ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('noCategories')}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">Nenhuma categoria encontrada</p>
           ) : (
             filteredCategories.map((category) => {
               const categorySubcategories = getCategorySubcategories(category.id);
@@ -392,7 +388,7 @@ export default function GroupCategoriesPage() {
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               ({categorySubcategories.length}{' '}
-                              {categorySubcategories.length === 1 ? t('subcategory') : t('subcategories')})
+                              {categorySubcategories.length === 1 ? 'Subcategoria' : 'Subcategorias'})
                             </span>
                           </>
                         )}
@@ -442,7 +438,7 @@ export default function GroupCategoriesPage() {
                               value={subcategoryInputValue}
                               onChange={(e) => setSubcategoryInputValue(e.target.value)}
                               onKeyDown={handleSubcategoryKeyDown}
-                              placeholder={t('subcategoryName')}
+                              placeholder="Nome da Subcategoria"
                               className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
                             <button
@@ -453,7 +449,7 @@ export default function GroupCategoriesPage() {
                               <X size={20} />
                             </button>
                           </div>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('enterToSave')}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Pressione Enter para salvar</p>
                         </div>
                       )}
 

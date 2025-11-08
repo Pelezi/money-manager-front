@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { translations } from '@/lib/translations';
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -30,9 +29,6 @@ import { useEffect, useState } from 'react';
 import { groupService } from '@/services/groupService';
 import { Group } from '@/types';
 import { NotificationBell } from './NotificationComponents';
-
-const t = translations.navigation;
-const tAuth = translations.auth;
 
 interface NavLinkProps {
   href: string;
@@ -83,17 +79,17 @@ export default function Sidebar() {
 
   // Navigation items that are context-dependent (personal vs group)
   const contextNavItems = [
-    { href: '/transactions', icon: <Receipt size={20} />, label: t.transactions },
-    { href: '/categories', icon: <FolderTree size={20} />, label: t.categories },
-    { href: '/budget', icon: <LayoutDashboard size={20} />, label: t.budget },
-    { href: '/annual-review', icon: <BarChart3 size={20} />, label: t.annualReview },
-    { href: '/settings', icon: <Settings size={20} />, label: t.settings },
+    { href: '/transactions', icon: <Receipt size={20} />, label: 'Transações' },
+    { href: '/categories', icon: <FolderTree size={20} />, label: 'Categorias' },
+    { href: '/budget', icon: <LayoutDashboard size={20} />, label: 'Orçamento' },
+    { href: '/annual-review', icon: <BarChart3 size={20} />, label: 'Resumo Anual' },
+    { href: '/settings', icon: <Settings size={20} />, label: 'Configurações' },
   ];
 
   // Global navigation items (always personal, never group-specific)
   const globalNavItems = [
-    { href: '/invitations', icon: <Mail size={20} />, label: t.invitations },
-    { href: '/notifications', icon: <Bell size={20} />, label: t.notifications },
+    { href: '/invitations', icon: <Mail size={20} />, label: 'Convites' },
+    { href: '/notifications', icon: <Bell size={20} />, label: 'Notificações' },
   ];
 
   const handleLogout = () => {
@@ -174,7 +170,7 @@ export default function Sidebar() {
               }`}
             >
               <Home size={18} />
-              <span>{t.personal}</span>
+              <span>Pessoal</span>
             </button>
           </div>
 
@@ -186,7 +182,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center gap-2">
                 <Users size={18} />
-                <span>{t.groups}</span>
+                <span>Grupos</span>
               </div>
               {showGroups ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
@@ -268,7 +264,7 @@ export default function Sidebar() {
           <NavLink
             href="/profile"
             icon={<User size={20} />}
-            label={t.profile}
+            label="Perfil"
             isActive={pathname === '/profile'}
             onClick={handleNavClick}
           />
@@ -277,7 +273,7 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <LogOut size={20} />
-            <span>{tAuth.logout}</span>
+            <span>Sair</span>
           </button>
         </div>
       </aside>

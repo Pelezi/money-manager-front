@@ -1,15 +1,14 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { notificationService } from '@/services/notificationService';
 import { Notification } from '@/types';
-import { useRouter } from '@/i18n/routing';
 import { Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 export default function NotificationsPage() {
-  const t = useTranslations('notifications');
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const router = useRouter();
@@ -47,7 +46,7 @@ export default function NotificationsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm(t('confirmDelete'))) return;
+    if (!confirm('Tem certeza de que deseja excluir esta notificação?')) return;
     
     try {
       await notificationService.deleteNotification(id);
@@ -112,10 +111,10 @@ export default function NotificationsPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {t('title')}
+            Notificações
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            {t('description')}
+            Veja todas as suas notificações e atividades do grupo
           </p>
         </div>
         <div className="flex gap-2">
@@ -127,7 +126,7 @@ export default function NotificationsPage() {
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             }`}
           >
-            {t('all')}
+            Todas
           </button>
           <button
             onClick={() => setFilter('unread')}
@@ -137,18 +136,18 @@ export default function NotificationsPage() {
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             }`}
           >
-            {t('unread')}
+            Não lidas
           </button>
         </div>
       </div>
 
       {loading ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">{t('loading')}</p>
+          <p className="text-gray-500 dark:text-gray-400">Carregando notificações...</p>
         </div>
       ) : notifications.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-          <p className="text-gray-500 dark:text-gray-400">{t('noNotifications')}</p>
+          <p className="text-gray-500 dark:text-gray-400">Nenhuma notificação para exibir</p>
         </div>
       ) : (
         <div className="space-y-2">

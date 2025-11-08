@@ -1,10 +1,6 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { translations } from '@/lib/translations';
-
-const t = translations.transactions;
-const tCommon = translations.common;
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -89,7 +85,7 @@ export function TransactionFilterModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {tCommon.filter}
+            Filtrar
           </h2>
           <button
             onClick={onClose}
@@ -104,16 +100,16 @@ export function TransactionFilterModal({
           {/* Type filter */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {t.filterByType}
+              Filtrar por Tipo
             </label>
             <select
               value={filters.type}
               onChange={(e) => handleTypeChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">{t.allTypes}</option>
-              <option value="EXPENSE">{tCommon.expense}</option>
-              <option value="INCOME">{tCommon.income}</option>
+              <option value="">Todos os Tipos</option>
+              <option value="EXPENSE">Despesa</option>
+              <option value="INCOME">Receita</option>
             </select>
           </div>
 
@@ -121,7 +117,7 @@ export function TransactionFilterModal({
           {showCategoryFilter && (
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                {t.filterByCategory}
+                Filtrar por Categoria
               </label>
               <select
                 value={filters.categoryId || ''}
@@ -130,7 +126,7 @@ export function TransactionFilterModal({
                 }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">{t.allCategories}</option>
+                <option value="">Todas as Categorias</option>
                 {categories
                   .filter((cat) => !filters.type || cat.type === filters.type)
                   .map((cat) => (
@@ -145,7 +141,7 @@ export function TransactionFilterModal({
           {/* Subcategory filter */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {t.filterBySubcategory}
+              Filtrar por Subcategoria
             </label>
             <select
               value={filters.subcategoryId || ''}
@@ -154,7 +150,7 @@ export function TransactionFilterModal({
               }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">{t.allSubcategories}</option>
+              <option value="">Todas as Subcategorias</option>
               {filteredSubcategories.map((sub) => (
                 <option key={sub.id} value={sub.id}>
                   {sub.name}
@@ -171,14 +167,14 @@ export function TransactionFilterModal({
               onClick={handleClearFilters}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              {tCommon.clear}
+              Limpar
             </button>
           )}
           <button
             onClick={onClose}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {tCommon.apply}
+            Aplicar
           </button>
         </div>
       </div>

@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
@@ -27,10 +26,7 @@ import { TrendingUp, TrendingDown, DollarSign, Calendar, ChevronLeft, ChevronRig
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 export default function AnnualReviewPage() {
-  const t = useTranslations('annualReview');
-  const tBudget = useTranslations('budget');
-  const tCommon = useTranslations('common');
-  const { selectedYear, setSelectedYear } = useAppStore();
+        const { selectedYear, setSelectedYear } = useAppStore();
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -53,6 +49,8 @@ export default function AnnualReviewPage() {
   });
 
   // Calculate monthly trends
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  
   const monthlyTrends = Array.from({ length: 12 }, (_, index) => {
     const month = index + 1;
     const income = aggregatedTransactions
@@ -63,12 +61,14 @@ export default function AnnualReviewPage() {
       .reduce((sum, t) => sum + t.total, 0);
     
     return {
-      month: tBudget(['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'][index]),
+      month: monthNames[index],
       income,
       expense,
       net: income - expense,
     };
   });
+
+  console.log('Monthly Trends Data:', monthlyTrends);
 
   // Calculate totals
   const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
@@ -134,7 +134,7 @@ export default function AnnualReviewPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Resumo Anual</h1>
         
         {/* Year Selector */}
         <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ export default function AnnualReviewPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('totalIncome')}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Receita Total</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                 ${totalIncome.toFixed(2)}
               </p>
@@ -176,7 +176,7 @@ export default function AnnualReviewPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('totalExpenses')}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Despesas Totais</p>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
                 ${totalExpenses.toFixed(2)}
               </p>
@@ -190,7 +190,7 @@ export default function AnnualReviewPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('netSavings')}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Economia Líquida</p>
               <p className={`text-2xl font-bold mt-1 ${netSavings >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
                 ${netSavings.toFixed(2)}
               </p>
@@ -206,24 +206,34 @@ export default function AnnualReviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Trends */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('monthlyTrends')}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Tendências Mensais</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyTrends}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis />
-              <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 11, fill: 'currentColor' }} 
+                className="text-gray-600 dark:text-gray-400"
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis tick={{ fontSize: 11, fill: 'currentColor' }} className="text-gray-600 dark:text-gray-400" />
+              <Tooltip 
+                formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                contentStyle={{ backgroundColor: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)' }}
+              />
               <Legend />
-              <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name={tCommon('income')} />
-              <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name={tCommon('expense')} />
-              <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={2} name="Net" />
+              <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Receita" />
+              <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Despesa" />
+              <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={2} name="Líquido" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Category Breakdown */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('categoryBreakdown')}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Distribuição por Categoria</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -250,7 +260,7 @@ export default function AnnualReviewPage() {
 
         {/* Income vs Expense */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('incomeVsExpense')}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Receita vs Despesa</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={incomeVsExpense}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -258,15 +268,15 @@ export default function AnnualReviewPage() {
               <YAxis />
               <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
               <Legend />
-              <Bar dataKey="income" fill="#10b981" name={tCommon('income')} />
-              <Bar dataKey="expense" fill="#ef4444" name={tCommon('expense')} />
+              <Bar dataKey="income" fill="#10b981" name="Receita" />
+              <Bar dataKey="expense" fill="#ef4444" name="Despesa" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Yearly Performance Table */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('yearlyPerformance')}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Desempenho Anual</h2>
           <div className="overflow-y-auto max-h-[300px]">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import FirstAccessSetupModal from '@/components/FirstAccessSetupModal';
 
 export default function SettingsPage() {
-  const t = useTranslations('setup');
-  const [showSetupModal, setShowSetupModal] = useState(false);
+    const [showSetupModal, setShowSetupModal] = useState(false);
 
   const handleSetupComplete = () => {
     setShowSetupModal(false);
@@ -17,7 +15,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {t('manageCategories')}
+          Gerenciar Categorias Padrão
         </h1>
       </div>
 
@@ -25,10 +23,10 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              {t('manageCategories')}
+              Gerenciar Categorias Padrão
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {t('manageCategoriesDescription')}
+              Adicione mais categorias e subcategorias padrão à sua conta
             </p>
           </div>
 
@@ -36,7 +34,7 @@ export default function SettingsPage() {
             onClick={() => setShowSetupModal(true)}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
-            {t('manageCategories')}
+            Gerenciar Categorias Padrão
           </button>
         </div>
       </div>

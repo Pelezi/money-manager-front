@@ -1,15 +1,14 @@
 'use client';
 
-import { useRouter } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { groupService } from '@/services/groupService';
 import { useAppStore } from '@/lib/store';
 
 export default function NewGroupPage() {
-  const t = useTranslations('groups');
-  const router = useRouter();
+    const router = useRouter();
   const { setGroups } = useAppStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

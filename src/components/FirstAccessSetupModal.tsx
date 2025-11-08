@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { translations } from '@/lib/translations';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { defaultCategoriesPT, DefaultCategory } from '@/lib/defaultCategories';
@@ -16,9 +15,6 @@ interface FirstAccessSetupModalProps {
 }
 
 type CategoryType = 'EXPENSE' | 'INCOME';
-
-const t = translations.setup;
-const tCommon = translations.common;
 
 export default function FirstAccessSetupModal({ onComplete, isResetup = false }: FirstAccessSetupModalProps) {
   const [activeTab, setActiveTab] = useState<CategoryType>('EXPENSE');
@@ -200,18 +196,18 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
         await authService.completeSetup(categoriesToCreate);
         // Show success toast
         if (isResetup) {
-          toast.success(t.categoriesAdded);
+          toast.success('Novas categorias adicionadas com sucesso!');
         } else {
-          toast.success(t.setupSuccess);
+          toast.success('Categorias configuradas com sucesso!');
         }
       } else if (isResetup) {
         // No new categories to add
-        toast.success(t.setupSuccess);
+        toast.success('Categorias configuradas com sucesso!');
       }
       onComplete();
     } catch (error) {
       console.error('Failed to complete setup:', error);
-      toast.error(t.setupError);
+      toast.error('Falha ao configurar as categorias. Por favor, tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -225,15 +221,15 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
           <button
             onClick={onComplete}
             className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title={tCommon.cancel}
+            title="Cancelar"
           >
             <X size={24} />
           </button>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 pr-10">
-            {t.title}
+            Bem-vindo! Vamos configurar suas categorias
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t.description}
+            Selecione as categorias e subcategorias que você gostaria de usar. Você sempre pode adicionar ou remover depois.
           </p>
         </div>
 
@@ -251,7 +247,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              {tCommon.expense}
+              Despesa
             </button>
             <button
               onClick={() => {
@@ -264,7 +260,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              {tCommon.income}
+              Receita
             </button>
           </div>
         </div>
@@ -365,7 +361,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
             disabled={isSubmitting || selectedCategories.size === 0}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isSubmitting ? tCommon.loading : t.complete}
+            {isSubmitting ? 'Carregando...' : 'Concluir Configuração'}
           </button>
         </div>
       </div>

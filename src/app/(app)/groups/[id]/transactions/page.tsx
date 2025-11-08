@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
@@ -17,11 +16,7 @@ import { TransactionsTable } from '@/components/TransactionsTable';
 export default function GroupTransactionsPage() {
   const params = useParams();
   const groupId = parseInt(params?.id as string);
-  const t = useTranslations('transactions');
-  const tCommon = useTranslations('common');
-  const tGroups = useTranslations('groups');
-  const locale = useLocale();
-  const queryClient = useQueryClient();
+          const queryClient = useQueryClient();
   const { currentGroupPermissions } = useAppStore();
 
   const now = new Date();
@@ -147,10 +142,7 @@ export default function GroupTransactionsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (locale === 'pt') {
-      return date.toLocaleDateString('pt-BR');
-    }
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString('pt-BR');
   };
 
   const canManage = currentGroupPermissions?.canManageTransactions || false;
@@ -160,7 +152,7 @@ export default function GroupTransactionsPage() {
     return (
       <div className="p-6">
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 dark:text-yellow-200">{tGroups('noPermission')}</p>
+          <p className="text-yellow-800 dark:text-yellow-200">Você não tem permissão para visualizar as transações deste grupo.</p>
         </div>
       </div>
     );
@@ -176,7 +168,7 @@ export default function GroupTransactionsPage() {
       {/* Header with title and actions */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {tGroups('groupTransactions')}
+          Transações do Grupo
         </h1>
         <div className="flex items-center gap-2">
           <button
@@ -184,7 +176,7 @@ export default function GroupTransactionsPage() {
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Filter size={20} />
-            <span className="hidden sm:inline">{tCommon('filter')}</span>
+            <span className="hidden sm:inline">Filtrar</span>
           </button>
           {canManage && (
             <button
@@ -196,7 +188,7 @@ export default function GroupTransactionsPage() {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               <Plus size={20} />
-              <span className="hidden sm:inline">{t('addTransaction')}</span>
+              <span className="hidden sm:inline">Adicionar Transação</span>
             </button>
           )}
         </div>
@@ -237,7 +229,7 @@ export default function GroupTransactionsPage() {
         isLoading={isLoading}
         onEdit={handleEdit}
         onDelete={(id) => {
-          if (confirm(t('deleteConfirm'))) {
+          if (confirm('Tem certeza que deseja excluir esta transação?')) {
             deleteMutation.mutate(id);
           }
         }}
@@ -250,11 +242,11 @@ export default function GroupTransactionsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4">
-              {editingTransaction ? t('editTransaction') : t('addTransaction')}
+              {editingTransaction ? 'Editar Transação' : 'Adicionar Transação'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">{t('date')}</label>
+                <label className="block text-sm font-medium mb-1">Data</label>
                 <input
                   type="date"
                   value={formData.date}
@@ -265,19 +257,19 @@ export default function GroupTransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('transactionTitle')}</label>
+                <label className="block text-sm font-medium mb-1">Título</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder={t('transactionTitle')}
+                  placeholder="Título"
                   className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('type')}</label>
+                <label className="block text-sm font-medium mb-1">Tipo</label>
                 <select
                   value={formData.type}
                   onChange={(e) =>
@@ -290,13 +282,13 @@ export default function GroupTransactionsPage() {
                   }
                   className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                 >
-                  <option value="EXPENSE">{tCommon('expense')}</option>
-                  <option value="INCOME">{tCommon('income')}</option>
+                  <option value="EXPENSE">Despesa</option>
+                  <option value="INCOME">Receita</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('category')}</label>
+                <label className="block text-sm font-medium mb-1">Categoria</label>
                 <select
                   value={formData.categoryId}
                   onChange={(e) =>
@@ -309,7 +301,7 @@ export default function GroupTransactionsPage() {
                   className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                   required
                 >
-                  <option value={0}>{t('selectCategory')}</option>
+                  <option value={0}>Selecione a Categoria</option>
                   {filteredCategories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -319,7 +311,7 @@ export default function GroupTransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('subcategory')}</label>
+                <label className="block text-sm font-medium mb-1">Subcategoria</label>
                 <select
                   value={formData.subcategoryId}
                   onChange={(e) =>
@@ -329,7 +321,7 @@ export default function GroupTransactionsPage() {
                   required
                   disabled={!formData.categoryId}
                 >
-                  <option value={0}>{t('selectSubcategory')}</option>
+                  <option value={0}>Selecione a Subcategoria</option>
                   {filteredSubcategories.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -339,7 +331,7 @@ export default function GroupTransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('amount')}</label>
+                <label className="block text-sm font-medium mb-1">Valor</label>
                 <input
                   type="number"
                   step="0.01"
@@ -352,11 +344,11 @@ export default function GroupTransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">{t('description')}</label>
+                <label className="block text-sm font-medium mb-1">Descrição</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder={t('descriptionOptional')}
+                  placeholder="Descrição (opcional)"
                   rows={3}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                 />
@@ -372,7 +364,7 @@ export default function GroupTransactionsPage() {
                   }}
                   className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  {tGroups('cancel')}
+                  Cancelar
                 </button>
                 <button
                   type="submit"
@@ -380,8 +372,8 @@ export default function GroupTransactionsPage() {
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
                   {createMutation.isPending || updateMutation.isPending
-                    ? tCommon('saving')
-                    : tCommon('save')}
+                    ? 'Salvando...'
+                    : 'Salvar'}
                 </button>
               </div>
             </form>
