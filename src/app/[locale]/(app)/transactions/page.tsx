@@ -1,17 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Transaction, EntityType } from '@/types';
-import { Plus, Filter, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
+import { MonthYearPicker } from '@/components/MonthYearPicker';
+import { TransactionFilterModal } from '@/components/TransactionFilterModal';
+import { TransactionsTable } from '@/components/TransactionsTable';
 
 export default function TransactionsPage() {
   const t = useTranslations('transactions');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const queryClient = useQueryClient();
 
   // Get current date
@@ -27,7 +31,7 @@ export default function TransactionsPage() {
     subcategoryId: undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
     categoryId: 0,
@@ -97,6 +101,14 @@ export default function TransactionsPage() {
     },
   });
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    if (locale === 'pt') {
+      return date.toLocaleDateString('pt-BR');
+    }
+    return date.toLocaleDateString('en-US');
+  };
+
   const resetForm = () => {
     setFormData({
       categoryId: 0,
@@ -157,293 +169,72 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header with title and actions */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
-        <button
-          onClick={() => {
-            setEditingTransaction(null);
-            resetForm();
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
-        >
-          <Plus size={20} />
-          {t('addTransaction')}
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <button
-          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full p-4 flex items-center justify-between lg:pointer-events-none"
-        >
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
-            <Filter size={20} />
-            <span>{tCommon('filter')}</span>
-          </div>
-          <svg
-            className={`w-5 h-5 text-gray-700 dark:text-gray-300 transition-transform duration-300 lg:hidden ${
-              isFiltersOpen ? 'rotate-180' : ''
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsFilterModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div 
-          style={{
-            maxHeight: isFiltersOpen ? '500px' : '0',
-            opacity: isFiltersOpen ? 1 : 0,
-            transition: 'max-height 300ms ease-in-out, opacity 300ms ease-in-out'
-          }}
-          className="overflow-hidden lg:!max-h-[500px] lg:!opacity-100"
-        >
-          <div className="p-4 pt-0">
-            {/* Year and Month filters - separate row on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('year')}
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFilters({ ...filters, year: filters.year - 1 })}
-                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <select
-                value={filters.year}
-                onChange={(e) => setFilters({ ...filters, year: Number(e.target.value) })}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-              >
-                {Array.from({ length: 21 }, (_, i) => currentYear + 10 - i).map((year) => (
-                  <option key={year} value={year} className="text-gray-900 dark:text-gray-100">
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setFilters({ ...filters, year: filters.year + 1 })}
-                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('month')}
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const newMonth = filters.month - 1;
-                  if (newMonth < 1) {
-                    setFilters({ ...filters, month: 12, year: filters.year - 1 });
-                  } else {
-                    setFilters({ ...filters, month: newMonth });
-                  }
-                }}
-                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <select
-                value={filters.month}
-                onChange={(e) => setFilters({ ...filters, month: Number(e.target.value) })}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <option key={month} value={month} className="text-gray-900 dark:text-gray-100">
-                    {new Date(2000, month - 1).toLocaleString('default', { month: 'long' })}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  const newMonth = filters.month + 1;
-                  if (newMonth > 12) {
-                    setFilters({ ...filters, month: 1, year: filters.year + 1 });
-                  } else {
-                    setFilters({ ...filters, month: newMonth });
-                  }
-                }}
-                className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-            </div>
-
-            {/* Other filters - second row on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('filterByType')}
-            </label>
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-            >
-              <option value="" className="text-gray-500 dark:text-gray-400">All</option>
-              <option value="EXPENSE" className="text-gray-900 dark:text-gray-100">{tCommon('expense')}</option>
-              <option value="INCOME" className="text-gray-900 dark:text-gray-100">{tCommon('income')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('filterByCategory')}
-            </label>
-            <select
-              value={filters.categoryId || ''}
-              onChange={(e) => setFilters({ 
-                ...filters, 
-                categoryId: e.target.value ? Number(e.target.value) : undefined,
-                subcategoryId: undefined // Reset subcategory when category changes
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-            >
-              <option value="" className="text-gray-500 dark:text-gray-400">All</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id} className="text-gray-900 dark:text-gray-100">
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              {t('filterBySubcategory')}
-            </label>
-            <select
-              value={filters.subcategoryId || ''}
-              onChange={(e) => setFilters({ ...filters, subcategoryId: e.target.value ? Number(e.target.value) : undefined })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-            >
-              <option value="" className="text-gray-500 dark:text-gray-400">All</option>
-              {subcategories
-                .filter((sub) => !filters.categoryId || sub.categoryId === filters.categoryId)
-                .map((sub) => (
-                  <option key={sub.id} value={sub.id} className="text-gray-900 dark:text-gray-100">
-                    {sub.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-        </div>
-        </div>
+            <Filter size={20} />
+            <span className="hidden sm:inline">{tCommon('filter')}</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingTransaction(null);
+              resetForm();
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus size={20} />
+            <span className="hidden sm:inline">{t('addTransaction')}</span>
+          </button>
         </div>
       </div>
+
+      {/* Month/Year Picker - Fixed at top */}
+      <div className="sticky top-0 z-10">
+        <MonthYearPicker
+          year={filters.year}
+          month={filters.month}
+          onMonthYearChange={(year, month) => setFilters({ ...filters, year, month })}
+        />
+      </div>
+
+      {/* Filter Modal */}
+      <TransactionFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={{
+          type: filters.type,
+          categoryId: filters.categoryId,
+          subcategoryId: filters.subcategoryId,
+        }}
+        onFiltersChange={(newFilters) =>
+          setFilters({
+            ...filters,
+            type: newFilters.type,
+            categoryId: newFilters.categoryId,
+            subcategoryId: newFilters.subcategoryId,
+          })
+        }
+        categories={categories}
+        subcategories={subcategories}
+        showCategoryFilter={true}
+      />
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('date')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('transactionTitle')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('description')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('category')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('subcategory')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('type')}
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  {t('amount')}
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                    {tCommon('loading')}
-                  </td>
-                </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                    No transactions found
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {new Date(transaction.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                      {transaction.title}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                      {transaction.description || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {getCategoryName(transaction.subcategoryId)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {getSubcategoryName(transaction.subcategoryId)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          transaction.type === 'INCOME'
-                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                            : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                        }`}
-                      >
-                        {transaction.type === 'INCOME' ? tCommon('income') : tCommon('expense')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100 font-medium">
-                      ${transaction.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(transaction)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(transaction.id)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TransactionsTable
+        transactions={transactions}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        canManage={true}
+        showUser={false}
+      />
 
       {/* Modal */}
       {isModalOpen && (

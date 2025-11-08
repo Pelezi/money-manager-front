@@ -157,3 +157,47 @@ export interface GroupPermissions {
   canManageBudgets: boolean;
   canManageGroup: boolean;
 }
+
+// Notification types
+export type NotificationType =
+  | 'GROUP_INVITATION'
+  | 'GROUP_MEMBER_JOINED'
+  | 'GROUP_MEMBER_LEFT'
+  | 'TRANSACTION_CREATED'
+  | 'TRANSACTION_UPDATED'
+  | 'TRANSACTION_DELETED'
+  | 'CATEGORY_CREATED'
+  | 'CATEGORY_UPDATED'
+  | 'CATEGORY_DELETED'
+  | 'SUBCATEGORY_CREATED'
+  | 'SUBCATEGORY_UPDATED'
+  | 'SUBCATEGORY_DELETED'
+  | 'BUDGET_CREATED'
+  | 'BUDGET_UPDATED'
+  | 'BUDGET_DELETED'
+  | 'GROUP_UPDATED';
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  metadata?: any;
+  createdAt: string;
+}
+
+export interface GroupInvitation {
+  id: number;
+  groupId: number;
+  groupName?: string;
+  userId: number;
+  invitedBy: number;
+  inviterName?: string;
+  roleId: number;
+  roleName?: string;
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
+  createdAt: string;
+  updatedAt: string;
+}

@@ -13,7 +13,9 @@
     "income": "Receita",
     "expense": "Despesa",
     "user": "Usuário",
-    "actions": "Ações"
+    "actions": "Ações",
+    "apply": "Aplicar",
+    "clear": "Limpar"
   },
   "auth": {
     "login": "Entrar",
@@ -42,7 +44,7 @@
     "noCategories": "Nenhuma categoria encontrada. Clique em \"Adicionar Categoria\" para criar uma."
   },
   "transactions": {
-    "title": "Gerenciador de Transações",
+    "title": "Transações",
     "addTransaction": "Adicionar Transação",
     "editTransaction": "Editar Transação",
     "date": "Data",
@@ -55,6 +57,7 @@
     "type": "Tipo",
     "year": "Ano",
     "month": "Mês",
+    "period": "Período",
     "dateRange": "Intervalo de Datas",
     "filterByType": "Filtrar por Tipo",
     "filterByCategory": "Filtrar por Categoria",
@@ -111,7 +114,9 @@
     "settings": "Configurações",
     "profile": "Perfil",
     "personal": "Pessoal",
-    "groups": "Grupos"
+    "groups": "Grupos",
+    "notifications": "Notificações",
+    "invitations": "Convites"
   },
   "setup": {
     "title": "Bem-vindo! Vamos configurar suas categorias",
@@ -193,15 +198,38 @@
     "roleUpdateError": "Falha ao atualizar função",
     "roleDeleteError": "Falha ao excluir função",
     "groupNotFound": "Grupo não encontrado",
-    "groupMembers": "Membros do Grupo",
+    "groupMembers": "Membros",
     "pendingInvites": "Convites Pendentes",
     "noPermission": "Você não tem permissão para visualizar este conteúdo",
-    "groupTransactions": "Transações do Grupo",
-    "groupBudget": "Orçamento do Grupo",
-    "groupCategories": "Categorias do Grupo",
-    "groupAnnualReview": "Revisão Anual do Grupo",
+    "groupTransactions": "Transações",
+    "groupBudget": "Orçamento",
+    "groupCategories": "Categorias",
+    "groupAnnualReview": "Resumo Anual",
     "switchToPersonal": "Mudar para Pessoal",
     "switchToGroup": "Mudar para Grupo",
     "personal": "Pessoal"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "description": "Veja todas as suas notificações e atividades do grupo",
+    "all": "Todas",
+    "unread": "Não lidas",
+    "markAllAsRead": "Marcar todas como lidas",
+    "noNotifications": "Nenhuma notificação para exibir",
+    "loading": "Carregando notificações...",
+    "viewAll": "Ver todas as notificações",
+    "confirmDelete": "Tem certeza de que deseja excluir esta notificação?"
+  },
+  "invitations": {
+    "title": "Convites de Grupo",
+    "description": "Gerencie seus convites de grupo pendentes",
+    "noPending": "Nenhum convite pendente",
+    "accept": "Aceitar",
+    "decline": "Recusar",
+    "invitedBy": "Convidado por",
+    "role": "Função",
+    "invitedOn": "Convidado em",
+    "acceptError": "Falha ao aceitar convite",
+    "declineError": "Falha ao recusar convite"
   }
 }

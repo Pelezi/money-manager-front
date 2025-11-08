@@ -18,7 +18,9 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  Home
+  Home,
+  Bell,
+  Mail
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -26,6 +28,7 @@ import { useAppStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { groupService } from '@/services/groupService';
 import { Group } from '@/types';
+import { NotificationBell } from './NotificationComponents';
 
 interface NavLinkProps {
   href: string;
@@ -58,7 +61,7 @@ export default function Sidebar() {
   const { logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { isSidebarOpen, toggleSidebar, groups, setGroups, currentGroupId, setCurrentGroupId } = useAppStore();
-  const [showGroups, setShowGroups] = useState(true);
+  const [showGroups, setShowGroups] = useState(false);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
 
   useEffect(() => {
@@ -76,12 +79,19 @@ export default function Sidebar() {
     loadGroups();
   }, [setGroups]);
 
-  const navItems = [
+  // Navigation items that are context-dependent (personal vs group)
+  const contextNavItems = [
     { href: '/transactions', icon: <Receipt size={20} />, label: t('transactions') },
     { href: '/categories', icon: <FolderTree size={20} />, label: t('categories') },
     { href: '/budget', icon: <LayoutDashboard size={20} />, label: t('budget') },
     { href: '/annual-review', icon: <BarChart3 size={20} />, label: t('annualReview') },
     { href: '/settings', icon: <Settings size={20} />, label: t('settings') },
+  ];
+
+  // Global navigation items (always personal, never group-specific)
+  const globalNavItems = [
+    { href: '/invitations', icon: <Mail size={20} />, label: t('invitations') },
+    { href: '/notifications', icon: <Bell size={20} />, label: t('notifications') },
   ];
 
   const handleLogout = () => {
@@ -139,12 +149,15 @@ export default function Sidebar() {
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Budget Manager</h1>
-          <button
-            onClick={toggleSidebar}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded lg:hidden"
-          >
-            <X size={20} className="text-gray-900 dark:text-gray-100" />
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell onNavigate={handleNavClick} />
+            <button
+              onClick={toggleSidebar}
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded lg:hidden"
+            >
+              <X size={20} className="text-gray-900 dark:text-gray-100" />
+            </button>
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -215,8 +228,8 @@ export default function Sidebar() {
             )}
           </div>
 
-          {/* Main Navigation - only show when in personal or group context */}
-          {(isPersonalView || isInGroup) && navItems.map((item) => (
+          {/* Context-dependent Navigation - only show when in personal or group context */}
+          {(isPersonalView || isInGroup) && contextNavItems.map((item) => (
             <NavLink
               key={item.href}
               href={isInGroup && currentGroupId ? `/groups/${currentGroupId}${item.href}` : item.href}
@@ -230,6 +243,23 @@ export default function Sidebar() {
               onClick={handleNavClick}
             />
           ))}
+
+          {/* Global Navigation - always personal/user-scoped */}
+          {(isPersonalView || isInGroup) && (
+            <>
+              <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+              {globalNavItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={pathname === item.href}
+                  onClick={handleNavClick}
+                />
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
