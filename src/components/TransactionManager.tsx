@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
@@ -10,6 +10,12 @@ import { Plus, Filter } from 'lucide-react';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
 import { TransactionFilterModal } from '@/components/TransactionFilterModal';
 import { TransactionsTable } from '@/components/TransactionsTable';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/pt-br';
 
 interface TransactionManagerProps {
   groupId?: number;
@@ -42,17 +48,35 @@ export default function TransactionManager({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [formData, setFormData] = useState({
     categoryId: 0,
     subcategoryId: 0,
     title: '',
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
-    time: new Date().toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
+    dateTime: dayjs(), // Dayjs object for date and time
     type: 'EXPENSE' as EntityType,
     ...(groupId && { groupId }),
   });
+
+  // Detect dark mode on mount and when it changes
+  useEffect(() => {
+    const updateDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    updateDarkMode();
+    
+    // Watch for changes to dark mode
+    const observer = new MutationObserver(updateDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const getDateRange = () => {
     const startDate = `${filters.year}-${String(filters.month).padStart(2, '0')}-01`;
@@ -122,8 +146,7 @@ export default function TransactionManager({
       title: '',
       amount: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
+      dateTime: dayjs(), // Current date and time with Dayjs
       type: 'EXPENSE',
       ...(groupId && { groupId }),
     });
@@ -132,10 +155,20 @@ export default function TransactionManager({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Format date and time from the Dayjs object
+    const dateStr = formData.dateTime.format('YYYY-MM-DD');
+    const timeStr = formData.dateTime.format('HH:mm');
+    
     const data = {
-      ...formData,
+      categoryId: formData.categoryId,
+      subcategoryId: formData.subcategoryId,
+      title: formData.title,
       amount: parseFloat(formData.amount),
-      time: formData.time, // Send time to backend
+      description: formData.description,
+      date: dateStr,
+      time: timeStr,
+      type: formData.type,
+      ...(groupId && { groupId }),
     };
 
     if (editingTransaction) {
@@ -149,15 +182,14 @@ export default function TransactionManager({
     if (!canManage) return;
     setEditingTransaction(transaction);
     const subcategory = subcategories.find((s) => s.id === transaction.subcategoryId);
-    const transactionDate = new Date(transaction.date);
+    const transactionDate = dayjs(transaction.date); // Convert to Dayjs
     setFormData({
       categoryId: subcategory?.categoryId || 0,
       subcategoryId: transaction.subcategoryId,
       title: transaction.title,
       amount: transaction.amount.toString(),
       description: transaction.description || '',
-      date: transaction.date.split('T')[0],
-      time: transactionDate.toTimeString().split(' ')[0].substring(0, 5), // HH:MM format
+      dateTime: transactionDate, // Use the Dayjs object
       type: transaction.type,
       ...(groupId && { groupId }),
     });
@@ -170,6 +202,13 @@ export default function TransactionManager({
       deleteMutation.mutate(id);
     }
   };
+
+  // Create MUI theme that matches our dark mode
+  const muiTheme = createTheme({
+    palette: {
+      mode: isDarkMode ? 'dark' : 'light',
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -184,18 +223,6 @@ export default function TransactionManager({
             <Filter size={20} />
             <span className="hidden sm:inline">Filtrar</span>
           </button>
-          {canManage && (
-            <button
-              onClick={() => {
-                setEditingTransaction(null);
-                resetForm();
-                setIsModalOpen(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus size={20} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -240,6 +267,21 @@ export default function TransactionManager({
         showUser={showUser}
       />
 
+      {/* Floating Add Button */}
+      {canManage && (
+        <button
+          onClick={() => {
+            setEditingTransaction(null);
+            resetForm();
+            setIsModalOpen(true);
+          }}
+          className="fixed bottom-6 right-6 z-40 p-4 bg-blue-600 dark:bg-blue-700 text-white rounded-full shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all hover:scale-110 active:scale-95"
+          aria-label="Adicionar transação"
+        >
+          <Plus size={24} />
+        </button>
+      )}
+
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -248,31 +290,53 @@ export default function TransactionManager({
               {editingTransaction ? 'Editar' : 'Adicionar Transação'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                    Data
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                    Horário
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  Data e Horário
+                </label>
+                <ThemeProvider theme={muiTheme}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+                    <DateTimePicker
+                      value={formData.dateTime}
+                      onChange={(newValue: Dayjs | null) => {
+                        if (newValue) {
+                          setFormData({ ...formData, dateTime: newValue });
+                        }
+                      }}
+                      format="DD/MM/YYYY HH:mm"
+                      ampm={false}
+                      slotProps={{
+                        textField: {
+                          required: true,
+                          fullWidth: true,
+                          sx: {
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '0.5rem',
+                              backgroundColor: isDarkMode ? 'rgb(55 65 81)' : 'white',
+                              '& fieldset': {
+                                borderColor: isDarkMode ? 'rgb(75 85 99)' : 'rgb(209 213 219)',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: isDarkMode ? 'rgb(107 114 128)' : 'rgb(156 163 175)',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'rgb(59 130 246)',
+                                borderWidth: '2px',
+                              },
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '8px 12px',
+                              color: isDarkMode ? 'rgb(243 244 246)' : 'rgb(17 24 39)',
+                            },
+                            '& .MuiIconButton-root': {
+                              color: isDarkMode ? 'rgb(243 244 246)' : 'rgb(17 24 39)',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </ThemeProvider>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">

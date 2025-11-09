@@ -269,6 +269,13 @@ export default function Sidebar() {
             onClick={handleNavClick}
           />
           <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            <span>{theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
@@ -277,15 +284,6 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
-
-      {/* Floating Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        className="fixed bottom-6 right-6 z-50 p-4 bg-blue-600 dark:bg-blue-700 text-white rounded-full shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-all hover:scale-110 active:scale-95"
-        aria-label="Toggle theme"
-      >
-        {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
-      </button>
     </>
   );
 }
