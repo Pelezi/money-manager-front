@@ -102,3 +102,41 @@ a:hover {
 .animate-slideIn {
   animation: slideIn 0.3s ease-out;
 }
+
+/* Transaction card hover effects */
+.transaction-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.transaction-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: background-color 200ms ease;
+}
+
+.transaction-card:hover::before {
+  background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+}
+
+/* Smooth amount color transitions */
+.amount-positive {
+  color: #059669;
+}
+
+:root.dark .amount-positive {
+  color: #34d399;
+}
+
+.amount-negative {
+  color: #dc2626;
+}
+
+:root.dark .amount-negative {
+  color: #f87171;
+}

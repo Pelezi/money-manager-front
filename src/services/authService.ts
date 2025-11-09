@@ -28,6 +28,12 @@ export const authService = {
     return null;
   },
 
+  setCurrentUser: (user: any) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  },
+
   isAuthenticated: (): boolean => {
     if (typeof window !== 'undefined') {
       return !!localStorage.getItem('authToken');

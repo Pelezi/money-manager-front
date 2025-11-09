@@ -15,7 +15,13 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import dayjs, { Dayjs } from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import 'dayjs/locale/pt-br';
+import { createInUserTimezone, toUserTimezone, getUserTimezone } from '@/lib/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface TransactionManagerProps {
   groupId?: number;
@@ -55,7 +61,7 @@ export default function TransactionManager({
     title: '',
     amount: '',
     description: '',
-    dateTime: dayjs(), // Dayjs object for date and time
+    dateTime: createInUserTimezone(), // Dayjs object for date and time in user's timezone
     type: 'EXPENSE' as EntityType,
     ...(groupId && { groupId }),
   });
@@ -146,7 +152,7 @@ export default function TransactionManager({
       title: '',
       amount: '',
       description: '',
-      dateTime: dayjs(), // Current date and time with Dayjs
+      dateTime: createInUserTimezone(), // Current date and time in user's timezone
       type: 'EXPENSE',
       ...(groupId && { groupId }),
     });
@@ -155,12 +161,12 @@ export default function TransactionManager({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Format date and time from the Dayjs object
-    const dateStr = formData.dateTime.format('YYYY-MM-DD');
-    const timeStr = formData.dateTime.format('HH:mm');
+    // Convert to UTC for sending to backend
+    const dateInUtc = formData.dateTime.utc();
+    const dateStr = dateInUtc.format('YYYY-MM-DD');
+    const timeStr = dateInUtc.format('HH:mm:ss');
     
     const data = {
-      categoryId: formData.categoryId,
       subcategoryId: formData.subcategoryId,
       title: formData.title,
       amount: parseFloat(formData.amount),
@@ -182,14 +188,15 @@ export default function TransactionManager({
     if (!canManage) return;
     setEditingTransaction(transaction);
     const subcategory = subcategories.find((s) => s.id === transaction.subcategoryId);
-    const transactionDate = dayjs(transaction.date); // Convert to Dayjs
+    // Convert UTC date from backend to user's timezone
+    const transactionDate = toUserTimezone(transaction.date);
     setFormData({
       categoryId: subcategory?.categoryId || 0,
       subcategoryId: transaction.subcategoryId,
       title: transaction.title,
       amount: transaction.amount.toString(),
       description: transaction.description || '',
-      dateTime: transactionDate, // Use the Dayjs object
+      dateTime: transactionDate,
       type: transaction.type,
       ...(groupId && { groupId }),
     });
@@ -212,27 +219,49 @@ export default function TransactionManager({
 
   return (
     <div className="space-y-4">
-      {/* Header with title and actions */}
-      <div className="flex items-center justify-between">
+      {/* Desktop Title - Only visible on desktop */}
+      <div className="hidden lg:block">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <Filter size={20} />
-            <span className="hidden sm:inline">Filtrar</span>
-          </button>
-        </div>
       </div>
 
-      {/* Month/Year Picker - Fixed at top */}
-      <div className="sticky top-0 z-10">
-        <MonthYearPicker
-          year={filters.year}
-          month={filters.month}
-          onMonthYearChange={(year, month) => setFilters({ ...filters, year, month })}
-        />
+      {/* Sticky Header - Mobile and Desktop */}
+      <div className="bg-gray-50 dark:bg-gray-900 pb-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 shadow-sm lg:shadow-none">
+        <div className="pt-3 lg:pt-0 space-y-3">
+          {/* Mobile: Compact header with all controls */}
+          <div className="lg:hidden flex items-center gap-2">
+            <div className="flex-1">
+              <MonthYearPicker
+                year={filters.year}
+                month={filters.month}
+                onMonthYearChange={(year, month) => setFilters({ ...filters, year, month })}
+              />
+            </div>
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="flex items-center justify-center p-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+            >
+              <Filter size={18} />
+            </button>
+          </div>
+
+          {/* Desktop: Month picker with filter button */}
+          <div className="hidden lg:flex items-center gap-3">
+            <div className="flex-1">
+              <MonthYearPicker
+                year={filters.year}
+                month={filters.month}
+                onMonthYearChange={(year, month) => setFilters({ ...filters, year, month })}
+              />
+            </div>
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Filter size={20} />
+              <span>Filtrar</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filter Modal */}
@@ -258,14 +287,16 @@ export default function TransactionManager({
       />
 
       {/* Table */}
-      <TransactionsTable
-        transactions={transactions}
-        isLoading={isLoading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        canManage={canManage}
-        showUser={showUser}
-      />
+      <div className="mb-24">
+        <TransactionsTable
+          transactions={transactions}
+          isLoading={isLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          canManage={canManage}
+          showUser={showUser}
+        />
+      </div>
 
       {/* Floating Add Button */}
       {canManage && (

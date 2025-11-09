@@ -7,7 +7,8 @@ import { defaultCategoriesPT, DefaultCategory } from '@/lib/defaultCategories';
 import { authService } from '@/services/authService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
-import { ChevronDown, ChevronRight, Check, X } from 'lucide-react';
+import { userService } from '@/services/userService';
+import { ChevronDown, ChevronRight, Check, X, Globe, ArrowRight } from 'lucide-react';
 
 interface FirstAccessSetupModalProps {
   onComplete: () => void;
@@ -17,6 +18,8 @@ interface FirstAccessSetupModalProps {
 type CategoryType = 'EXPENSE' | 'INCOME';
 
 export default function FirstAccessSetupModal({ onComplete, isResetup = false }: FirstAccessSetupModalProps) {
+  const [step, setStep] = useState(isResetup ? 1 : 0); // 0 = timezone, 1 = categories
+  const [timezone, setTimezone] = useState('America/Sao_Paulo');
   const [activeTab, setActiveTab] = useState<CategoryType>('EXPENSE');
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [selectedCategories, setSelectedCategories] = useState<Map<number, Set<number>>>(new Map());
@@ -142,6 +145,24 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
     return selectedCategories.get(globalIndex)?.has(subcategoryIndex) || false;
   };
 
+  const handleTimezoneNext = async () => {
+    setIsSubmitting(true);
+    try {
+      await userService.updateProfile({ timezone });
+      // Update user in localStorage
+      const user = authService.getCurrentUser();
+      if (user) {
+        authService.setCurrentUser({ ...user, timezone });
+      }
+      setStep(1);
+    } catch (error) {
+      console.error('Failed to save timezone:', error);
+      toast.error('Erro ao salvar fuso horário');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -213,20 +234,108 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
     }
   };
 
+  const timezones = [
+    { value: 'America/Sao_Paulo', label: 'São Paulo (UTC-3)' },
+    { value: 'America/Manaus', label: 'Manaus (UTC-4)' },
+    { value: 'America/Rio_Branco', label: 'Rio Branco (UTC-5)' },
+    { value: 'America/Noronha', label: 'Fernando de Noronha (UTC-2)' },
+    { value: 'UTC', label: 'UTC (GMT+0)' },
+    { value: 'America/New_York', label: 'New York (UTC-5/-4)' },
+    { value: 'Europe/London', label: 'London (UTC+0/+1)' },
+    { value: 'Europe/Paris', label: 'Paris (UTC+1/+2)' },
+    { value: 'Asia/Tokyo', label: 'Tokyo (UTC+9)' },
+  ];
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
-          <button
-            onClick={onComplete}
-            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Cancelar"
-          >
-            <X size={24} />
-          </button>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 pr-10">
-            Bem-vindo! Vamos configurar suas categorias
+        {/* Step 0: Timezone Selection */}
+        {step === 0 && (
+          <>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
+              <button
+                onClick={onComplete}
+                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Cancelar"
+              >
+                <X size={24} />
+              </button>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                  <Globe className="text-blue-600 dark:text-blue-400" size={32} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 pr-10">
+                    Bem-vindo! Configure seu fuso horário
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Passo 1 de 2
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    Selecione seu fuso horário para garantir que datas e horários sejam exibidos corretamente em suas transações.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    Selecione seu Fuso Horário
+                  </label>
+                  <select
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                  >
+                    {timezones.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={onComplete}
+                  className="px-6 py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleTimezoneNext}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Salvando...' : 'Próximo'}
+                  <ArrowRight size={18} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Step 1: Category Selection */}
+        {step === 1 && (
+          <>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
+              <button
+                onClick={onComplete}
+                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Cancelar"
+              >
+                <X size={24} />
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 pr-10">
+                {isResetup ? 'Adicionar mais categorias' : 'Configure suas categorias'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
             Selecione as categorias e subcategorias que você gostaria de usar. Você sempre pode adicionar ou remover depois.
@@ -364,6 +473,8 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
             {isSubmitting ? 'Carregando...' : 'Concluir Configuração'}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

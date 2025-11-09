@@ -81,30 +81,30 @@ export function MonthYearPicker({ year, month, onMonthYearChange }: MonthYearPic
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Main display bar */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
-        <div className="flex items-center justify-between gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => handleMonthChange(-1)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronLeft size={20} className="text-gray-700 dark:text-gray-300" />
+            <ChevronLeft size={18} className="text-gray-700 dark:text-gray-300" />
           </button>
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors flex-1 justify-center"
+            className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors flex-1 justify-center"
           >
-            <Calendar size={18} className="text-gray-600 dark:text-gray-400" />
-            <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+            <Calendar size={16} className="text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-sm text-gray-900 dark:text-gray-100 capitalize">
               {displayText}
             </span>
           </button>
 
           <button
             onClick={() => handleMonthChange(1)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ChevronRight size={20} className="text-gray-700 dark:text-gray-300" />
+            <ChevronRight size={18} className="text-gray-700 dark:text-gray-300" />
           </button>
         </div>
       </div>

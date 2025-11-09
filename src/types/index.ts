@@ -69,6 +69,7 @@ export interface User {
   lastName?: string;
   firstAccess?: boolean;
   locale?: string;
+  timezone?: string;
 }
 
 export interface AuthResponse {

@@ -1,7 +1,9 @@
 'use client';
 
-import { Edit2, Trash2, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Transaction } from '@/types';
+import { useRouter } from 'next/navigation';
+import { toUserTimezone, formatInUserTimezone } from '@/lib/timezone';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -12,6 +14,14 @@ interface TransactionsTableProps {
   showUser?: boolean;
 }
 
+interface DayGroup {
+  date: string;
+  transactions: Transaction[];
+  totalIncome: number;
+  totalExpense: number;
+  total: number;
+}
+
 export function TransactionsTable({
   transactions,
   isLoading,
@@ -20,134 +30,175 @@ export function TransactionsTable({
   canManage = true,
   showUser = false,
 }: TransactionsTableProps) {
+  const router = useRouter();
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    // Convert to user's timezone
+    const date = toUserTimezone(dateString);
+    const today = toUserTimezone(new Date().toISOString());
+    const yesterday = today.subtract(1, 'day');
+
+    // Compare dates
+    if (date.isSame(today, 'day')) {
+      return 'Hoje';
+    } else if (date.isSame(yesterday, 'day')) {
+      return 'Ontem';
+    }
+
+    return formatInUserTimezone(dateString, 'dddd, D [de] MMMM');
   };
 
-  const colSpan = showUser ? (canManage ? 7 : 6) : (canManage ? 6 : 5);
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+  };
+
+  // Group transactions by date
+  const groupedTransactions = transactions.reduce((acc, transaction) => {
+    const dateKey = transaction.date.split('T')[0];
+    if (!acc[dateKey]) {
+      acc[dateKey] = {
+        date: dateKey,
+        transactions: [],
+        totalIncome: 0,
+        totalExpense: 0,
+        total: 0,
+      };
+    }
+    acc[dateKey].transactions.push(transaction);
+    
+    if (transaction.type === 'INCOME') {
+      acc[dateKey].totalIncome += transaction.amount;
+      acc[dateKey].total += transaction.amount;
+    } else {
+      acc[dateKey].totalExpense += transaction.amount;
+      acc[dateKey].total -= transaction.amount;
+    }
+    
+    return acc;
+  }, {} as Record<string, DayGroup>);
+
+  // Sort by date descending
+  const sortedDays = Object.values(groupedTransactions).sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  const handleTransactionClick = (transactionId: number, e: React.MouseEvent) => {
+    // Don't navigate if clicking on action buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    router.push(`/transactions/${transactionId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+        <p className="text-gray-500 dark:text-gray-400">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+        <p className="text-gray-500 dark:text-gray-400">Nenhuma transação encontrada</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Data
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Título
-              </th>
-              {showUser && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Usuário
-                </th>
-              )}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Categoria
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Subcategoria
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Tipo
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Valor
-              </th>
-              {canManage && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Ações
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {isLoading ? (
-              <tr>
-                <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  Carregando...
-                </td>
-              </tr>
-            ) : transactions.length === 0 ? (
-              <tr>
-                <td colSpan={colSpan} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  Nenhuma transação encontrada
-                </td>
-              </tr>
-            ) : (
-              transactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {formatDate(transaction.date)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    <div>{transaction.title}</div>
-                    {transaction.description && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {transaction.description}
-                      </div>
-                    )}
-                  </td>
-                  {showUser && (
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                      <div className="flex items-center gap-2">
-                        <User size={14} className="text-gray-500 dark:text-gray-400" />
-                        <span>
-                          {transaction.user
-                            ? `${transaction.user.firstName} ${transaction.user.lastName}`
-                            : '-'}
-                        </span>
-                      </div>
-                    </td>
-                  )}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+    <div className="space-y-4">
+      {sortedDays.map((dayGroup) => (
+        <div key={dayGroup.date} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          {/* Date Header */}
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
+                {formatDate(dayGroup.date)}
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500 dark:text-gray-400">Entradas:</span>
+                  <span className="font-semibold text-green-600 dark:text-green-400">
+                    {formatCurrency(dayGroup.totalIncome)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500 dark:text-gray-400">Saídas:</span>
+                  <span className="font-semibold text-red-600 dark:text-red-400">
+                    {formatCurrency(dayGroup.totalExpense)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500 dark:text-gray-400">Total:</span>
+                  <span
+                    className={`font-semibold ${
+                      dayGroup.total >= 0
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {formatCurrency(dayGroup.total)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transaction Cards */}
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {dayGroup.transactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                onClick={(e) => handleTransactionClick(transaction.id, e)}
+                className="flex items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
+              >
+                {/* Left: Category & Subcategory */}
+                <div className="flex-shrink-0 min-w-0 sm:w-32">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                     {transaction.subcategory?.category?.name || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     {transaction.subcategory?.name || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        transaction.type === 'INCOME'
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                      }`}
-                    >
-                      {transaction.type === 'INCOME' ? 'Receita' : 'Despesa'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-gray-100">
-                    ${transaction.amount.toFixed(2)}
-                  </td>
-                  {canManage && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => onEdit(transaction)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => onDelete(transaction.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                          title="Excluir"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                  </div>
+                </div>
+
+                {/* Center: Title & Description */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {transaction.title}
+                  </div>
+                  {showUser && transaction.user && (
+                    <div className="flex items-center gap-1">
+                      <User size={10} className="text-gray-400 dark:text-gray-500" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {transaction.user.firstName} {transaction.user.lastName}
+                      </span>
+                    </div>
                   )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                </div>
+
+                {/* Right: Amount */}
+                <div className="flex-shrink-0">
+                  <div
+                    className={`text-sm sm:text-lg font-bold whitespace-nowrap ${
+                      transaction.type === 'INCOME'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {transaction.type === 'INCOME' ? '+' : '-'}
+                    {formatCurrency(transaction.amount)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
