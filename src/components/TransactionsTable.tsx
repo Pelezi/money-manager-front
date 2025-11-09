@@ -40,12 +40,36 @@ export function TransactionsTable({
 
     // Compare dates
     if (date.isSame(today, 'day')) {
-      return 'Hoje';
+      return { display: 'Hoje', isSpecial: true };
     } else if (date.isSame(yesterday, 'day')) {
-      return 'Ontem';
+      return { display: 'Ontem', isSpecial: true };
     }
 
-    return formatInUserTimezone(dateString, 'dddd, D [de] MMMM');
+    return { 
+      display: formatInUserTimezone(dateString, 'DD/MM'),
+      isSpecial: false 
+    };
+  };
+
+  const getDayOfWeek = (dateString: string) => {
+    const date = toUserTimezone(dateString);
+    const dayNumber = date.day(); // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayNumber === 0 || dayNumber === 6;
+    
+    const dayNames: { [key: number]: string } = {
+      0: 'Dom',
+      1: 'Seg',
+      2: 'Ter',
+      3: 'Qua',
+      4: 'Qui',
+      5: 'Sex',
+      6: 'Sáb'
+    };
+
+    return {
+      name: dayNames[dayNumber],
+      isWeekend
+    };
   };
 
   const formatCurrency = (value: number) => {
@@ -115,35 +139,47 @@ export function TransactionsTable({
         <div key={dayGroup.date} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
           {/* Date Header */}
           <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
-                {formatDate(dayGroup.date)}
-              </h3>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500 dark:text-gray-400">Entradas:</span>
-                  <span className="font-semibold text-green-600 dark:text-green-400">
-                    {formatCurrency(dayGroup.totalIncome)}
+            <div className="grid grid-cols-4 gap-3 text-xs">
+              <div className="flex flex-col gap-1">
+                <span className="text-gray-500 dark:text-gray-400">Data</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {formatDate(dayGroup.date).display}
                   </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500 dark:text-gray-400">Saídas:</span>
-                  <span className="font-semibold text-red-600 dark:text-red-400">
-                    {formatCurrency(dayGroup.totalExpense)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500 dark:text-gray-400">Total:</span>
                   <span
-                    className={`font-semibold ${
-                      dayGroup.total >= 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                      getDayOfWeek(dayGroup.date).isWeekend
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                     }`}
                   >
-                    {formatCurrency(dayGroup.total)}
+                    {getDayOfWeek(dayGroup.date).name}
                   </span>
                 </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-gray-500 dark:text-gray-400">Entradas</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                  {formatCurrency(dayGroup.totalIncome)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-gray-500 dark:text-gray-400">Saídas</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">
+                  {formatCurrency(dayGroup.totalExpense)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-gray-500 dark:text-gray-400">Total</span>
+                <span
+                  className={`font-semibold ${
+                    dayGroup.total >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {formatCurrency(dayGroup.total)}
+                </span>
               </div>
             </div>
           </div>
@@ -154,35 +190,27 @@ export function TransactionsTable({
               <div
                 key={transaction.id}
                 onClick={(e) => handleTransactionClick(transaction.id, e)}
-                className="flex items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                className="grid grid-cols-[100px_1fr_100px] gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
               >
                 {/* Left: Category & Subcategory */}
-                <div className="flex-shrink-0 min-w-0 sm:w-32">
-                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <div className="flex flex-col justify-center">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 break-words line-clamp-2">
                     {transaction.subcategory?.category?.name || '-'}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 break-words line-clamp-2">
                     {transaction.subcategory?.name || '-'}
                   </div>
                 </div>
 
-                {/* Center: Title & Description */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {/* Center: Title */}
+                <div className="flex flex-col justify-center text-center">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 break-words line-clamp-2">
                     {transaction.title}
                   </div>
-                  {showUser && transaction.user && (
-                    <div className="flex items-center gap-1">
-                      <User size={10} className="text-gray-400 dark:text-gray-500" />
-                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {transaction.user.firstName} {transaction.user.lastName}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Right: Amount */}
-                <div className="flex-shrink-0">
+                <div className="flex flex-col justify-center items-end gap-1">
                   <div
                     className={`text-sm sm:text-lg font-bold whitespace-nowrap ${
                       transaction.type === 'INCOME'
@@ -193,6 +221,14 @@ export function TransactionsTable({
                     {transaction.type === 'INCOME' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
                   </div>
+                  {showUser && transaction.user && (
+                    <div className="flex items-center gap-1">
+                      <User size={10} className="text-gray-400 dark:text-gray-500" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {transaction.user.firstName} {transaction.user.lastName}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

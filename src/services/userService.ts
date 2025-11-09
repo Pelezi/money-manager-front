@@ -5,6 +5,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string;
   firstAccess: boolean;
   locale: string;
   timezone?: string;
@@ -17,7 +18,7 @@ export const userService = {
     return response.data;
   },
 
-  async updateProfile(data: { timezone?: string; locale?: string }): Promise<User> {
+  async updateProfile(data: { timezone?: string; locale?: string; phoneNumber?: string }): Promise<User> {
     const response = await apiClient.patch('/users/profile', data);
     return response.data;
   },

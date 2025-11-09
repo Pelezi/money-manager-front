@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
+import { groupService } from '@/services/groupService';
 import { Transaction, EntityType } from '@/types';
 import { Plus, Filter } from 'lucide-react';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
@@ -64,6 +65,7 @@ export default function TransactionManager({
     dateTime: createInUserTimezone(), // Dayjs object for date and time in user's timezone
     type: 'EXPENSE' as EntityType,
     ...(groupId && { groupId }),
+    ...(groupId && { userId: undefined as number | undefined }),
   });
 
   // Detect dark mode on mount and when it changes
@@ -118,6 +120,12 @@ export default function TransactionManager({
     enabled: canView,
   });
 
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: ['groupMembers', groupId],
+    queryFn: () => groupService.getMembers(groupId!),
+    enabled: !!groupId && canView,
+  });
+
   const createMutation = useMutation({
     mutationFn: transactionService.create,
     onSuccess: () => {
@@ -155,6 +163,7 @@ export default function TransactionManager({
       dateTime: createInUserTimezone(), // Current date and time in user's timezone
       type: 'EXPENSE',
       ...(groupId && { groupId }),
+      ...(groupId && { userId: undefined as number | undefined }),
     });
   };
 
@@ -175,6 +184,7 @@ export default function TransactionManager({
       time: timeStr,
       type: formData.type,
       ...(groupId && { groupId }),
+      ...(groupId && formData.userId && { userId: formData.userId }),
     };
 
     if (editingTransaction) {
@@ -403,6 +413,31 @@ export default function TransactionManager({
                   <option value="INCOME">Receita</option>
                 </select>
               </div>
+              {groupId && !editingTransaction && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                    Membro do Grupo
+                  </label>
+                  <select
+                    value={formData.userId || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      userId: e.target.value ? Number(e.target.value) : undefined
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                  >
+                    <option value="">Eu (usuário atual)</option>
+                    {groupMembers.filter(m => m.user).map((member) => (
+                      <option key={member.id} value={member.user!.id} className="text-gray-900 dark:text-gray-100">
+                        {member.user!.firstName} {member.user!.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Selecione qual membro do grupo fez esta transação
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                   Categoria

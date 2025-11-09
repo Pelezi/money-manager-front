@@ -6,23 +6,25 @@ import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import FirstAccessSetupModal from '@/components/FirstAccessSetupModal';
 import toast from 'react-hot-toast';
-import { Globe } from 'lucide-react';
+import { Globe, Phone } from 'lucide-react';
 
 export default function SettingsPage() {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [timezone, setTimezone] = useState('UTC');
   const [locale, setLocale] = useState('pt-BR');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
     const user = authService.getCurrentUser();
     if (user) {
       setTimezone(user.timezone || 'UTC');
       setLocale(user.locale || 'pt-BR');
+      setPhoneNumber(user.phoneNumber || '');
     }
   }, []);
 
   const updateSettingsMutation = useMutation({
-    mutationFn: (data: { timezone?: string; locale?: string }) => 
+    mutationFn: (data: { timezone?: string; locale?: string; phoneNumber?: string }) => 
       userService.updateProfile(data),
     onSuccess: (updatedUser) => {
       // Update local storage with new user data
@@ -43,6 +45,10 @@ export default function SettingsPage() {
 
   const handleSaveTimezone = () => {
     updateSettingsMutation.mutate({ timezone });
+  };
+
+  const handleSavePhoneNumber = () => {
+    updateSettingsMutation.mutate({ phoneNumber });
   };
 
   const timezones = [
@@ -103,6 +109,44 @@ export default function SettingsPage() {
             className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updateSettingsMutation.isPending ? 'Salvando...' : 'Salvar Fuso Horário'}
+          </button>
+        </div>
+      </div>
+
+      {/* Phone Number Settings */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <Phone className="text-blue-600 dark:text-blue-400" size={24} />
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Telefone
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Configure seu número de telefone
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Número de Telefone
+            </label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+55 11 98765-4321"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            onClick={handleSavePhoneNumber}
+            disabled={updateSettingsMutation.isPending}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updateSettingsMutation.isPending ? 'Salvando...' : 'Salvar Telefone'}
           </button>
         </div>
       </div>

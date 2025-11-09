@@ -67,6 +67,7 @@ export interface User {
   name?: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
   firstAccess?: boolean;
   locale?: string;
   timezone?: string;
