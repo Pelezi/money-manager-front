@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
+import { accountService } from '@/services/accountService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { groupService } from '@/services/groupService';
@@ -32,14 +33,21 @@ interface TransactionManagerProps {
   showUser?: boolean;
 }
 
-export default function TransactionManager({ 
-  groupId, 
-  canManage = true, 
+export default function TransactionManager({
+  groupId,
+  canManage = true,
   canView = true,
   title = 'Transações',
   showUser = false
 }: TransactionManagerProps) {
   const queryClient = useQueryClient();
+
+  // Buscar contas disponíveis
+  const { data: accounts = [] } = useQuery({
+    queryKey: groupId ? ['accounts', groupId] : ['accounts'],
+    queryFn: () => accountService.getAll(groupId ? { groupId } : undefined),
+    enabled: canView,
+  });
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -51,6 +59,7 @@ export default function TransactionManager({
     type: '',
     categoryId: undefined as number | undefined,
     subcategoryId: undefined as number | undefined,
+    accountId: undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -59,8 +68,9 @@ export default function TransactionManager({
   const [formData, setFormData] = useState({
     categoryId: 0,
     subcategoryId: 0,
+    accountId: 0,
     title: '',
-    amount: '',
+    amount: '0,00',
     description: '',
     dateTime: createInUserTimezone(), // Dayjs object for date and time in user's timezone
     type: 'EXPENSE' as EntityType,
@@ -73,16 +83,16 @@ export default function TransactionManager({
     const updateDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
-    
+
     updateDarkMode();
-    
+
     // Watch for changes to dark mode
     const observer = new MutationObserver(updateDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -101,7 +111,9 @@ export default function TransactionManager({
         startDate,
         endDate,
         type: filters.type || undefined,
+        categoryId: filters.categoryId,
         subcategoryId: filters.subcategoryId,
+        accountId: filters.accountId,
         ...(groupId && { groupId }),
       });
     },
@@ -157,8 +169,9 @@ export default function TransactionManager({
     setFormData({
       categoryId: 0,
       subcategoryId: 0,
+      accountId: 0,
       title: '',
-      amount: '',
+      amount: '0,00',
       description: '',
       dateTime: createInUserTimezone(), // Current date and time in user's timezone
       type: 'EXPENSE',
@@ -169,16 +182,19 @@ export default function TransactionManager({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Convert to UTC for sending to backend
     const dateInUtc = formData.dateTime.utc();
     const dateStr = dateInUtc.format('YYYY-MM-DD');
     const timeStr = dateInUtc.format('HH:mm:ss');
-    
+
+    const amountNumber = Number(formData.amount.replace(/\./g, '').replace(',', '.'));
+
     const data = {
       subcategoryId: formData.subcategoryId,
+      accountId: formData.accountId,
       title: formData.title,
-      amount: parseFloat(formData.amount),
+      amount: amountNumber,
       description: formData.description,
       date: dateStr,
       time: timeStr,
@@ -203,8 +219,9 @@ export default function TransactionManager({
     setFormData({
       categoryId: subcategory?.categoryId || 0,
       subcategoryId: transaction.subcategoryId,
+      accountId: transaction.accountId || 0,
       title: transaction.title,
-      amount: transaction.amount.toString(),
+      amount: Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       description: transaction.description || '',
       dateTime: transactionDate,
       type: transaction.type,
@@ -226,6 +243,54 @@ export default function TransactionManager({
       mode: isDarkMode ? 'dark' : 'light',
     },
   });
+
+  // ---- Accent styles (cores por tipo) ----
+  const ACCENTS = {
+    EXPENSE: {
+      twRing: 'focus:ring-red-500',
+      twBorder: 'focus:border-red-500',
+      twBorderBase: 'border-red-300',
+      twText: 'text-red-600',
+      twBgSoft: 'bg-red-50',
+      twChipOn: 'bg-red-600 text-white border-red-600',
+      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
+      muiColor: '#ef4444', // red-500
+    },
+    INCOME: {
+      twRing: 'focus:ring-green-500',
+      twBorder: 'focus:border-green-500',
+      twBorderBase: 'border-green-300',
+      twText: 'text-green-600',
+      twBgSoft: 'bg-green-50',
+      twChipOn: 'bg-green-600 text-white border-green-600',
+      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
+      muiColor: '#22c55e', // green-500
+    },
+  } as const;
+
+  const accent = ACCENTS[formData.type];
+
+  const formatBRLfromCents = (cents: number) =>
+    (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const normalizeToBRL = (value: string) => {
+    const digits = value.replace(/\D/g, ''); // só números
+    const cents = Number(digits || '0');
+    return formatBRLfromCents(cents);
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = normalizeToBRL(e.target.value);
+    setFormData((f) => ({ ...f, amount: formatted }));
+  };
+
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (allowed.includes(e.key)) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault(); // apenas dígitos
+  };
+
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <div className="space-y-4">
@@ -282,6 +347,7 @@ export default function TransactionManager({
           type: filters.type,
           categoryId: filters.categoryId,
           subcategoryId: filters.subcategoryId,
+          accountId: filters.accountId,
         }}
         onFiltersChange={(newFilters) =>
           setFilters({
@@ -289,10 +355,12 @@ export default function TransactionManager({
             type: newFilters.type,
             categoryId: newFilters.categoryId,
             subcategoryId: newFilters.subcategoryId,
+            accountId: newFilters.accountId,
           })
         }
         categories={categories}
         subcategories={subcategories}
+        accounts={accounts}
         showCategoryFilter={!groupId}
       />
 
@@ -300,6 +368,7 @@ export default function TransactionManager({
       <div className="mb-24">
         <TransactionsTable
           transactions={transactions}
+          accounts={accounts}
           isLoading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -325,24 +394,72 @@ export default function TransactionManager({
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-              {editingTransaction ? 'Editar' : 'Adicionar Transação'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 pt-6 sm:pt-10 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
+            {/* Cabeçalho + selector de tipo */}
+            <div className="sticky top-0 z-10 p-4 border-b border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {editingTransaction ? 'Editar Transação' : 'Adicionar Transação'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingTransaction(null);
+                    resetForm();
+                  }}
+                  className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Fechar
+                </button>
+              </div>
+
+              {/* Segmented control Despesa / Renda */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(f => ({ ...f, type: 'EXPENSE', categoryId: 0, subcategoryId: 0 }));
+                  }}
+                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
+                       ${formData.type === 'EXPENSE' ? accent.twChipOn : accent.twChipOff}`}
+                >
+                  Despesa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(f => ({ ...f, type: 'INCOME', categoryId: 0, subcategoryId: 0 }));
+                  }}
+                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
+                       ${formData.type === 'INCOME' ? accent.twChipOn : accent.twChipOff}`}
+                >
+                  Renda
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo rolável */}
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="flex-1 p-4 space-y-4 overflow-y-auto pb-28 sm:pb-32"
+              style={{
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4rem)',
+                scrollPaddingBottom: '4rem',
+              }}
+            >
+              {/* Data/Hora - PRIMEIRO CAMPO */}
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Data e Horário
+                  Data e horário
                 </label>
                 <ThemeProvider theme={muiTheme}>
                   <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
                     <DateTimePicker
                       value={formData.dateTime}
                       onChange={(newValue: Dayjs | null) => {
-                        if (newValue) {
-                          setFormData({ ...formData, dateTime: newValue });
-                        }
+                        if (newValue) setFormData({ ...formData, dateTime: newValue });
                       }}
                       format="DD/MM/YYYY HH:mm"
                       ampm={false}
@@ -352,22 +469,26 @@ export default function TransactionManager({
                           fullWidth: true,
                           sx: {
                             '& .MuiOutlinedInput-root': {
-                              borderRadius: '0.5rem',
+                              borderRadius: '0.75rem',
                               backgroundColor: isDarkMode ? 'rgb(55 65 81)' : 'white',
-                              '& fieldset': {
-                                borderColor: isDarkMode ? 'rgb(75 85 99)' : 'rgb(209 213 219)',
+                              // Borda base pela cor do tipo
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: accent.muiColor,
                               },
-                              '&:hover fieldset': {
-                                borderColor: isDarkMode ? 'rgb(107 114 128)' : 'rgb(156 163 175)',
+                              // Hover mantém a cor do tipo
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: accent.muiColor,
                               },
-                              '&.Mui-focused fieldset': {
-                                borderColor: 'rgb(59 130 246)',
+                              // Foco dá ênfase e espessura
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: accent.muiColor,
                                 borderWidth: '2px',
                               },
                             },
                             '& .MuiInputBase-input': {
-                              padding: '8px 12px',
+                              padding: '10px 12px',
                               color: isDarkMode ? 'rgb(243 244 246)' : 'rgb(17 24 39)',
+                              fontSize: '0.95rem',
                             },
                             '& .MuiIconButton-root': {
                               color: isDarkMode ? 'rgb(243 244 246)' : 'rgb(17 24 39)',
@@ -379,6 +500,81 @@ export default function TransactionManager({
                   </LocalizationProvider>
                 </ThemeProvider>
               </div>
+
+              {/* Conta - linha única */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-gray-100 mb-1">Conta</label>
+                <select
+                  value={formData.accountId}
+                  onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
+                  required
+                  className={`w-full px-2 py-2 text-sm border rounded-lg bg-white dark:bg-gray-700
+                ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase} focus:outline-none`}
+                >
+                  <option value={0}>Selecione</option>
+                  {(accounts as Array<{ id: number; name: string }>).map((acc) => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Categoria e Subcategoria - mesma linha */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-900 dark:text-gray-100 mb-1">Categoria</label>
+                  <select
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
+                    required
+                    className={`w-full px-2 py-2 text-sm border rounded-lg bg-white dark:bg-gray-700
+                  ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase} focus:outline-none`}
+                  >
+                    <option value={0}>Selecione</option>
+                    {categories.filter((cat) => cat.type === formData.type).map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-900 dark:text-gray-100 mb-1">Subcategoria</label>
+                  <select
+                    value={formData.subcategoryId}
+                    onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
+                    required
+                    disabled={!formData.categoryId}
+                    className={`w-full px-2 py-2 text-sm border rounded-lg bg-white dark:bg-gray-700
+                  disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed
+                  ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase} focus:outline-none`}
+                  >
+                    <option value={0}>Selecione</option>
+                    {subcategories
+                      .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
+                      .map((sub) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))}
+                  </select>
+                </div>
+              </div>
+
+
+              {/* Valor */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  Valor
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.amount}
+                  onChange={handleAmountChange}
+                  onKeyDown={handleAmountKeyDown}
+                  required
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase} focus:outline-none`}
+                  placeholder="0,00"
+                />
+
+              </div>
+
+              {/* Título */}
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                   Título
@@ -387,32 +583,29 @@ export default function TransactionManager({
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  placeholder="Digite o título da transação..."
+                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700
+                       placeholder:text-gray-500 dark:placeholder:text-gray-400
+                       ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase}
+                       focus:outline-none`}
+                  placeholder="Opcional…"
                 />
               </div>
+
+              {/* Descrição */}
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Tipo
+                  Descrição
                 </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => {
-                    const newType = e.target.value as EntityType;
-                    setFormData({ 
-                      ...formData, 
-                      type: newType,
-                      categoryId: 0,
-                      subcategoryId: 0
-                    });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-                >
-                  <option value="EXPENSE">Despesa</option>
-                  <option value="INCOME">Receita</option>
-                </select>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className={`min-h-24 w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase} focus:outline-none`}
+                  placeholder="Opcional…"
+                />
               </div>
+
+              {/* (Opcional) Membro do grupo – mantive sua regra original */}
               {groupId && !editingTransaction && (
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
@@ -420,15 +613,19 @@ export default function TransactionManager({
                   </label>
                   <select
                     value={formData.userId || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      userId: e.target.value ? Number(e.target.value) : undefined
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        userId: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700
+                         ${accent.twRing} ${accent.twBorder} ${accent.twBorderBase}
+                         focus:outline-none`}
                   >
                     <option value="">Eu (usuário atual)</option>
                     {groupMembers.filter(m => m.user).map((member) => (
-                      <option key={member.id} value={member.user!.id} className="text-gray-900 dark:text-gray-100">
+                      <option key={member.id} value={member.user!.id}>
                         {member.user!.firstName} {member.user!.lastName}
                       </option>
                     ))}
@@ -438,78 +635,16 @@ export default function TransactionManager({
                   </p>
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Categoria
-                </label>
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    categoryId: Number(e.target.value),
-                    subcategoryId: 0
-                  })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
-                >
-                  <option value={0} className="text-gray-500 dark:text-gray-400">Selecione uma categoria</option>
-                  {categories
-                    .filter((cat) => cat.type === formData.type)
-                    .map((cat) => (
-                      <option key={cat.id} value={cat.id} className="text-gray-900 dark:text-gray-100">
-                        {cat.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Subcategoria
-                </label>
-                <select
-                  value={formData.subcategoryId}
-                  onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
-                  required
-                  disabled={!formData.categoryId}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-                >
-                  <option value={0} className="text-gray-500 dark:text-gray-400">Selecione uma subcategoria</option>
-                  {subcategories
-                    .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
-                    .map((sub) => (
-                      <option key={sub.id} value={sub.id} className="text-gray-900 dark:text-gray-100">
-                        {sub.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Valor
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                  placeholder="Descrição opcional..."
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
+            </form>
+
+            {/* Rodapé de ações fixo (mobile-friendly) */}
+            <div
+              className="sticky bottom-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur"
+              style={{
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)'
+              }}
+            >
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -517,21 +652,24 @@ export default function TransactionManager({
                     setEditingTransaction(null);
                     resetForm();
                   }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => {
+                    if (!formRef.current?.reportValidity()) return;
+                    formRef.current?.requestSubmit();
+                  }}
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg text-white disabled:opacity-50"
+                  style={{ background: accent.muiColor }}
                 >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? 'Carregando...'
-                    : 'Salvar'}
+                  {createMutation.isPending || updateMutation.isPending ? 'Salvando…' : 'Salvar'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

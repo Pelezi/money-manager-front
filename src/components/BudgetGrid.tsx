@@ -30,7 +30,28 @@ export default function BudgetGrid({
   
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
   const [editingCell, setEditingCell] = useState<{ subcategoryId: number; month: number } | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const [editValue, setEditValue] = useState('0,00');
+
+  // Funções para formatar e normalizar valor BRL
+  const formatBRLfromCents = (cents: number) =>
+    (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const normalizeToBRL = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    const cents = Number(digits || '0');
+    return formatBRLfromCents(cents);
+  };
+
+  const handleEditValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = normalizeToBRL(e.target.value);
+    setEditValue(formatted);
+  };
+
+  const handleEditValueKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+    if (allowed.includes(e.key)) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+  };
 
   // Queries
   const { data: categories = [] } = useQuery({
@@ -224,7 +245,7 @@ export default function BudgetGrid({
   };
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
         
@@ -269,17 +290,17 @@ export default function BudgetGrid({
               : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
         >
-          Receita
+          Renda
         </button>
       </div>
 
       {/* Budget Spreadsheet */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+  <table className="w-full border-collapse text-xs">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
               <th className="sticky left-0 bg-gray-50 dark:bg-gray-700 px-2 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 w-40">
-                Categoria / Subcategoria
+                Categoria
               </th>
               {MONTHS.map((month) => (
                 <th
@@ -308,7 +329,7 @@ export default function BudgetGrid({
                 <Fragment key={category.id}>
                   {/* Category Row */}
                   <tr className="bg-blue-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-600">
-                    <td className="sticky left-0 bg-blue-50 dark:bg-gray-900 px-2 py-1.5 font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
+                    <td className="sticky left-0 bg-blue-50 dark:bg-gray-900 px-2 py-1.5 font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 break-words whitespace-pre-line max-w-[120px]">
                       {category.name}
                     </td>
                     {MONTHS.map((_, index) => {
@@ -368,7 +389,7 @@ export default function BudgetGrid({
                   {/* Subcategory Rows */}
                   {categorySubs.map((subcategory) => (
                     <tr key={subcategory.id} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="sticky left-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1.5 pl-6 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
+                      <td className="sticky left-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1.5 pl-6 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 break-words whitespace-pre-line max-w-[120px]">
                         {subcategory.name}
                       </td>
                       {MONTHS.map((_, index) => {
@@ -390,16 +411,17 @@ export default function BudgetGrid({
                           >
                             {isEditing ? (
                               <input
-                                type="number"
-                                step="0.01"
+                                type="text"
+                                inputMode="numeric"
                                 value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
+                                onChange={handleEditValueChange}
                                 onBlur={handleCellBlur}
                                 onKeyDown={(e) => {
+                                  handleEditValueKeyDown(e);
                                   if (e.key === 'Enter') handleCellBlur();
                                   if (e.key === 'Escape') {
                                     setEditingCell(null);
-                                    setEditValue('');
+                                    setEditValue('0,00');
                                   }
                                 }}
                                 autoFocus

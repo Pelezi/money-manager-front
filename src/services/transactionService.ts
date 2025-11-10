@@ -6,14 +6,18 @@ export const transactionService = {
     startDate?: string;
     endDate?: string;
     type?: string;
+    categoryId?: number;
     subcategoryId?: number;
+    accountId?: number;
     groupId?: number;
   }): Promise<Transaction[]> => {
     const queryParams = new URLSearchParams();
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     if (params?.type) queryParams.append('type', params.type);
+    if (params?.categoryId) queryParams.append('categoryId', params.categoryId.toString());
     if (params?.subcategoryId) queryParams.append('subcategoryId', params.subcategoryId.toString());
+    if (params?.accountId) queryParams.append('accountId', params.accountId.toString());
     if (params?.groupId) queryParams.append('groupId', params.groupId.toString());
     
     const queryString = queryParams.toString();

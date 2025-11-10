@@ -47,7 +47,7 @@ export default function AccountManager({
   const [formData, setFormData] = useState({
     name: '',
     type: 'CASH' as AccountType,
-    initialBalance: 0,
+    initialBalance: '0,00',
     initialBalanceDateTime: createInUserTimezone(),
     userId: currentUserId || undefined,
   });
@@ -116,9 +116,10 @@ export default function AccountManager({
         // Remover userId se não for grupo
         if (!groupId) delete (payload as any).userId;
         // Enviar saldo inicial e data/hora
+        const amountNumber = Number(formData.initialBalance.replace(/\./g, '').replace(',', '.'));
         await accountService.create({
           ...payload,
-          initialBalance: formData.initialBalance,
+          initialBalance: amountNumber,
           // Se a API suportar, envie initialBalanceDate: formData.initialBalanceDateTime.toDate(),
           // Caso contrário, apenas envie initialBalance e trate a data/hora no backend
         });
@@ -170,7 +171,7 @@ export default function AccountManager({
     setFormData({
       name: '',
       type: 'CASH',
-      initialBalance: 0,
+      initialBalance: '0,00',
       initialBalanceDateTime: createInUserTimezone(),
       userId: currentUserId || undefined,
     });
@@ -190,7 +191,7 @@ export default function AccountManager({
     setFormData({
       name: account.name,
       type: account.type,
-      initialBalance: 0,
+      initialBalance: '0,00',
       initialBalanceDateTime: createInUserTimezone(),
       userId: account.userId,
     });
@@ -465,12 +466,22 @@ export default function AccountManager({
                       Saldo Inicial
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
+                      inputMode="numeric"
                       value={formData.initialBalance}
-                      onChange={(e) => setFormData({ ...formData, initialBalance: parseFloat(e.target.value) })}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        const cents = Number(digits || '0');
+                        const formatted = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        setFormData({ ...formData, initialBalance: formatted });
+                      }}
+                      onKeyDown={(e) => {
+                        const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                        if (allowed.includes(e.key)) return;
+                        if (!/^\d$/.test(e.key)) e.preventDefault();
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0.00"
+                      placeholder="0,00"
                     />
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4 mb-2">
                       Data e Hora do Saldo Inicial

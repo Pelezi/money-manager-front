@@ -9,15 +9,18 @@ interface FilterModalProps {
     type: string;
     categoryId?: number;
     subcategoryId?: number;
+    accountId?: number;
   };
   onFiltersChange: (filters: {
     type: string;
     categoryId?: number;
     subcategoryId?: number;
+    accountId?: number;
   }) => void;
+  accounts: Array<{ id: number; name: string }>;
   categories: Array<{ id: number; name: string; type: string }>;
   subcategories: Array<{ id: number; name: string; categoryId: number; type: string }>;
-  showCategoryFilter?: boolean;
+    showCategoryFilter?: boolean;
 }
 
 export function TransactionFilterModal({
@@ -27,6 +30,7 @@ export function TransactionFilterModal({
   onFiltersChange,
   categories,
   subcategories,
+  accounts,
   showCategoryFilter = true,
 }: FilterModalProps) {
 
@@ -62,15 +66,23 @@ export function TransactionFilterModal({
     });
   };
 
+  const handleAccountChange = (accountId: number | undefined) => {
+    onFiltersChange({
+      ...filters,
+      accountId,
+    });
+  };
+
   const handleClearFilters = () => {
     onFiltersChange({
       type: '',
       categoryId: undefined,
       subcategoryId: undefined,
+      accountId: undefined,
     });
   };
 
-  const hasActiveFilters = filters.type || filters.categoryId || filters.subcategoryId;
+  const hasActiveFilters = filters.type || filters.categoryId || filters.subcategoryId || filters.accountId;
 
   return (
     <>
@@ -109,7 +121,24 @@ export function TransactionFilterModal({
             >
               <option value="">Todos os Tipos</option>
               <option value="EXPENSE">Despesa</option>
-              <option value="INCOME">Receita</option>
+              <option value="INCOME">Renda</option>
+            </select>
+          </div>
+
+          {/* Account filter - move above category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+              Filtrar por Conta
+            </label>
+            <select
+              value={filters.accountId || ''}
+              onChange={(e) => handleAccountChange(e.target.value ? Number(e.target.value) : undefined)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas as Contas</option>
+              {accounts.map((acc: { id: number; name: string }) => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+              ))}
             </select>
           </div>
 
@@ -171,7 +200,10 @@ export function TransactionFilterModal({
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={() => {
+              onFiltersChange(filters);
+              onClose();
+            }}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Aplicar

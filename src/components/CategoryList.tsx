@@ -288,7 +288,7 @@ export default function CategoryList({
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          Receita
+          Renda
         </button>
       </div>
 
@@ -387,8 +387,7 @@ export default function CategoryList({
                               {category.name}
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
-                              ({categorySubcategories.length}{' '}
-                              {categorySubcategories.length === 1 ? 'Subcategoria' : 'Subcategorias'})
+                              ({categorySubcategories.length})
                             </span>
                           </>
                         )}

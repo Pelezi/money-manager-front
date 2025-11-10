@@ -275,7 +275,7 @@ export default function AnnualReviewDashboard({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Receita Total</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Renda Total</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
                 ${totalIncome.toFixed(2)}
               </p>
@@ -340,7 +340,7 @@ export default function AnnualReviewDashboard({
                 contentStyle={{ backgroundColor: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)' }}
               />
               <Legend />
-              <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Receita" />
+              <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Renda" />
               <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Despesa" />
               <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={2} name="Líquido Mensal" />
               <Line type="monotone" dataKey="accumulatedBalance" stroke="#8b5cf6" strokeWidth={2} name="Saldo Real (Contas)" strokeDasharray="5 5" />
@@ -379,7 +379,7 @@ export default function AnnualReviewDashboard({
 
         {/* Income vs Expense */}
         {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Receita vs Despesa</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Renda vs Despesa</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={incomeVsExpense}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -387,7 +387,7 @@ export default function AnnualReviewDashboard({
               <YAxis />
               <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
               <Legend />
-              <Bar dataKey="income" fill="#10b981" name="Receita" />
+              <Bar dataKey="income" fill="#10b981" name="Renda" />
               <Bar dataKey="expense" fill="#ef4444" name="Despesa" />
             </BarChart>
           </ResponsiveContainer>

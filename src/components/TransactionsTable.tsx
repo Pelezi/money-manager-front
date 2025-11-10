@@ -1,12 +1,13 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { Transaction } from '@/types';
+import { Transaction, Account } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toUserTimezone, formatInUserTimezone } from '@/lib/timezone';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
+  accounts: Account[];
   isLoading: boolean;
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: number) => void;
@@ -24,6 +25,7 @@ interface DayGroup {
 
 export function TransactionsTable({
   transactions,
+  accounts,
   isLoading,
   onEdit,
   onDelete,
@@ -205,8 +207,20 @@ export function TransactionsTable({
                 {/* Center: Title */}
                 <div className="flex flex-col justify-center text-center">
                   <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 break-words line-clamp-2">
-                    {transaction.title}
+                    {transaction.title && (
+                      transaction.title
+                    )}
                   </div>
+                  {transaction.accountId && (
+                    (() => {
+                      const account = accounts.find(acc => acc.id === transaction.accountId);
+                      return account ? (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words line-clamp-2">
+                          {account.name}
+                        </div>
+                      ) : null;
+                    })()
+                  )}
                 </div>
 
                 {/* Right: Amount */}

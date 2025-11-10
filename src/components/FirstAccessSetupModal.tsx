@@ -26,7 +26,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountName, setAccountName] = useState('Dinheiro');
   const [accountType, setAccountType] = useState<'CREDIT' | 'CASH' | 'PREPAID'>('CASH');
-  const [accountBalance, setAccountBalance] = useState(0);
+  const [accountBalance, setAccountBalance] = useState('0,00');
 
   const allCategories = defaultCategoriesPT;
   const categories = allCategories.filter(cat => cat.type === activeTab);
@@ -172,10 +172,12 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
       // Import accountService
       const { accountService } = await import('@/services/accountService');
       
+      const amountNumber = Number(accountBalance.replace(/\./g, '').replace(',', '.'));
+      
       await accountService.create({
         name: accountName,
         type: accountType,
-        initialBalance: accountBalance
+        initialBalance: amountNumber
       });
       
       toast.success('Conta criada com sucesso!');
@@ -415,12 +417,22 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
                     Saldo Inicial (R$)
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="numeric"
                     value={accountBalance}
-                    onChange={(e) => setAccountBalance(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      const cents = Number(digits || '0');
+                      const formatted = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      setAccountBalance(formatted);
+                    }}
+                    onKeyDown={(e) => {
+                      const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                      if (allowed.includes(e.key)) return;
+                      if (!/^\d$/.test(e.key)) e.preventDefault();
+                    }}
                     className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                    placeholder="0.00"
+                    placeholder="0,00"
                   />
                 </div>
               </div>
@@ -493,7 +505,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              Receita
+              Renda
             </button>
           </div>
         </div>

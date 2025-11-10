@@ -110,11 +110,11 @@ A aplicação espera os seguintes endpoints da API:
 - Visualize todas as transações com filtragem por período, tipo e subcategoria
 - Edição inline e ordenação
 - Criar, editar e excluir transações
-- Tipos de transação codificados por cores (receita/despesa)
+- Tipos de transação codificados por cores (renda/despesa)
 
 ### Gerenciador de Categorias
 - Interface de dois painéis com categorias à esquerda e subcategorias à direita
-- Abas separadas para despesas e receitas
+- Abas separadas para despesas e rendas
 - Criação e gerenciamento fácil de categorias hierárquicas
 
 ### Planilha de Orçamento
@@ -126,10 +126,10 @@ A aplicação espera os seguintes endpoints da API:
 - Comparação em tempo real: orçado vs. real
 
 ### Revisão Anual
-- Cards resumindo receita total, despesas e economia líquida
+- Cards resumindo renda total, despesas e economia líquida
 - Gráfico de linha para tendências mensais
 - Gráfico de pizza para distribuição por categoria
-- Gráfico de barras para comparação receita vs. despesa
+- Gráfico de barras para comparação renda vs. despesa
 - Tabela de desempenho mostrando orçado vs. real por categoria
 
 ### Gerenciamento de Grupos

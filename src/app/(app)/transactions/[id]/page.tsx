@@ -6,7 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionService } from '@/services/transactionService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
-import { Transaction, EntityType } from '@/types';
+import { Transaction, EntityType, Account } from '@/types';
+import { accountService } from '@/services/accountService';
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountService.getAll(),
+  });
 import { ArrowLeft, Edit2, Trash2, Calendar, Tag, FileText, DollarSign, User } from 'lucide-react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -253,7 +258,7 @@ export default function TransactionDetailPage() {
                 required
               >
                 <option value="EXPENSE">Despesa</option>
-                <option value="INCOME">Receita</option>
+                <option value="INCOME">Renda</option>
               </select>
             </div>
 
@@ -376,7 +381,7 @@ export default function TransactionDetailPage() {
           >
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                {transaction.type === 'INCOME' ? 'Receita' : 'Despesa'}
+                {transaction.type === 'INCOME' ? 'Renda' : 'Despesa'}
               </div>
               <div
                 className={`text-4xl font-bold ${
@@ -415,6 +420,23 @@ export default function TransactionDetailPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Conta */}
+              {transaction.accountId && (
+                (() => {
+                  const account = accounts.find(acc => acc.id === transaction.accountId);
+                  return account ? (
+                    <div className="flex items-start gap-3">
+                      <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
+                      <div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Conta</div>
+                        <div className="text-base font-medium text-gray-900 dark:text-gray-100">
+                          {account.name}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+                })()
+              )}
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>

@@ -48,6 +48,7 @@ export interface Expense {
 export interface Transaction {
   id: number;
   subcategoryId: number;
+  accountId?: number;
   subcategory?: Subcategory & { category: Category };
   title: string;
   amount: number;
