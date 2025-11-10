@@ -144,12 +144,12 @@ export function TransactionsTable({
             <div className="grid grid-cols-4 gap-3 text-xs">
               <div className="flex flex-col gap-1">
                 <span className="text-gray-500 dark:text-gray-400">Data</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {formatDate(dayGroup.date).display}
                   </span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                    className={`px-1 py-0.5 rounded text-[10px] font-medium ${
                       getDayOfWeek(dayGroup.date).isWeekend
                         ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                         : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
