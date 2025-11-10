@@ -120,13 +120,17 @@ export interface GroupRole {
   name: string;
   description?: string;
   canViewTransactions: boolean;
-  canManageTransactions: boolean;
+  canManageOwnTransactions: boolean;
+  canManageGroupTransactions: boolean;
   canViewCategories: boolean;
   canManageCategories: boolean;
   canViewSubcategories: boolean;
   canManageSubcategories: boolean;
   canViewBudgets: boolean;
   canManageBudgets: boolean;
+  canViewAccounts: boolean;
+  canManageOwnAccounts: boolean;
+  canManageGroupAccounts: boolean;
   canManageGroup: boolean;
   createdAt: string;
   updatedAt: string;
@@ -150,13 +154,17 @@ export interface GroupMember {
 
 export interface GroupPermissions {
   canViewTransactions: boolean;
-  canManageTransactions: boolean;
+  canManageOwnTransactions: boolean;
+  canManageGroupTransactions: boolean;
   canViewCategories: boolean;
   canManageCategories: boolean;
   canViewSubcategories: boolean;
   canManageSubcategories: boolean;
   canViewBudgets: boolean;
   canManageBudgets: boolean;
+  canViewAccounts: boolean;
+  canManageOwnAccounts: boolean;
+  canManageGroupAccounts: boolean;
   canManageGroup: boolean;
 }
 
@@ -202,4 +210,29 @@ export interface GroupInvitation {
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
   createdAt: string;
   updatedAt: string;
+}
+
+// Account types
+export type AccountType = 'CREDIT' | 'CASH' | 'PREPAID';
+
+export interface Account {
+  id: number;
+  userId: number;
+  groupId?: number;
+  name: string;
+  type: AccountType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountBalance {
+  id: number;
+  accountId: number;
+  amount: number;
+  date: string;
+  createdAt: string;
+}
+
+export interface AccountWithBalance extends Account {
+  currentBalance?: AccountBalance;
 }

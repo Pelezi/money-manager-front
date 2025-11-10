@@ -9,7 +9,8 @@ export default function GroupTransactionsPage() {
   const groupId = parseInt(params?.id as string);
   const { currentGroupPermissions } = useAppStore();
 
-  const canManage = currentGroupPermissions?.canManageTransactions || false;
+  // Can manage if user has permission for own transactions OR all group transactions
+  const canManage = currentGroupPermissions?.canManageOwnTransactions || currentGroupPermissions?.canManageGroupTransactions || false;
   const canView = currentGroupPermissions?.canViewTransactions || false;
 
   if (!canView) {

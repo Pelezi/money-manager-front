@@ -5,6 +5,7 @@ import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { budgetService } from '@/services/budgetService';
 import { transactionService } from '@/services/transactionService';
+import { accountService } from '@/services/accountService';
 import { useAppStore } from '@/lib/store';
 import {
   LineChart,
@@ -63,6 +64,32 @@ export default function AnnualReviewDashboard({
     enabled: canView,
   });
 
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts', groupId],
+    queryFn: () => accountService.getAll(groupId ? { groupId } : undefined),
+    enabled: canView,
+  });
+
+  // Fetch balance history for all accounts
+  const { data: accountBalances = [] } = useQuery({
+    queryKey: ['account-balances-history', accounts.map(a => a.id), groupId],
+    queryFn: async () => {
+      if (accounts.length === 0) return [];
+      
+      const balancePromises = accounts.map(async (account) => {
+        const history = await accountService.getBalanceHistory(account.id);
+        return history.map(balance => ({
+          ...balance,
+          accountId: account.id,
+        }));
+      });
+      
+      const results = await Promise.all(balancePromises);
+      return results.flat();
+    },
+    enabled: canView && accounts.length > 0,
+  });
+
   // Permission check
   if (!canView) {
     return (
@@ -94,12 +121,85 @@ export default function AnnualReviewDashboard({
     };
   });
 
-  // Calculate totals
-  const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
-  const totalExpenses = monthlyTrends.reduce((sum, m) => sum + m.expense, 0);
+  // Calculate real account balance per month based on balance records
+
+  type TrendWithBalance = {
+    month: string;
+    income: number;
+    expense: number;
+    net: number;
+    accumulatedBalance: number;
+    calculatedBalance: number;
+    divergence: number | null;
+    hasRealData: boolean;
+  };
+
+  let lastBalanceMonthIndex = -1;
+  let lastBalanceValue = 0;
+  let lastBalanceDate: Date | null = null;
+  const monthlyTrendsWithBalance: TrendWithBalance[] = [];
+  monthlyTrends.forEach((trend, index) => {
+    const month = index + 1;
+    const endOfMonth = new Date(selectedYear, month, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    let mostRecentBalance: { amount: number; date: string } | null = null;
+    accounts.forEach(account => {
+      const accountHistory = accountBalances as { amount: number; date: string; accountId: number }[];
+      const relevantBalances: { amount: number; date: string; accountId: number }[] = accountHistory.filter(b => b.accountId === account.id && new Date(b.date) <= endOfMonth);
+      if (relevantBalances.length > 0) {
+        const mostRecentAux = relevantBalances.reduce((latest, current) => {
+          const latestDate = new Date(latest.date);
+          const currentDate = new Date(current.date);
+          return currentDate > latestDate ? current : latest;
+        }, relevantBalances[0]);
+        if (!mostRecentBalance || new Date(mostRecentAux.date) > new Date(mostRecentBalance.date)) {
+          mostRecentBalance = { amount: mostRecentAux.amount, date: mostRecentAux.date };
+        }
+      }
+    });
+
+    let hasNewBalanceThisMonth = false;
+    if (mostRecentBalance !== null) {
+      const balanceDate = new Date((mostRecentBalance as { amount: number; date: string }).date);
+      if (lastBalanceDate === null || balanceDate > lastBalanceDate) {
+        lastBalanceMonthIndex = index;
+        lastBalanceValue = (mostRecentBalance as { amount: number; date: string }).amount;
+        lastBalanceDate = balanceDate;
+        if (balanceDate.getFullYear() === selectedYear && balanceDate.getMonth() + 1 === month) {
+          hasNewBalanceThisMonth = true;
+        }
+      }
+    }
+
+    const realBalance = mostRecentBalance !== null
+      ? (mostRecentBalance as { amount: number; date: string }).amount
+      : (index === 0 ? 0 : monthlyTrendsWithBalance[index-1].accumulatedBalance);
+
+    let calculatedBalance = lastBalanceValue;
+    if (lastBalanceMonthIndex >= 0) {
+      for (let i = lastBalanceMonthIndex + 1; i <= index; i++) {
+        calculatedBalance += monthlyTrends[i].net;
+      }
+    } else {
+      calculatedBalance = monthlyTrends.slice(0, index + 1).reduce((sum, m) => sum + m.net, 0);
+    }
+
+    const divergence = hasNewBalanceThisMonth ? realBalance - calculatedBalance : null;
+
+    monthlyTrendsWithBalance.push({
+      ...trend,
+      accumulatedBalance: realBalance,
+      calculatedBalance,
+      divergence,
+      hasRealData: !!mostRecentBalance,
+    });
+  });
+
+  const totalIncome = monthlyTrendsWithBalance.reduce((sum, m) => sum + (m.income || 0), 0);
+  const totalExpenses = monthlyTrendsWithBalance.reduce((sum, m) => sum + (m.expense || 0), 0);
   const netSavings = totalIncome - totalExpenses;
 
-  // Category breakdown for expenses
   const expensesByCategory = categories
     .filter((cat) => cat.type === 'EXPENSE')
     .map((cat) => {
@@ -110,7 +210,6 @@ export default function AnnualReviewDashboard({
           .reduce((s, t) => s + t.total, 0);
         return sum + subTotal;
       }, 0);
-      
       return {
         name: cat.name,
         value: total,
@@ -119,41 +218,31 @@ export default function AnnualReviewDashboard({
     .filter((cat) => cat.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // Income vs Expense by month
-  const incomeVsExpense = monthlyTrends.map((m) => ({
-    month: m.month,
-    income: m.income,
-    expense: m.expense,
-  }));
-
-  // Yearly performance by category
+  // Calcula desempenho anual por categoria
   const yearlyPerformance = categories
     .filter((cat) => cat.type === 'EXPENSE')
     .map((cat) => {
-      const categorySubs = subcategories.filter((sub) => sub.categoryId === cat.id);
-      
-      const budgeted = categorySubs.reduce((sum, sub) => {
-        const subBudgeted = budgets
-          .filter((budget) => budget.subcategoryId === sub.id)
-          .reduce((s, budget) => s + budget.amount, 0);
-        return sum + subBudgeted;
-      }, 0);
-      
-      const actual = categorySubs.reduce((sum, sub) => {
-        const subActual = aggregatedTransactions
-          .filter((t) => t.subcategoryId === sub.id && t.type === 'EXPENSE')
-          .reduce((s, t) => s + t.total, 0);
-        return sum + subActual;
-      }, 0);
-      
+      // Subcategorias da categoria
+      const subs = subcategories.filter((sub) => sub.categoryId === cat.id);
+
+      // Soma orçamento anual da categoria
+      const annualBudget = budgets
+        .filter((b) => subs.some((sub) => sub.id === b.subcategoryId))
+        .reduce((sum, b) => sum + (b.amount ?? 0), 0);
+
+      // Soma gastos anuais da categoria
+      const annualSpent = aggregatedTransactions
+        .filter((t) => t.type === 'EXPENSE' && subs.some((sub) => sub.id === t.subcategoryId))
+        .reduce((sum, t) => sum + (t.total ?? 0), 0);
+
       return {
-        category: cat.name,
-        budgeted,
-        actual,
-        difference: budgeted - actual,
+        categoryId: cat.id,
+        categoryName: cat.name,
+        annualBudget,
+        annualSpent,
+        difference: annualBudget - annualSpent,
       };
-    })
-    .filter((cat) => cat.budgeted > 0 || cat.actual > 0);
+    });
 
   return (
     <div className="space-y-6">
@@ -232,7 +321,7 @@ export default function AnnualReviewDashboard({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 lg:col-span-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Tendências Mensais</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyTrends}>
+            <LineChart data={monthlyTrendsWithBalance}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
               <XAxis 
                 dataKey="month" 
@@ -244,13 +333,19 @@ export default function AnnualReviewDashboard({
               />
               <YAxis tick={{ fontSize: 11, fill: 'currentColor' }} className="text-gray-600 dark:text-gray-400" />
               <Tooltip 
-                formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                formatter={(value: any) => {
+                  if (value === null || value === undefined) return 'N/A';
+                  return `R$ ${Number(value).toFixed(2)}`;
+                }}
                 contentStyle={{ backgroundColor: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)' }}
               />
               <Legend />
               <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Receita" />
               <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} name="Despesa" />
-              <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={2} name="Líquido" />
+              <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={2} name="Líquido Mensal" />
+              <Line type="monotone" dataKey="accumulatedBalance" stroke="#8b5cf6" strokeWidth={2} name="Saldo Real (Contas)" strokeDasharray="5 5" />
+              <Line type="monotone" dataKey="calculatedBalance" stroke="#06b6d4" strokeWidth={2} name="Saldo Calculado (Transações)" strokeDasharray="3 3" />
+              <Line type="monotone" dataKey="divergence" stroke="#f97316" strokeWidth={2} name="Divergência Desconhecida" dot={{ r: 4 }} connectNulls={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -283,7 +378,7 @@ export default function AnnualReviewDashboard({
         </div>
 
         {/* Income vs Expense */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Receita vs Despesa</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={incomeVsExpense}>
@@ -296,7 +391,7 @@ export default function AnnualReviewDashboard({
               <Bar dataKey="expense" fill="#ef4444" name="Despesa" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
 
         {/* Yearly Performance Table */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 lg:col-span-2">
@@ -320,20 +415,12 @@ export default function AnnualReviewDashboard({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {yearlyPerformance.map((item) => (
-                  <tr key={item.category}>
-                    <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{item.category}</td>
-                    <td className="px-3 py-2 text-right text-gray-900 dark:text-gray-100">
-                      ${item.budgeted.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-900 dark:text-gray-100">
-                      ${item.actual.toFixed(2)}
-                    </td>
-                    <td className={`px-3 py-2 text-right font-medium ${
-                      item.difference >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                    }`}>
-                      ${item.difference.toFixed(2)}
-                    </td>
+                {yearlyPerformance.map((row) => (
+                  <tr key={row.categoryId}>
+                    <td className="px-3 py-2 text-left">{row.categoryName}</td>
+                    <td className="px-3 py-2 text-right">{row.annualBudget.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td className="px-3 py-2 text-right">{row.annualSpent.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td className={`px-3 py-2 text-right ${row.difference < 0 ? 'text-red-600' : 'text-green-600'}`}>{row.difference.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                   </tr>
                 ))}
               </tbody>

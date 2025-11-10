@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Home,
   Bell,
-  Mail
+  Mail,
+  PiggyBank
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -82,6 +83,7 @@ export default function Sidebar() {
     { href: '/transactions', icon: <Receipt size={20} />, label: 'Transações' },
     { href: '/categories', icon: <FolderTree size={20} />, label: 'Categorias' },
     { href: '/budget', icon: <LayoutDashboard size={20} />, label: 'Orçamento' },
+    { href: '/accounts', icon: <PiggyBank size={20} />, label: 'Contas' },
     { href: '/annual-review', icon: <BarChart3 size={20} />, label: 'Resumo Anual' },
     { href: '/settings', icon: <Settings size={20} />, label: 'Configurações' },
   ];

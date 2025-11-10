@@ -57,13 +57,17 @@ export default function GroupSettingsPage() {
   const [roleDescription, setRoleDescription] = useState('');
   const [rolePermissions, setRolePermissions] = useState({
     canViewTransactions: false,
-    canManageTransactions: false,
+    canManageOwnTransactions: false,
+    canManageGroupTransactions: false,
     canViewCategories: false,
     canManageCategories: false,
     canViewSubcategories: false,
     canManageSubcategories: false,
     canViewBudgets: false,
     canManageBudgets: false,
+    canViewAccounts: false,
+    canManageOwnAccounts: false,
+    canManageGroupAccounts: false,
     canManageGroup: false,
   });
   const [savingRole, setSavingRole] = useState(false);
@@ -230,13 +234,17 @@ export default function GroupSettingsPage() {
       setRoleDescription(role.description || '');
       setRolePermissions({
         canViewTransactions: role.canViewTransactions,
-        canManageTransactions: role.canManageTransactions,
+        canManageOwnTransactions: role.canManageOwnTransactions,
+        canManageGroupTransactions: role.canManageGroupTransactions,
         canViewCategories: role.canViewCategories,
         canManageCategories: role.canManageCategories,
         canViewSubcategories: role.canViewSubcategories,
         canManageSubcategories: role.canManageSubcategories,
         canViewBudgets: role.canViewBudgets,
         canManageBudgets: role.canManageBudgets,
+        canViewAccounts: role.canViewAccounts,
+        canManageOwnAccounts: role.canManageOwnAccounts,
+        canManageGroupAccounts: role.canManageGroupAccounts,
         canManageGroup: role.canManageGroup,
       });
     } else {
@@ -245,13 +253,17 @@ export default function GroupSettingsPage() {
       setRoleDescription('');
       setRolePermissions({
         canViewTransactions: false,
-        canManageTransactions: false,
+        canManageOwnTransactions: false,
+        canManageGroupTransactions: false,
         canViewCategories: false,
         canManageCategories: false,
         canViewSubcategories: false,
         canManageSubcategories: false,
         canViewBudgets: false,
         canManageBudgets: false,
+        canViewAccounts: false,
+        canManageOwnAccounts: false,
+        canManageGroupAccounts: false,
         canManageGroup: false,
       });
     }
@@ -599,8 +611,12 @@ export default function GroupSettingsPage() {
                         <span className="text-gray-700 dark:text-gray-300">Ver Transações</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" checked={role.canManageTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Transações</span>
+                        <input type="checkbox" checked={role.canManageOwnTransactions} disabled className="rounded" />
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Próprias Transações</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" checked={role.canManageGroupTransactions} disabled className="rounded" />
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Transações do Grupo</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewCategories} disabled className="rounded" />
@@ -625,6 +641,18 @@ export default function GroupSettingsPage() {
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageBudgets} disabled className="rounded" />
                         <span className="text-gray-700 dark:text-gray-300">Gerenciar Orçamentos</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" checked={role.canViewAccounts} disabled className="rounded" />
+                        <span className="text-gray-700 dark:text-gray-300">Ver Contas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" checked={role.canManageOwnAccounts} disabled className="rounded" />
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Próprias Contas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" checked={role.canManageGroupAccounts} disabled className="rounded" />
+                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Contas do Grupo</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageGroup} disabled className="rounded" />
@@ -824,114 +852,201 @@ export default function GroupSettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Permissões
                   </label>
-                  <div className="space-y-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canViewTransactions"
-                        checked={rolePermissions.canViewTransactions}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canViewTransactions: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canViewTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Ver Transações
-                      </label>
+                  <div className="space-y-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg max-h-96 overflow-y-auto">
+                    {/* Transações */}
+                    <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Transações</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canViewTransactions"
+                            checked={rolePermissions.canViewTransactions}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canViewTransactions: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canViewTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Ver Transações
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3 ml-6">
+                          <input
+                            type="checkbox"
+                            id="canManageOwnTransactions"
+                            checked={rolePermissions.canManageOwnTransactions}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageOwnTransactions: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageOwnTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Próprias Transações
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3 ml-6">
+                          <input
+                            type="checkbox"
+                            id="canManageGroupTransactions"
+                            checked={rolePermissions.canManageGroupTransactions}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageGroupTransactions: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageGroupTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Transações do Grupo
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canManageTransactions"
-                        checked={rolePermissions.canManageTransactions}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canManageTransactions: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canManageTransactions" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Gerenciar Transações
-                      </label>
+
+                    {/* Categorias */}
+                    <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Categorias</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canViewCategories"
+                            checked={rolePermissions.canViewCategories}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canViewCategories: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canViewCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Ver Categorias
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canManageCategories"
+                            checked={rolePermissions.canManageCategories}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageCategories: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Categorias
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canViewCategories"
-                        checked={rolePermissions.canViewCategories}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canViewCategories: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canViewCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Ver Categorias
-                      </label>
+
+                    {/* Subcategorias */}
+                    <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Subcategorias</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canViewSubcategories"
+                            checked={rolePermissions.canViewSubcategories}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canViewSubcategories: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canViewSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Ver Subcategorias
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canManageSubcategories"
+                            checked={rolePermissions.canManageSubcategories}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageSubcategories: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Subcategorias
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canManageCategories"
-                        checked={rolePermissions.canManageCategories}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canManageCategories: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canManageCategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Gerenciar Categorias
-                      </label>
+
+                    {/* Orçamentos */}
+                    <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Orçamentos</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canViewBudgets"
+                            checked={rolePermissions.canViewBudgets}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canViewBudgets: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canViewBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Ver Orçamentos
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canManageBudgets"
+                            checked={rolePermissions.canManageBudgets}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageBudgets: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Orçamentos
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canViewSubcategories"
-                        checked={rolePermissions.canViewSubcategories}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canViewSubcategories: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canViewSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Ver Subcategorias
-                      </label>
+
+                    {/* Contas */}
+                    <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Contas</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="canViewAccounts"
+                            checked={rolePermissions.canViewAccounts}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canViewAccounts: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canViewAccounts" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Ver Contas
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3 ml-6">
+                          <input
+                            type="checkbox"
+                            id="canManageOwnAccounts"
+                            checked={rolePermissions.canManageOwnAccounts}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageOwnAccounts: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageOwnAccounts" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Próprias Contas
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-3 ml-6">
+                          <input
+                            type="checkbox"
+                            id="canManageGroupAccounts"
+                            checked={rolePermissions.canManageGroupAccounts}
+                            onChange={(e) => setRolePermissions({ ...rolePermissions, canManageGroupAccounts: e.target.checked })}
+                            className="rounded"
+                          />
+                          <label htmlFor="canManageGroupAccounts" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                            Gerenciar Contas do Grupo
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canManageSubcategories"
-                        checked={rolePermissions.canManageSubcategories}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canManageSubcategories: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canManageSubcategories" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Gerenciar Subcategorias
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canViewBudgets"
-                        checked={rolePermissions.canViewBudgets}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canViewBudgets: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canViewBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Ver Orçamentos
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canManageBudgets"
-                        checked={rolePermissions.canManageBudgets}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canManageBudgets: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canManageBudgets" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Gerenciar Orçamentos
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="canManageGroup"
-                        checked={rolePermissions.canManageGroup}
-                        onChange={(e) => setRolePermissions({ ...rolePermissions, canManageGroup: e.target.checked })}
-                        className="rounded"
-                      />
-                      <label htmlFor="canManageGroup" className="text-sm text-gray-900 dark:text-white cursor-pointer">
-                        Gerenciar Grupo
-                      </label>
+
+                    {/* Grupo */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Grupo</h4>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="canManageGroup"
+                          checked={rolePermissions.canManageGroup}
+                          onChange={(e) => setRolePermissions({ ...rolePermissions, canManageGroup: e.target.checked })}
+                          className="rounded"
+                        />
+                        <label htmlFor="canManageGroup" className="text-sm text-gray-900 dark:text-white cursor-pointer">
+                          Gerenciar Grupo
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
