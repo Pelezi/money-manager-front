@@ -15,6 +15,12 @@ import { Account, AccountBalance, AccountType } from '@/types';
 import { GroupMember } from '@/types';
 import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 
 interface AccountManagerProps {
   groupId?: number;
@@ -57,6 +63,14 @@ export default function AccountManager({
     dateTime: createInUserTimezone(), // Dayjs object
   });
 
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
+
   useEffect(() => {
     if (canView) {
       loadAccounts();
@@ -65,6 +79,21 @@ export default function AccountManager({
       groupService.getMembers(groupId).then((members: GroupMember[]) => setGroupMembers(members));
     }
   }, [canView, groupId, showModal]);
+
+  // Listen for changes to Tailwind's dark mode class
+  useEffect(() => {
+    const updateDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    updateDarkMode();
+    window.addEventListener('storage', updateDarkMode);
+    const observer = new MutationObserver(updateDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => {
+      window.removeEventListener('storage', updateDarkMode);
+      observer.disconnect();
+    };
+  }, []);
 
   const loadAccounts = async () => {
     try {
@@ -94,7 +123,7 @@ export default function AccountManager({
 
   const canEditAccount = (account: Account): boolean => {
     if (!groupId) return canManage; // Personal accounts
-    
+
     // Group accounts
     if (canManageAll) return true;
     if (canManageOwn && currentUserId && account.userId === currentUserId) return true;
@@ -261,6 +290,16 @@ export default function AccountManager({
 
   const showCreateButton = groupId ? (canManageOwn || canManageAll) : canManage;
 
+  const muiTheme = createTheme({
+    palette: {
+      mode: isDarkMode ? 'dark' : 'light',
+      primary: {
+        main: isDarkMode ? '#ffffffff' : '#000000ff',
+      },
+    },
+  });
+
+
   return (
     <div className="p-6 max-w-7xl mx-auto pb-24">
       <div className="mb-6">
@@ -402,264 +441,222 @@ export default function AccountManager({
                 </button>
               </div>
 
+
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nome da Conta
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="Ex: Carteira, Nubank, Conta Corrente"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tipo de Conta
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as AccountType })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="CASH">💵 Dinheiro</option>
-                    <option value="CREDIT">💳 Crédito</option>
-                    <option value="PREPAID">💰 Pré-pago</option>
-                  </select>
-                </div>
-
-                {groupId && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Dono da Conta
-                    </label>
-                    {canManageAll ? (
-                      <select
-                        value={formData.userId}
-                        onChange={e => setFormData({ ...formData, userId: Number(e.target.value) })}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      >
-                        {groupMembers.map(member => (
-                          <option key={member.userId} value={member.userId}>
-                            {member.user?.firstName ? `${member.user.firstName} ${member.user.lastName}` : member.user?.email}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={groupMembers.find(m => m.userId === currentUserId)?.user?.firstName ? `${groupMembers.find(m => m.userId === currentUserId)?.user?.firstName} ${groupMembers.find(m => m.userId === currentUserId)?.user?.lastName}` : groupMembers.find(m => m.userId === currentUserId)?.user?.email || ''}
-                        disabled
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                      />
-                    )}
-                  </div>
-                )}
-
-                {!editingAccount && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Saldo Inicial
-                    </label>
-                    <input
+                <ThemeProvider theme={muiTheme}>
+                  <FormControl fullWidth required margin="normal">
+                    <TextField
+                      label="Nome da Conta"
                       type="text"
-                      inputMode="numeric"
-                      value={formData.initialBalance}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        const cents = Number(digits || '0');
-                        const formatted = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        setFormData({ ...formData, initialBalance: formatted });
-                      }}
-                      onKeyDown={(e) => {
-                        const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
-                        if (allowed.includes(e.key)) return;
-                        if (!/^\d$/.test(e.key)) e.preventDefault();
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="0,00"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Ex: Carteira, Nubank, Conta Corrente"
+                      required
+                      focused
                     />
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4 mb-2">
-                      Data e Hora do Saldo Inicial
-                    </label>
-                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-                      <DateTimePicker
-                        value={formData.initialBalanceDateTime}
-                        onChange={(newValue: Dayjs | null) => {
-                          if (newValue) {
-                            setFormData({ ...formData, initialBalanceDateTime: newValue });
-                          }
-                        }}
-                        format="DD/MM/YYYY HH:mm"
-                        ampm={false}
-                        slotProps={{
-                          textField: {
-                            required: true,
-                            fullWidth: true,
-                            sx: {
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: '0.5rem',
-                                backgroundColor: 'white',
-                                '& fieldset': {
-                                  borderColor: 'rgb(209 213 219)',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'rgb(156 163 175)',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'rgb(59 130 246)',
-                                  borderWidth: '2px',
-                                },
-                              },
-                              '& .MuiInputBase-input': {
-                                padding: '8px 12px',
-                                color: 'rgb(17 24 39)',
-                              },
-                              '& .MuiIconButton-root': {
-                                color: 'rgb(17 24 39)',
-                              },
-                            },
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                )}
+                  </FormControl>
 
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    {editingAccount ? 'Salvar' : 'Criar'}
-                  </button>
-                </div>
+                  <FormControl focused fullWidth required margin="normal">
+                    <InputLabel id="account-type-label">Tipo de Conta</InputLabel>
+                    <Select
+                      labelId="account-type-label"
+                      value={formData.type}
+                      label="Tipo de Conta"
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value as AccountType })}
+                    >
+                      <MenuItem value="CASH">💵 Dinheiro</MenuItem>
+                      <MenuItem value="CREDIT">💳 Crédito</MenuItem>
+                      <MenuItem value="PREPAID">💰 Pré-pago</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {groupId && (
+                    <FormControl focused  fullWidth required margin="normal">
+                      <InputLabel id="account-owner-label">Dono da Conta</InputLabel>
+                      {canManageAll ? (
+                        <Select
+                          labelId="account-owner-label"
+                          value={formData.userId ?? ''}
+                          label="Dono da Conta"
+                          onChange={e => setFormData({ ...formData, userId: Number(e.target.value) })}
+                        // focused removido
+                        >
+                          {groupMembers.map(member => (
+                            <MenuItem key={member.userId} value={member.userId}>
+                              {member.user?.firstName ? `${member.user.firstName} ${member.user.lastName}` : member.user?.email}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      ) : (
+                        <TextField
+                          label="Dono da Conta"
+                          value={groupMembers.find(m => m.userId === currentUserId)?.user?.firstName ? `${groupMembers.find(m => m.userId === currentUserId)?.user?.firstName} ${groupMembers.find(m => m.userId === currentUserId)?.user?.lastName}` : groupMembers.find(m => m.userId === currentUserId)?.user?.email || ''}
+                          disabled
+                          fullWidth
+                          focused
+                        />
+                      )}
+                    </FormControl>
+                  )}
+
+                  {!editingAccount && (
+                    <FormControl focused  fullWidth required margin="normal">
+                      <TextField
+                        label="Saldo Inicial"
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.initialBalance}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          const cents = Number(digits || '0');
+                          const formatted = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          setFormData({ ...formData, initialBalance: formatted });
+                        }}
+                        onKeyDown={(e) => {
+                          const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                          if (allowed.includes(e.key)) return;
+                          if (!/^\d$/.test(e.key)) e.preventDefault();
+                        }}
+                        placeholder="0,00"
+                        required
+                        focused
+                      />
+                    </FormControl>
+                  )}
+
+                  {!editingAccount && (
+                    <FormControl   fullWidth required margin="normal">
+                      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+                        <DateTimePicker
+                          label="Data e Hora do Saldo Inicial"
+                          value={formData.initialBalanceDateTime}
+                          onChange={(newValue: Dayjs | null) => {
+                            if (newValue) {
+                              setFormData({ ...formData, initialBalanceDateTime: newValue });
+                            }
+                          }}
+                          format="DD/MM/YYYY HH:mm"
+                          ampm={false}
+                          slotProps={{
+                            textField: {
+                              focused: true,
+                              required: true,
+                              fullWidth: true,
+                            },
+                          }}
+                        />
+                      </LocalizationProvider>
+                    </FormControl>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowModal(false);
+                        resetForm();
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      {editingAccount ? 'Salvar' : 'Criar'}
+                    </button>
+                  </div>
+                </ThemeProvider>
               </form>
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Update Balance Modal */}
-      {showBalanceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Atualizar Saldo
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowBalanceModal(false);
-                    resetBalanceForm();
-                  }}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <form onSubmit={handleBalanceSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Novo Saldo
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={balanceFormData.amount}
-                    onChange={(e) => setBalanceFormData({ ...balanceFormData, amount: parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Data e Hora
-                  </label>
-                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-                    <DateTimePicker
-                      value={balanceFormData.dateTime}
-                      onChange={(newValue: Dayjs | null) => {
-                        if (newValue) {
-                          setBalanceFormData({ ...balanceFormData, dateTime: newValue });
-                        }
-                      }}
-                      format="DD/MM/YYYY HH:mm"
-                      ampm={false}
-                      slotProps={{
-                        textField: {
-                          required: true,
-                          fullWidth: true,
-                          sx: {
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: '0.5rem',
-                              backgroundColor: 'white',
-                              '& fieldset': {
-                                borderColor: 'rgb(209 213 219)',
-                              },
-                              '&:hover fieldset': {
-                                borderColor: 'rgb(156 163 175)',
-                              },
-                              '&.Mui-focused fieldset': {
-                                borderColor: 'rgb(59 130 246)',
-                                borderWidth: '2px',
-                              },
-                            },
-                            '& .MuiInputBase-input': {
-                              padding: '8px 12px',
-                              color: 'rgb(17 24 39)',
-                            },
-                            '& .MuiIconButton-root': {
-                              color: 'rgb(17 24 39)',
-                            },
-                          },
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
-
-                <div className="flex gap-3 pt-4">
+      {
+        showBalanceModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Atualizar Saldo
+                  </h3>
                   <button
-                    type="button"
                     onClick={() => {
                       setShowBalanceModal(false);
                       resetBalanceForm();
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                   >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Atualizar
+                    <X size={20} />
                   </button>
                 </div>
-              </form>
+
+
+                <form onSubmit={handleBalanceSubmit} className="space-y-4">
+                  <ThemeProvider theme={muiTheme}>
+                    <FormControl focused fullWidth required margin="normal">
+                      <TextField
+                        label="Novo Saldo"
+                        type="number"
+                        value={balanceFormData.amount}
+                        onChange={(e) => setBalanceFormData({ ...balanceFormData, amount: parseFloat(e.target.value) })}
+                        placeholder="0.00"
+                        required
+                        focused
+                      />
+                    </FormControl>
+                    <FormControl fullWidth required margin="normal">
+                      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+                        <DateTimePicker
+                          label="Data e Hora"
+                          value={balanceFormData.dateTime}
+                          onChange={(newValue: Dayjs | null) => {
+                            if (newValue) {
+                              setBalanceFormData({ ...balanceFormData, dateTime: newValue });
+                            }
+                          }}
+                          format="DD/MM/YYYY HH:mm"
+                          ampm={false}
+                          slotProps={{
+                            textField: {
+                              focused: true,
+                              required: true,
+                              fullWidth: true,
+                            },
+                          }}
+                        />
+                      </LocalizationProvider>
+                    </FormControl>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowBalanceModal(false);
+                          resetBalanceForm();
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Atualizar
+                      </button>
+                    </div>
+                  </ThemeProvider>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

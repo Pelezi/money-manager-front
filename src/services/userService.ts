@@ -13,6 +13,11 @@ export interface User {
 }
 
 export const userService = {
+  async register(data: { email: string; firstName: string; lastName: string; password: string }): Promise<User> {
+    const response = await apiClient.post('/users/register', data);
+    return response.data;
+  },
+
   async updateLocale(locale: string): Promise<User> {
     const response = await apiClient.patch('/users/locale', { locale });
     return response.data;

@@ -20,7 +20,7 @@ export default function NewGroupPage() {
     setError('');
 
     if (!name.trim()) {
-      setError('Group name is required');
+      setError('O nome do grupo é obrigatório');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function NewGroupPage() {
       // Navigate to the new group
       router.push(`/groups/${newGroup.id}/transactions`);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create group');
+      setError(err.response?.data?.message || 'Falha ao criar grupo');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,7 +49,7 @@ export default function NewGroupPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Create New Group
+            Criar novo grupo
           </h1>
           <button
             onClick={() => router.back()}
@@ -68,14 +68,14 @@ export default function NewGroupPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Group Name <span className="text-red-500">*</span>
+              Nome do grupo <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Family Budget"
+              placeholder="Ex: Orçamento da família"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -83,13 +83,13 @@ export default function NewGroupPage() {
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description (Optional)
+              Descrição (opcional)
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Shared budget for family expenses"
+              placeholder="Ex: Orçamento compartilhado para despesas da família"
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -102,7 +102,7 @@ export default function NewGroupPage() {
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               disabled={isSubmitting}
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="submit"
@@ -112,12 +112,12 @@ export default function NewGroupPage() {
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
+                  Criando...
                 </>
               ) : (
                 <>
                   <Plus size={20} />
-                  Create Group
+                  Criar grupo
                 </>
               )}
             </button>
@@ -126,13 +126,13 @@ export default function NewGroupPage() {
 
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
-            What happens when you create a group?
+            O que acontece ao criar um grupo?
           </h3>
           <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-            <li>• Three default roles are created: Owner, Member, and Viewer</li>
-            <li>• You are automatically added as a member with the Owner role</li>
-            <li>• You can invite members and customize roles afterward</li>
-            <li>• You can share budgets, categories, and transactions with the group</li>
+            <li>• Três papéis padrão são criados: Proprietário, Membro e Visualizador</li>
+            <li>• Você é adicionado automaticamente como membro com o papel de Proprietário</li>
+            <li>• Você pode convidar membros e personalizar papéis depois</li>
+            <li>• Você pode compartilhar orçamentos, categorias e transações com o grupo</li>
           </ul>
         </div>
       </div>

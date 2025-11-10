@@ -156,11 +156,11 @@ export default function TransactionDetailPage() {
     });
   };
 
-  const muiTheme = createTheme({
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-    },
-  });
+  // const muiTheme = createTheme({
+  //   palette: {
+  //     mode: isDarkMode ? 'dark' : 'light',
+  //   },
+  // });
 
   const availableSubcategories = subcategories.filter(
     (sub) => sub.categoryId === formData.categoryId
@@ -232,7 +232,7 @@ export default function TransactionDetailPage() {
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                 Data e Horário
               </label>
-              <ThemeProvider theme={muiTheme}>
+              {/* <ThemeProvider theme={muiTheme}> */}
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
                   <DateTimePicker
                     value={formData.dateTime}
@@ -242,7 +242,7 @@ export default function TransactionDetailPage() {
                     className="w-full"
                   />
                 </LocalizationProvider>
-              </ThemeProvider>
+              {/* </ThemeProvider> */}
             </div>
 
             <div>

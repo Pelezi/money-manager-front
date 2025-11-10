@@ -324,7 +324,7 @@ export default function GroupSettingsPage() {
 
   if (!currentGroup) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-gray-600 dark:text-gray-400">Grupo não encontrado</p>
       </div>
     );
@@ -334,53 +334,53 @@ export default function GroupSettingsPage() {
   const isOwner = currentGroup.ownerId === (typeof window !== 'undefined' && JSON.parse(localStorage.getItem('user') || '{}').id);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:text-2xl text-lg">
           Configurações do Grupo
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+  <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
           Gerencie as configurações, membros e funções de {currentGroup.name}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('general')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-2 py-2 font-small transition-colors text-[11px] sm:text-xs ${
             activeTab === 'general'
               ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <SettingsIcon size={18} />
             Geral
           </div>
         </button>
         <button
           onClick={() => setActiveTab('members')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-2 py-2 font-small transition-colors text-[11px] sm:text-xs ${
             activeTab === 'members'
               ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Users size={18} />
             Membros ({members.length})
           </div>
         </button>
         <button
           onClick={() => setActiveTab('roles')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-2 py-2 font-small transition-colors text-[11px] sm:text-xs ${
             activeTab === 'roles'
               ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Shield size={18} />
             Funções ({roles.length})
           </div>
@@ -391,13 +391,13 @@ export default function GroupSettingsPage() {
       {activeTab === 'general' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-base sm:text-lg">
               Informações do Grupo
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 sm:text-sm">
                   Nome do Grupo
                 </label>
                 <input
@@ -410,7 +410,7 @@ export default function GroupSettingsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 sm:text-sm">
                   Descrição do Grupo
                 </label>
                 <textarea
@@ -436,13 +436,13 @@ export default function GroupSettingsPage() {
 
           {/* Danger Zone */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 border-red-200 dark:border-red-800">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4 text-base sm:text-lg">
               Zona de Perigo
             </h2>
             
             {isOwner ? (
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 sm:text-sm">
                   Excluir este grupo permanentemente. Esta ação não pode ser desfeita.
                 </p>
                 <button
@@ -455,7 +455,7 @@ export default function GroupSettingsPage() {
               </div>
             ) : (
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 sm:text-sm">
                   Sair deste grupo. Você precisará de um novo convite para voltar.
                 </p>
                 <button
@@ -473,18 +473,18 @@ export default function GroupSettingsPage() {
 
       {/* Members Tab */}
       {activeTab === 'members' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white text-xs sm:text-sm">
               Membros do Grupo
             </h2>
             {canManageGroup && (
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-xs sm:text-sm"
               >
-                <UserPlus size={18} />
-                Convidar Membro
+                <UserPlus size={14} />
+                Convidar
               </button>
             )}
           </div>
@@ -494,14 +494,14 @@ export default function GroupSettingsPage() {
               <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  className="flex items-center justify-between p-2 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-white">
+                    <div className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm">
                       {member.user?.firstName} {member.user?.lastName}
                       {member.userId === currentGroup.ownerId && (
                         <span className="ml-2 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded">
@@ -509,18 +509,18 @@ export default function GroupSettingsPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs">
                       {member.user?.email}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {canManageGroup && member.userId !== currentGroup.ownerId ? (
                       <>
                         <select
                           value={member.roleId}
                           onChange={(e) => handleUpdateMemberRole(member.id, parseInt(e.target.value))}
-                          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                          className="px-1 py-0.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-[10px] sm:text-xs"
                         >
                           {roles.map((role) => (
                             <option key={role.id} value={role.id}>
@@ -530,14 +530,14 @@ export default function GroupSettingsPage() {
                         </select>
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Remover Membro"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={14} />
                         </button>
                       </>
                     ) : (
-                      <span className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="px-1 py-0.5 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs">
                         {member.role?.name}
                       </span>
                     )}
@@ -553,16 +553,16 @@ export default function GroupSettingsPage() {
       {activeTab === 'roles' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Funções e Permissões
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white text-base sm:text-lg">
+              Funções
             </h2>
             {canManageGroup && (
               <button
                 onClick={() => handleOpenRoleModal()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                className="px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1 text-xs sm:text-sm"
               >
-                <Plus size={18} />
-                Criar Função
+                <Plus size={14} />
+                Nova Função
               </button>
             )}
           </div>
@@ -574,16 +574,16 @@ export default function GroupSettingsPage() {
           ) : (
             <div className="space-y-4">
               {roles.map((role) => {
-                const isDefaultRole = ['Owner', 'Member', 'Viewer'].includes(role.name);
+                const isDefaultRole = ['Dono', 'Membro', 'Leitor'].includes(role.name);
                 return (
                   <div key={role.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                           {role.name}
                         </div>
                         {role.description && (
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 sm:text-sm">
                             {role.description}
                           </div>
                         )}
@@ -608,55 +608,55 @@ export default function GroupSettingsPage() {
                     <div className="grid grid-cols-2 gap-2 text-sm mt-3">
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Ver Transações</span>
+                        <span className={role.canViewTransactions ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Ver Transações</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageOwnTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Próprias Transações</span>
+                        <span className={role.canManageOwnTransactions ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Próprias Transações</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageGroupTransactions} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Transações do Grupo</span>
+                        <span className={role.canManageGroupTransactions ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Transações do Grupo</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewCategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Ver Categorias</span>
+                        <span className={role.canViewCategories ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Ver Categorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageCategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Categorias</span>
+                        <span className={role.canManageCategories ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Categorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewSubcategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Ver Subcategorias</span>
+                        <span className={role.canViewSubcategories ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Ver Subcategorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageSubcategories} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Subcategorias</span>
+                        <span className={role.canManageSubcategories ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Subcategorias</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewBudgets} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Ver Orçamentos</span>
+                        <span className={role.canViewBudgets ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Ver Orçamentos</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageBudgets} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Orçamentos</span>
+                        <span className={role.canManageBudgets ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Orçamentos</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canViewAccounts} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Ver Contas</span>
+                        <span className={role.canViewAccounts ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Ver Contas</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageOwnAccounts} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Próprias Contas</span>
+                        <span className={role.canManageOwnAccounts ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Próprias Contas</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageGroupAccounts} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Contas do Grupo</span>
+                        <span className={role.canManageGroupAccounts ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Contas do Grupo</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input type="checkbox" checked={role.canManageGroup} disabled className="rounded" />
-                        <span className="text-gray-700 dark:text-gray-300">Gerenciar Grupo</span>
+                        <span className={role.canManageGroup ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>Gerenciar Grupo</span>
                       </div>
                     </div>
                   </div>
