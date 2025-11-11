@@ -199,10 +199,10 @@ export function TransactionsTable({
                 {/* Left: Category & Subcategory */}
                 <div className="flex flex-col justify-center">
                   <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 break-words line-clamp-2">
-                    {transaction.subcategory?.category?.name || '-'}
+                    {transaction.type == 'TRANSFER' ? 'Transferência' : transaction.subcategory?.category?.name || '-'}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 break-words line-clamp-2">
-                    {transaction.subcategory?.name || '-'}
+                    { transaction.type == 'TRANSFER' ? '' : transaction.subcategory?.name || '-'}
                   </div>
                 </div>
 
