@@ -75,10 +75,10 @@ export default function AccountManager({
     if (canView) {
       loadAccounts();
     }
-    if (groupId && showModal) {
+    if (groupId) {
       groupService.getMembers(groupId).then((members: GroupMember[]) => setGroupMembers(members));
     }
-  }, [canView, groupId, showModal]);
+  }, [canView, groupId]);
 
   // Listen for changes to Tailwind's dark mode class
   useEffect(() => {
