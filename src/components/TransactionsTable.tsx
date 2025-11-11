@@ -98,9 +98,11 @@ export function TransactionsTable({
     if (transaction.type === 'INCOME') {
       acc[dateKey].totalIncome += transaction.amount;
       acc[dateKey].total += transaction.amount;
-    } else {
+    } else if (transaction.type === 'EXPENSE') {
       acc[dateKey].totalExpense += transaction.amount;
       acc[dateKey].total -= transaction.amount;
+    } else {
+      // TRANSFER: neutro, não afeta total do dia
     }
     
     return acc;
@@ -213,6 +215,16 @@ export function TransactionsTable({
                   </div>
                   {transaction.accountId && (
                     (() => {
+                      if (transaction.type === 'TRANSFER' && transaction.toAccountId) {
+                        const from = accounts.find(acc => acc.id === transaction.accountId);
+                        const to = accounts.find(acc => acc.id === transaction.toAccountId);
+                        const label = `${from ? from.name : 'Conta'} → ${to ? to.name : 'Conta'}`;
+                        return (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words line-clamp-2">
+                            {label}
+                          </div>
+                        );
+                      }
                       const account = accounts.find(acc => acc.id === transaction.accountId);
                       return account ? (
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words line-clamp-2">
@@ -229,10 +241,12 @@ export function TransactionsTable({
                     className={`text-sm sm:text-lg font-bold whitespace-nowrap ${
                       transaction.type === 'INCOME'
                         ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
+                        : transaction.type === 'EXPENSE'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-600 dark:text-gray-300'
                     }`}
                   >
-                    {transaction.type === 'INCOME' ? '+' : '-'}
+                    {transaction.type === 'INCOME' ? '+' : transaction.type === 'EXPENSE' ? '-' : ''}
                     {formatCurrency(transaction.amount)}
                   </div>
                   {showUser && transaction.user && (

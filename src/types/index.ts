@@ -1,4 +1,4 @@
-export type EntityType = 'EXPENSE' | 'INCOME';
+export type EntityType = 'EXPENSE' | 'INCOME' | 'TRANSFER';
 
 export interface Category {
   id: number;
@@ -49,6 +49,7 @@ export interface Transaction {
   id: number;
   subcategoryId: number;
   accountId?: number;
+  toAccountId?: number;
   subcategory?: Subcategory & { category: Category };
   title: string;
   amount: number;

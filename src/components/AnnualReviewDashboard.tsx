@@ -126,7 +126,19 @@ export default function AnnualReviewDashboard({
 
   const { data: aggregatedTransactions = [] } = useQuery<AggTx[]>({
     queryKey: ['transactions-aggregated', selectedYear, groupId],
-    queryFn: () => transactionService.getAggregated(selectedYear, undefined, groupId),
+    queryFn: async (): Promise<AggTx[]> => {
+      const res = await transactionService.getAggregated(selectedYear, undefined, groupId);
+      return (res || [])
+        .filter((t: any) => t.type === 'INCOME' || t.type === 'EXPENSE')
+        .map((t: any) => ({
+          subcategoryId: t.subcategoryId,
+          total: t.total ?? 0,
+          count: t.count ?? 0,
+          month: t.month,
+          year: t.year,
+          type: t.type as 'INCOME' | 'EXPENSE',
+        }));
+    },
     enabled: canView,
   });
 

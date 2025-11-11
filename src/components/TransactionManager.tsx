@@ -80,6 +80,7 @@ export default function TransactionManager({
     categoryId: 0,
     subcategoryId: 0,
     accountId: 0,
+    toAccountId: 0,
     title: '',
     amount: '0,00',
     description: '',
@@ -178,6 +179,7 @@ export default function TransactionManager({
       categoryId: 0,
       subcategoryId: 0,
       accountId: 0,
+      toAccountId: 0,
       title: '',
       amount: '0,00',
       description: '',
@@ -201,6 +203,7 @@ export default function TransactionManager({
     const data = {
       subcategoryId: formData.subcategoryId,
       accountId: formData.accountId,
+      toAccountId: formData.toAccountId,
       title: formData.title,
       amount: amountNumber,
       description: formData.description,
@@ -228,6 +231,7 @@ export default function TransactionManager({
       categoryId: subcategory?.categoryId || 0,
       subcategoryId: transaction.subcategoryId,
       accountId: transaction.accountId || 0,
+      toAccountId: transaction.toAccountId || 0,
       title: transaction.title,
       amount: Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       description: transaction.description || '',
@@ -266,6 +270,16 @@ export default function TransactionManager({
       twChipOn: 'bg-green-600 text-white border-green-600',
       twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
       muiColor: '#22c55e', // green-500
+    },
+    TRANSFER: {
+      twRing: 'focus:ring-gray-400',
+      twBorder: 'focus:border-gray-400',
+      twBorderBase: 'border-gray-300',
+      twText: 'text-gray-600',
+      twBgSoft: 'bg-gray-50',
+      twChipOn: 'bg-gray-600 text-white border-gray-600',
+      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
+      muiColor: '#6b7280',
     },
   } as const;
 
@@ -426,7 +440,7 @@ export default function TransactionManager({
               </div>
 
               {/* Segmented control Despesa / Renda */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -446,6 +460,16 @@ export default function TransactionManager({
                        ${formData.type === 'INCOME' ? accent.twChipOn : accent.twChipOff}`}
                 >
                   Renda
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(f => ({ ...f, type: 'TRANSFER', categoryId: 0, subcategoryId: 0 }));
+                  }}
+                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
+                       ${formData.type === 'TRANSFER' ? accent.twChipOn : accent.twChipOff}`}
+                >
+                  Transferência
                 </button>
               </div>
             </div>
@@ -483,53 +507,89 @@ export default function TransactionManager({
                   </LocalizationProvider>
                 </div>
 
-                {/* Conta - linha única */}
-                <FormControl focused fullWidth required margin="normal">
-                  <InputLabel id="account-label">Conta</InputLabel>
-                  <Select
-                    labelId="account-label"
-                    value={formData.accountId}
-                    label="Conta"
-                    onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
-                  >
-                    <MenuItem value={0}>Selecione</MenuItem>
-                    {(accounts).map((acc) => (
-                      <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Conta(s) - linha única quando for despesa ou renda, dois selects quando for transferência */}
+                {formData.type === 'TRANSFER' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormControl focused fullWidth required margin="normal">
+                      <InputLabel id="account-from-label">Conta origem</InputLabel>
+                      <Select
+                        labelId="account-from-label"
+                        value={formData.accountId}
+                        label="Conta origem"
+                        onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
+                      >
+                        <MenuItem value={0}>Selecione</MenuItem>
+                        {(accounts).map((acc) => (
+                          <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
 
-                {/* Categoria e Subcategoria - mesma linha */}
-                <div className="grid grid-cols-2 gap-2">
+                    <FormControl focused fullWidth required margin="normal">
+                      <InputLabel id="account-to-label">Conta destino</InputLabel>
+                      <Select
+                        labelId="account-to-label"
+                        value={formData.toAccountId}
+                        label="Conta destino"
+                        onChange={(e) => setFormData({ ...formData, toAccountId: Number(e.target.value) })}
+                      >
+                        <MenuItem value={0}>Selecione</MenuItem>
+                        {(accounts).map((acc) => (
+                          <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                ) : (
                   <FormControl focused fullWidth required margin="normal">
-                    <InputLabel id="category-label">Categoria</InputLabel>
+                    <InputLabel id="account-label">Conta</InputLabel>
                     <Select
-                      labelId="category-label"
-                      value={formData.categoryId}
-                      label="Categoria"
-                      onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
+                      labelId="account-label"
+                      value={formData.accountId}
+                      label="Conta"
+                      onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
                     >
                       <MenuItem value={0}>Selecione</MenuItem>
-                      {categories.filter((cat) => cat.type === formData.type).map((cat) => (
-                        <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                      {(accounts).map((acc) => (
+                        <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
-                  <FormControl focused fullWidth required margin="normal" disabled={!formData.categoryId}>
-                    <InputLabel id="subcategory-label">Subcategoria</InputLabel>
-                    <Select
-                      labelId="subcategory-label"
-                      value={formData.subcategoryId}
-                      label="Subcategoria"
-                      onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
-                    >
-                      <MenuItem value={0}>Selecione</MenuItem>
-                      {subcategories
-                        .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
-                        .map((sub) => (<MenuItem key={sub.id} value={sub.id}>{sub.name}</MenuItem>))}
-                    </Select>
-                  </FormControl>
-                </div>
+                )}
+
+                {/* Categoria e Subcategoria - mesma linha (omitidas para transferências) */}
+                {formData.type !== 'TRANSFER' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormControl focused fullWidth required margin="normal">
+                      <InputLabel id="category-label">Categoria</InputLabel>
+                      <Select
+                        labelId="category-label"
+                        value={formData.categoryId}
+                        label="Categoria"
+                        onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
+                      >
+                        <MenuItem value={0}>Selecione</MenuItem>
+                        {categories.filter((cat) => cat.type === formData.type).map((cat) => (
+                          <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl focused fullWidth required margin="normal" disabled={!formData.categoryId}>
+                      <InputLabel id="subcategory-label">Subcategoria</InputLabel>
+                      <Select
+                        labelId="subcategory-label"
+                        value={formData.subcategoryId}
+                        label="Subcategoria"
+                        onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
+                      >
+                        <MenuItem value={0}>Selecione</MenuItem>
+                        {subcategories
+                          .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
+                          .map((sub) => (<MenuItem key={sub.id} value={sub.id}>{sub.name}</MenuItem>))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
 
 
                 {/* Valor */}
