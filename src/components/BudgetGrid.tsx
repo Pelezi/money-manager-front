@@ -48,9 +48,6 @@ export default function BudgetGrid({
 
   const brlToNumber = (value: string) => brlToCents(value) / 100;
 
-  const formatBRLfromCents = centsToBRL;
-  const normalizeToBRL = brlMask;
-
   const handleEditValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditValue(brlMask(e.target.value));
   };
@@ -140,8 +137,7 @@ export default function BudgetGrid({
   };
 
   const getBudgetStatus = (budgeted: number, actual: number, type: EntityType = 'EXPENSE') => {
-    if (budgeted === 0) return '';
-    const percentage = (actual / budgeted) * 100;
+    const percentage = (actual / (budgeted || 1)) * 100;
 
     // For INCOME: green when above budget, red when below
     // For EXPENSE: green when below budget, red when above
@@ -150,8 +146,8 @@ export default function BudgetGrid({
       if (percentage >= 85) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
       return 'bg-red-200/40 dark:bg-red-900/40';
     } else {
-      if (percentage < 85) return 'bg-green-200/40 dark:bg-green-900/40';
-      if (percentage < 100) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
+      if (percentage <= 100) return 'bg-green-200/40 dark:bg-green-900/40';
+      if (percentage < 120) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
       return 'bg-red-200/40 dark:bg-red-900/40';
     }
   };
