@@ -219,6 +219,10 @@ export type AccountType = 'CREDIT' | 'CASH' | 'PREPAID';
 export interface Account {
   id: number;
   userId: number;
+  user?: {
+    firstName: string;
+    lastName: string;
+  };
   groupId?: number;
   name: string;
   type: AccountType;

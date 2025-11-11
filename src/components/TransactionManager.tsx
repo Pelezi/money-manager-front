@@ -493,8 +493,8 @@ export default function TransactionManager({
                     onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
                   >
                     <MenuItem value={0}>Selecione</MenuItem>
-                    {(accounts as Array<{ id: number; name: string }>).map((acc) => (
-                      <MenuItem key={acc.id} value={acc.id}>{acc.name}</MenuItem>
+                    {(accounts).map((acc) => (
+                      <MenuItem key={acc.id} value={acc.id}>{acc.name} ({acc.user?.firstName})</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
