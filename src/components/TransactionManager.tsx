@@ -494,7 +494,7 @@ export default function TransactionManager({
                   >
                     <MenuItem value={0}>Selecione</MenuItem>
                     {(accounts).map((acc) => (
-                      <MenuItem key={acc.id} value={acc.id}>{acc.name} ({acc.user?.firstName})</MenuItem>
+                      <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
