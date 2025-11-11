@@ -19,32 +19,40 @@ interface BudgetGridProps {
   title?: string;
 }
 
-export default function BudgetGrid({ 
-  groupId, 
-  canManage = true, 
+export default function BudgetGrid({
+  groupId,
+  canManage = true,
   canView = true,
   title = 'Planilha de Orçamento'
 }: BudgetGridProps) {
   const queryClient = useQueryClient();
   const { selectedYear, setSelectedYear } = useAppStore();
-  
+
   const [activeTab, setActiveTab] = useState<EntityType>('EXPENSE');
   const [editingCell, setEditingCell] = useState<{ subcategoryId: number; month: number } | null>(null);
   const [editValue, setEditValue] = useState('0,00');
 
-  // Funções para formatar e normalizar valor BRL
-  const formatBRLfromCents = (cents: number) =>
+  const centsToBRL = (cents: number) =>
     (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const normalizeToBRL = (value: string) => {
-    const digits = value.replace(/\D/g, '');
+  const brlMask = (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
     const cents = Number(digits || '0');
-    return formatBRLfromCents(cents);
+    return centsToBRL(cents);
   };
 
+  const brlToCents = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    return digits ? Number(digits) : 0;
+  };
+
+  const brlToNumber = (value: string) => brlToCents(value) / 100;
+
+  const formatBRLfromCents = centsToBRL;
+  const normalizeToBRL = brlMask;
+
   const handleEditValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = normalizeToBRL(e.target.value);
-    setEditValue(formatted);
+    setEditValue(brlMask(e.target.value));
   };
 
   const handleEditValueKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -134,7 +142,7 @@ export default function BudgetGrid({
   const getBudgetStatus = (budgeted: number, actual: number, type: EntityType = 'EXPENSE') => {
     if (budgeted === 0) return '';
     const percentage = (actual / budgeted) * 100;
-    
+
     // For INCOME: green when above budget, red when below
     // For EXPENSE: green when below budget, red when above
     if (type === 'INCOME') {
@@ -150,26 +158,31 @@ export default function BudgetGrid({
 
   const handleCellClick = (subcategoryId: number, month: number) => {
     if (!canManage) return;
-    
+
     const budget = getBudget(subcategoryId, month);
     setEditingCell({ subcategoryId, month });
-    setEditValue(budget?.amount.toString() || '');
+
+    // Show "X.XXX,YY" instead of raw number/string
+    const initial = budget?.amount ?? 0;
+    setEditValue(
+      typeof initial === 'number'
+        ? initial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '0,00'
+    );
   };
+
 
   const handleCellBlur = async () => {
     if (!editingCell) return;
 
-    const value = parseFloat(editValue) || 0;
+    // Locale-safe parse:
+    const value = brlToNumber(editValue); // "4.300,00" -> 4300
     const budget = getBudget(editingCell.subcategoryId, editingCell.month);
     const subcategory = subcategories.find((sub) => sub.id === editingCell.subcategoryId);
-
     if (!subcategory) return;
 
     if (budget) {
-      await updateBudgetMutation.mutateAsync({
-        id: budget.id,
-        data: { amount: value },
-      });
+      await updateBudgetMutation.mutateAsync({ id: budget.id, data: { amount: value } });
     } else {
       await createBudgetMutation.mutateAsync({
         name: `${subcategory.name} - ${editingCell.month}/${selectedYear}`,
@@ -183,8 +196,9 @@ export default function BudgetGrid({
     }
 
     setEditingCell(null);
-    setEditValue('');
+    setEditValue('0,00');
   };
+
 
   const getCategoryTotal = (categoryId: number, month: number) => {
     const categorySubs = filteredSubcategories.filter((sub) => sub.categoryId === categoryId);
@@ -245,10 +259,10 @@ export default function BudgetGrid({
   };
 
   return (
-  <div className="space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
-        
+
         {/* Year Selector */}
         <div className="flex items-center gap-2">
           <button
@@ -274,21 +288,19 @@ export default function BudgetGrid({
       <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('EXPENSE')}
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'EXPENSE'
-              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
-          }`}
+          className={`px-4 py-2 font-medium ${activeTab === 'EXPENSE'
+            ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+            : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
         >
           Despesa
         </button>
         <button
           onClick={() => setActiveTab('INCOME')}
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'INCOME'
-              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-              : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
-          }`}
+          className={`px-4 py-2 font-medium ${activeTab === 'INCOME'
+            ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+            : 'text-gray-800 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
         >
           Renda
         </button>
@@ -296,7 +308,7 @@ export default function BudgetGrid({
 
       {/* Budget Spreadsheet */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
-  <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse text-xs">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
               <th className="sticky left-0 bg-gray-50 dark:bg-gray-700 px-2 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 w-40">
@@ -350,15 +362,14 @@ export default function BudgetGrid({
                         </td>
                       );
                     })}
-                    <td className={`px-2 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${
-                      getCategoryActualTotal(category.id) > 0 
-                        ? getBudgetStatus(
-                            categorySubs.reduce((sum, sub) => sum + getSubcategoryYearTotal(sub.id), 0),
-                            getCategoryActualTotal(category.id),
-                            category.type
-                          )
-                        : ''
-                    }`}>
+                    <td className={`px-2 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${getCategoryActualTotal(category.id) > 0
+                      ? getBudgetStatus(
+                        categorySubs.reduce((sum, sub) => sum + getSubcategoryYearTotal(sub.id), 0),
+                        getCategoryActualTotal(category.id),
+                        category.type
+                      )
+                      : ''
+                      }`}>
                       <div>
                         $
                         {categorySubs
@@ -385,7 +396,7 @@ export default function BudgetGrid({
                       )}
                     </td>
                   </tr>
-                  
+
                   {/* Subcategory Rows */}
                   {categorySubs.map((subcategory) => (
                     <tr key={subcategory.id} className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -456,7 +467,7 @@ export default function BudgetGrid({
                 </Fragment>
               );
             })}
-            
+
             {/* Total Row */}
             <tr className="bg-gray-100 dark:bg-gray-700 border-t-2 border-gray-300 dark:border-gray-600 font-semibold">
               <td className="sticky left-0 bg-gray-100 dark:bg-gray-700 px-2 py-2 text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
@@ -477,15 +488,14 @@ export default function BudgetGrid({
                   </td>
                 );
               })}
-              <td className={`px-2 py-2 text-center text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${
-                MONTHS.some((_, index) => getMonthActualTotal(index + 1) > 0)
-                  ? getBudgetStatus(
-                      MONTHS.reduce((sum, _, index) => sum + getMonthTotal(index + 1), 0),
-                      MONTHS.reduce((sum, _, index) => sum + getMonthActualTotal(index + 1), 0),
-                      activeTab
-                    )
-                  : ''
-              }`}>
+              <td className={`px-2 py-2 text-center text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${MONTHS.some((_, index) => getMonthActualTotal(index + 1) > 0)
+                ? getBudgetStatus(
+                  MONTHS.reduce((sum, _, index) => sum + getMonthTotal(index + 1), 0),
+                  MONTHS.reduce((sum, _, index) => sum + getMonthActualTotal(index + 1), 0),
+                  activeTab
+                )
+                : ''
+                }`}>
                 <div>
                   $
                   {MONTHS.reduce((sum, _, index) => sum + getMonthTotal(index + 1), 0).toFixed(2)}
