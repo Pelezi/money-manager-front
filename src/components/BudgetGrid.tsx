@@ -137,10 +137,8 @@ export default function BudgetGrid({
   };
 
   const getBudgetStatus = (budgeted: number, actual: number, type: EntityType = 'EXPENSE') => {
+    if (budgeted == 0 && actual == 0) return '';    
     const percentage = (actual / (budgeted || 1)) * 100;
-
-    // For INCOME: green when above budget, red when below
-    // For EXPENSE: green when below budget, red when above
     if (type === 'INCOME') {
       if (percentage >= 100) return 'bg-green-200/40 dark:bg-green-900/40';
       if (percentage >= 85) return 'bg-yellow-200/40 dark:bg-yellow-900/40';
