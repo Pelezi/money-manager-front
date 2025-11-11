@@ -8,10 +8,6 @@ import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
 import { Transaction, EntityType, Account } from '@/types';
 import { accountService } from '@/services/accountService';
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: () => accountService.getAll(),
-  });
 import { ArrowLeft, Edit2, Trash2, Calendar, Tag, FileText, DollarSign, User } from 'lucide-react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -49,15 +45,15 @@ export default function TransactionDetailPage() {
     const updateDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
-    
+
     updateDarkMode();
-    
+
     const observer = new MutationObserver(updateDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -75,6 +71,11 @@ export default function TransactionDetailPage() {
   const { data: subcategories = [] } = useQuery({
     queryKey: ['subcategories'],
     queryFn: () => subcategoryService.getAll(),
+  });
+
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountService.getAll(),
   });
 
   const updateMutation = useMutation({
@@ -114,12 +115,12 @@ export default function TransactionDetailPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Convert to UTC for sending to backend
     const dateInUtc = formData.dateTime.utc();
     const dateStr = dateInUtc.format('YYYY-MM-DD');
     const timeStr = dateInUtc.format('HH:mm:ss');
-    
+
     const data = {
       subcategoryId: formData.subcategoryId,
       title: formData.title,
@@ -188,6 +189,15 @@ export default function TransactionDetailPage() {
     );
   }
 
+  const muiTheme = createTheme({
+    palette: {
+      mode: isDarkMode ? 'dark' : 'light',
+      primary: {
+        main: isDarkMode ? '#ffffffff' : '#000000ff',
+      },
+    },
+  });
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -229,20 +239,27 @@ export default function TransactionDetailPage() {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-                Data e Horário
-              </label>
-              {/* <ThemeProvider theme={muiTheme}> */}
+              <ThemeProvider theme={muiTheme}>
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
                   <DateTimePicker
+                  label="Data e Horário"
                     value={formData.dateTime}
                     onChange={(newValue) =>
                       setFormData({ ...formData, dateTime: newValue || dayjs() })
                     }
-                    className="w-full"
+                    format="DD/MM/YYYY HH:mm"
+                      ampm={false}
+                      slotProps={{
+                        textField: {
+                          required: true,
+                          focused: true,
+                          fullWidth: true,
+                          color: 'primary',
+                        },
+                      }}
                   />
                 </LocalizationProvider>
-              {/* </ThemeProvider> */}
+              </ThemeProvider>
             </div>
 
             <div>
@@ -373,22 +390,20 @@ export default function TransactionDetailPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           {/* Header with amount */}
           <div
-            className={`p-6 ${
-              transaction.type === 'INCOME'
-                ? 'bg-green-50 dark:bg-green-900/20'
-                : 'bg-red-50 dark:bg-red-900/20'
-            }`}
+            className={`p-6 ${transaction.type === 'INCOME'
+              ? 'bg-green-50 dark:bg-green-900/20'
+              : 'bg-red-50 dark:bg-red-900/20'
+              }`}
           >
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 {transaction.type === 'INCOME' ? 'Renda' : 'Despesa'}
               </div>
               <div
-                className={`text-4xl font-bold ${
-                  transaction.type === 'INCOME'
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
+                className={`text-4xl font-bold ${transaction.type === 'INCOME'
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+                  }`}
               >
                 {transaction.type === 'INCOME' ? '+' : '-'}
                 {formatCurrency(transaction.amount)}
@@ -480,11 +495,10 @@ export default function TransactionDetailPage() {
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Valor</div>
                   <div
-                    className={`text-base font-medium ${
-                      transaction.type === 'INCOME'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}
+                    className={`text-base font-medium ${transaction.type === 'INCOME'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                      }`}
                   >
                     {formatCurrency(transaction.amount)}
                   </div>
