@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
@@ -208,6 +208,13 @@ export default function AnnualReviewDashboard({
       .sort((a: any, b: any) => b.value - a.value);
   }, [categories, subcategories, aggregatedTransactions]);
 
+  // Hover state to sync highlight between pie slices and legend items
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const totalByCategory = useMemo(() => {
+    return expensesByCategory.reduce((s: number, c: any) => s + (c.value || 0), 0);
+  }, [expensesByCategory]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -322,33 +329,69 @@ export default function AnnualReviewDashboard({
 
         {/* Category Breakdown */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Distribuição por Categoria</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={expensesByCategory}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={(entry: any) => {
-                  const { name, percent } = entry as { name: string; percent: number };
-                  return `${name}: ${(percent * 100).toFixed(0)}%`;
-                }}
-                outerRadius={100}
-                dataKey="value"
-              >
-                {expensesByCategory.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number, _name: string, props: any) => [
-                  fmtBRL(value),
-                  `${props?.payload?.name ?? 'Categoria'}`,
-                ]}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Distribuição por Categoria</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={expensesByCategory}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  // Remove label to avoid cutoff
+                  outerRadius={100}
+                  dataKey="value"
+                >
+                  {expensesByCategory.map((entry: any, index: number) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      fillOpacity={hoveredIndex === null || hoveredIndex === index ? 1 : 0.35}
+                      stroke={hoveredIndex === index ? '#000000' : undefined}
+                      strokeWidth={hoveredIndex === index ? 2 : 0}
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, _name: string, props: any) => [
+                    fmtBRL(value),
+                    `${props?.payload?.name ?? 'Categoria'}`,
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Custom legend below the chart with percentages and hover sync */}
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              {expensesByCategory.map((cat: any, idx: number) => {
+                const percent = totalByCategory > 0 ? (cat.value / totalByCategory) * 100 : 0;
+                return (
+                  <div
+                    key={cat.name}
+                    onMouseEnter={() => setHoveredIndex(idx)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    className={`flex items-center gap-2 text-sm px-3 py-1 rounded transition-all duration-150 cursor-pointer ${
+                      hoveredIndex === idx
+                        ? 'ring-2 ring-offset-1 ring-blue-400 dark:ring-blue-600 bg-gray-200 dark:bg-gray-600'
+                        : 'bg-gray-100 dark:bg-gray-700'
+                    }`}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        background: COLORS[idx % COLORS.length],
+                      }}
+                    />
+                    <span className="font-medium">{cat.name}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{`${percent.toFixed(0)}%`}</span>
+                  </div>
+                );
+              })}
+            </div>
         </div>
       </div>
     </div>
