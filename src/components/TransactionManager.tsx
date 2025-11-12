@@ -18,18 +18,9 @@ import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import { TransactionFilterModal } from '@/components/TransactionFilterModal';
 import { TransactionsTable } from '@/components/TransactionsTable';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import dayjs, { Dayjs } from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-import 'dayjs/locale/pt-br';
-import { createInUserTimezone, toUserTimezone, getUserTimezone } from '@/lib/timezone';
+import { createInUserTimezone, toUserTimezone } from '@/lib/timezone';
+import TransactionForm from '@/components/TransactionForm';
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 interface TransactionManagerProps {
   groupId?: number;
@@ -249,51 +240,7 @@ export default function TransactionManager({
     }
   };
 
-  // ---- Accent styles (cores por tipo) ----
-  const ACCENTS = {
-    EXPENSE: {
-      twRing: 'focus:ring-red-500',
-      twBorder: 'focus:border-red-500',
-      twBorderBase: 'border-red-300',
-      twText: 'text-red-600',
-      twBgSoft: 'bg-red-50',
-      twChipOn: 'bg-red-600 text-white border-red-600',
-      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
-      muiColor: '#ef4444', // red-500
-    },
-    INCOME: {
-      twRing: 'focus:ring-green-500',
-      twBorder: 'focus:border-green-500',
-      twBorderBase: 'border-green-300',
-      twText: 'text-green-600',
-      twBgSoft: 'bg-green-50',
-      twChipOn: 'bg-green-600 text-white border-green-600',
-      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
-      muiColor: '#22c55e', // green-500
-    },
-    TRANSFER: {
-      twRing: 'focus:ring-gray-400',
-      twBorder: 'focus:border-gray-400',
-      twBorderBase: 'border-gray-300',
-      twText: 'text-gray-600',
-      twBgSoft: 'bg-gray-50',
-      twChipOn: 'bg-gray-600 text-white border-gray-600',
-      twChipOff: 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
-      muiColor: '#6b7280',
-    },
-  } as const;
 
-  const accent = ACCENTS[formData.type];
-
-
-  const muiTheme = createTheme({
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-      primary: {
-        main: accent.muiColor,
-      },
-    },
-  });
 
   const formatBRLfromCents = (cents: number) =>
     (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -315,7 +262,7 @@ export default function TransactionManager({
     if (!/^\d$/.test(e.key)) e.preventDefault(); // apenas dígitos
   };
 
-  const formRef = useRef<HTMLFormElement>(null);
+
 
   return (
     <div className="space-y-4">
@@ -399,6 +346,7 @@ export default function TransactionManager({
           onDelete={handleDelete}
           canManage={canManage}
           showUser={showUser}
+          groupId={groupId}
         />
       </div>
 
@@ -420,7 +368,7 @@ export default function TransactionManager({
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 pt-6 sm:pt-10 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[95vh] overflow-hidden shadow-xl flex flex-col">
             {/* Cabeçalho + selector de tipo */}
             <div className="sticky top-0 z-10 p-4 border-b border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
               <div className="flex items-center justify-between mb-3">
@@ -438,286 +386,36 @@ export default function TransactionManager({
                   Fechar
                 </button>
               </div>
-
-              {/* Segmented control Despesa / Renda */}
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(f => ({ ...f, type: 'EXPENSE', categoryId: 0, subcategoryId: 0 }));
-                  }}
-                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
-                       ${formData.type === 'EXPENSE' ? accent.twChipOn : accent.twChipOff}`}
-                >
-                  Despesa
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(f => ({ ...f, type: 'INCOME', categoryId: 0, subcategoryId: 0 }));
-                  }}
-                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
-                       ${formData.type === 'INCOME' ? accent.twChipOn : accent.twChipOff}`}
-                >
-                  Renda
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(f => ({ ...f, type: 'TRANSFER', categoryId: 0, subcategoryId: 0 }));
-                  }}
-                  className={`py-2 rounded-lg border text-sm font-medium transition-colors
-                       ${formData.type === 'TRANSFER' ? accent.twChipOn : accent.twChipOff}`}
-                >
-                  Transferência
-                </button>
-              </div>
             </div>
 
             {/* Conteúdo rolável */}
-            <form
-              ref={formRef}
-              onSubmit={handleSubmit}
-              className="flex-1 p-4 space-y-4 overflow-y-auto pb-28 sm:pb-32"
-              style={{
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))',
-              }}
-            >
-              {/* Data/Hora - PRIMEIRO CAMPO */}
-              <ThemeProvider theme={muiTheme}>
-                <div>
-                  <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-                    <DateTimePicker
-                      label="Data e horário"
-                      value={formData.dateTime}
-                      onChange={(newValue: Dayjs | null) => {
-                        if (newValue) setFormData({ ...formData, dateTime: newValue });
-                      }}
-                      format="DD/MM/YYYY HH:mm"
-                      ampm={false}
-                      slotProps={{
-                        textField: {
-                          required: true,
-                          focused: true,
-                          fullWidth: true,
-                          color: 'primary',
-                        },
-                      }}
-                    />
-                  </LocalizationProvider>
-                </div>
-
-                {/* Conta(s) - linha única quando for despesa ou renda, dois selects quando for transferência */}
-                {formData.type === 'TRANSFER' ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormControl focused fullWidth required margin="normal">
-                      <InputLabel id="account-from-label">Conta origem</InputLabel>
-                      <Select
-                        labelId="account-from-label"
-                        value={formData.accountId}
-                        label="Conta origem"
-                        onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
-                      >
-                        <MenuItem value={0}>Selecione</MenuItem>
-                        {(accounts).map((acc) => (
-                          <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-
-                    <FormControl focused fullWidth required margin="normal">
-                      <InputLabel id="account-to-label">Conta destino</InputLabel>
-                      <Select
-                        labelId="account-to-label"
-                        value={formData.toAccountId}
-                        label="Conta destino"
-                        onChange={(e) => setFormData({ ...formData, toAccountId: Number(e.target.value) })}
-                      >
-                        <MenuItem value={0}>Selecione</MenuItem>
-                        {(accounts).map((acc) => (
-                          <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </div>
-                ) : (
-                  <FormControl focused fullWidth required margin="normal">
-                    <InputLabel id="account-label">Conta</InputLabel>
-                    <Select
-                      labelId="account-label"
-                      value={formData.accountId}
-                      label="Conta"
-                      onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
-                    >
-                      <MenuItem value={0}>Selecione</MenuItem>
-                      {(accounts).map((acc) => (
-                        <MenuItem key={acc.id} value={acc.id}>{acc.name} - {acc.type === 'CASH' ? 'Dinheiro' : acc.type === 'CREDIT' ? 'Crédito' : 'Pré-pago'} ({acc.user?.firstName})</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
-
-                {/* Categoria e Subcategoria - mesma linha (omitidas para transferências) */}
-                {formData.type !== 'TRANSFER' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormControl focused fullWidth required margin="normal">
-                      <InputLabel id="category-label">Categoria</InputLabel>
-                      <Select
-                        labelId="category-label"
-                        value={formData.categoryId}
-                        label="Categoria"
-                        onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
-                      >
-                        <MenuItem value={0}>Selecione</MenuItem>
-                        {categories.filter((cat) => cat.type === formData.type).map((cat) => (
-                          <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    <FormControl focused fullWidth required margin="normal" disabled={!formData.categoryId}>
-                      <InputLabel id="subcategory-label">Subcategoria</InputLabel>
-                      <Select
-                        labelId="subcategory-label"
-                        value={formData.subcategoryId}
-                        label="Subcategoria"
-                        onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
-                      >
-                        <MenuItem value={0}>Selecione</MenuItem>
-                        {subcategories
-                          .filter((sub) => sub.type === formData.type && sub.categoryId === formData.categoryId)
-                          .map((sub) => (<MenuItem key={sub.id} value={sub.id}>{sub.name}</MenuItem>))}
-                      </Select>
-                    </FormControl>
-                  </div>
-                )}
-
-
-                {/* Valor */}
-                <TextField focused 
-                  label="Valor"
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.amount}
-                  onChange={handleAmountChange}
-                  onKeyDown={handleAmountKeyDown}
-                  required
-                  fullWidth
-                  margin="normal"
-                  placeholder="0,00"
-                />
-
-                {/* Título */}
-                <TextField focused 
-                  label="Título"
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  fullWidth
-                  margin="normal"
-                  placeholder="Opcional…"
-                />
-
-                {/* Descrição */}
-                <TextField focused 
-                  label="Descrição"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  fullWidth
-                  margin="normal"
-                  multiline
-                  rows={3}
-                  placeholder="Opcional…"
-                />
-
-                {/* (Opcional) Membro do grupo – mantive sua regra original */}
-                {groupId && !editingTransaction && (
-                  (() => {
-                    // Busca o usuário atual
-                    let currentUserId: number | undefined = undefined;
-                    if (typeof window !== 'undefined') {
-                      const userStr = localStorage.getItem('user');
-                      if (userStr) {
-                        try {
-                          const user = JSON.parse(userStr);
-                          currentUserId = Number(user.id);
-                        } catch {}
-                      }
-                    }
-                    // Se não estiver definido, pega o primeiro membro
-                    const defaultUserId: number | undefined = currentUserId ?? (groupMembers[0]?.user?.id ?? undefined);
-                    // Se não estiver selecionado, seleciona o padrão
-                    if (!formData.userId && defaultUserId !== undefined) {
-                      setFormData(f => ({ ...f, userId: defaultUserId }));
-                    }
-                    return (
-                      <FormControl focused fullWidth margin="normal">
-                        <InputLabel id="group-member-label">Membro do Grupo</InputLabel>
-                        <Select
-                          labelId="group-member-label"
-                          value={formData.userId ?? defaultUserId ?? ''}
-                          label="Membro do Grupo"
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              userId: e.target.value ? Number(e.target.value) : undefined,
-                            })
-                          }
-                        >
-                          {defaultUserId !== undefined && (
-                            <MenuItem value={defaultUserId}>Eu (usuário atual)</MenuItem>
-                          )}
-                          {groupMembers.filter(m => m.user).map((member) => (
-                            <MenuItem key={member.id} value={member.user!.id}>
-                              {member.user!.firstName} {member.user!.lastName}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        <FormHelperText>Selecione qual membro do grupo fez esta transação</FormHelperText>
-                      </FormControl>
-                    );
-                  })()
-                )}
-              </ThemeProvider>
-
-            </form>
-
-            {/* Rodapé de ações fixo (mobile-friendly) */}
-            <div
-              className="sticky bottom-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur"
-              style={{
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)'
-              }}
-            >
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditingTransaction(null);
-                    resetForm();
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    if (!formRef.current?.reportValidity()) return;
-                    formRef.current?.requestSubmit();
-                  }}
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 px-4 py-2 rounded-lg text-white disabled:opacity-50"
-                  style={{ background: accent.muiColor }}
-                >
-                  {createMutation.isPending || updateMutation.isPending ? 'Salvando…' : 'Salvar'}
-                </button>
-              </div>
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto pb-28 sm:pb-32" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))' }}>
+              <TransactionForm
+                groupId={groupId}
+                accounts={accounts}
+                categories={categories}
+                subcategories={subcategories}
+                groupMembers={groupMembers}
+                initialValues={formData}
+                submitting={createMutation.isPending || updateMutation.isPending}
+                onCancel={() => {
+                  setIsModalOpen(false);
+                  setEditingTransaction(null);
+                  resetForm();
+                }}
+                onSave={(data: any) => {
+                  if (editingTransaction) {
+                    updateMutation.mutate({ id: editingTransaction.id, data });
+                  } else {
+                    createMutation.mutate(data);
+                  }
+                }}
+              />
             </div>
+
           </div>
         </div>
-      )
-      }
+      )}
     </div >
   );
 }

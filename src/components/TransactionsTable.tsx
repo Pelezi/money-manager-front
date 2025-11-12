@@ -13,6 +13,7 @@ interface TransactionsTableProps {
   onDelete: (id: number) => void;
   canManage?: boolean;
   showUser?: boolean;
+  groupId?: number;
 }
 
 interface DayGroup {
@@ -31,6 +32,7 @@ export function TransactionsTable({
   onDelete,
   canManage = true,
   showUser = false,
+  groupId,
 }: TransactionsTableProps) {
   const router = useRouter();
 
@@ -118,7 +120,7 @@ export function TransactionsTable({
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    router.push(`/transactions/${transactionId}`);
+    router.push(`${groupId ? `/groups/${groupId}` : ''}/transactions/${transactionId}`);
   };
 
   if (isLoading) {
