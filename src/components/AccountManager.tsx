@@ -13,7 +13,9 @@ import { accountService } from '@/services/accountService';
 import { groupService } from '@/services/groupService';
 import { Account, AccountBalance, AccountType } from '@/types';
 import { GroupMember } from '@/types';
-import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X, Info, Settings } from 'lucide-react';
+import Popover from '@mui/material/Popover';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
@@ -41,6 +43,15 @@ export default function AccountManager({
   canManageOwn = false,
   canManageAll = false,
 }: AccountManagerProps) {
+  const router = useRouter();
+  const [infoAnchorEl, setInfoAnchorEl] = useState<HTMLElement | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  const handleInfoClick = (e: React.MouseEvent<HTMLElement>) => {
+    setInfoAnchorEl(e.currentTarget);
+  };
+  const handleInfoClose = () => setInfoAnchorEl(null);
+  const infoOpen = Boolean(infoAnchorEl);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [balances, setBalances] = useState<Record<number, AccountBalance | null>>({});
@@ -49,6 +60,10 @@ export default function AccountManager({
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+  const [deleteTxCount, setDeleteTxCount] = useState<number>(0);
+  const [deleteTargetAccountId, setDeleteTargetAccountId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -184,15 +199,58 @@ export default function AccountManager({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir esta conta?')) return;
-
     try {
-      await accountService.delete(id);
-      toast.success('Conta excluída com sucesso!');
-      loadAccounts();
+      const count = await accountService.getTransactionCount(id);
+      if (count === 0) {
+        if (!confirm('Tem certeza que deseja excluir esta conta?')) return;
+        await accountService.delete(id);
+        toast.success('Conta excluída com sucesso!');
+        loadAccounts();
+        return;
+      }
+
+      // Has transactions -> show modal with options
+      const acc = accounts.find(a => a.id === id) || null;
+      setAccountToDelete(acc);
+      setDeleteTxCount(count);
+      setDeleteTargetAccountId(null);
+      setShowDeleteModal(true);
     } catch (error) {
       console.error('Failed to delete account:', error);
       toast.error('Erro ao excluir conta');
+    }
+  };
+
+  const performForceDelete = async () => {
+    if (!accountToDelete) return;
+    try {
+      await accountService.deleteWithForce(accountToDelete.id);
+      toast.success('Conta e transações excluídas com sucesso!');
+      setShowDeleteModal(false);
+      setAccountToDelete(null);
+      loadAccounts();
+    } catch (error) {
+      console.error('Failed to force delete account:', error);
+      toast.error('Erro ao excluir conta');
+    }
+  };
+
+  const performMoveAndDelete = async () => {
+    if (!accountToDelete || !deleteTargetAccountId) {
+      toast.error('Selecione uma conta destino para mover as transações');
+      return;
+    }
+    try {
+      await accountService.moveTransactions(accountToDelete.id, deleteTargetAccountId);
+      // After moving, delete account (no need to force but use force to ensure clean deletion)
+      await accountService.deleteWithForce(accountToDelete.id);
+      toast.success('Transações movidas e conta excluída com sucesso!');
+      setShowDeleteModal(false);
+      setAccountToDelete(null);
+      loadAccounts();
+    } catch (error) {
+      console.error('Failed to move transactions and delete account:', error);
+      toast.error('Erro ao mover transações ou excluir conta');
     }
   };
 
@@ -302,7 +360,24 @@ export default function AccountManager({
 
   return (
     <div className="p-6 max-w-7xl mx-auto pb-24">
-      <div className="mb-6">
+      <div className="mb-6 relative">
+        <div className="absolute top-0 right-0 flex items-center gap-2">
+          <button
+            onClick={handleInfoClick}
+            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Ajuda sobre tipos de conta"
+          >
+            <Info size={18} />
+          </button>
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Configurações"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
+
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           {title || 'Minhas Contas'}
         </h1>
@@ -310,6 +385,48 @@ export default function AccountManager({
           Gerencie suas contas e acompanhe seus saldos
         </p>
       </div>
+
+      <Popover
+        open={infoOpen}
+        anchorEl={infoAnchorEl}
+        onClose={handleInfoClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <div style={{ padding: 12, maxWidth: 340, whiteSpace: 'pre-line' }}>
+          <strong>Tipos de conta</strong>
+          <div style={{ marginTop: 8 }}>
+            {/* Dinheiro (padrão): gastos e ganhos são registrados imediatamente, no momento em que acontecem.
+Crédito: você pode escolher se os gastos serão contabilizados conforme as compras acontecem ou apenas quando a fatura for paga.
+Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transações de gasto não entram no total de gastos. */}
+            Dinheiro (padrão): gastos e ganhos são descontados imediatamente.
+          </div>
+          <div style={{ marginTop: 8 }}>
+            Crédito: Os gastos podem ser contabilizados conforme as compras acontecem ou apenas quando a fatura for paga.
+          </div>
+          <div style={{ marginTop: 8 }}>
+            Pré-pago: O valor é descontado ao transferir dinheiro para a conta.
+          </div>
+        </div>
+      </Popover>
+
+      {/* Settings modal (placeholder) */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Configurações</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400">Configurações da conta — implementação futura.</p>
+            <div className="mt-4 flex justify-end">
+              <button onClick={() => setShowSettingsModal(false)} className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700">Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12">
@@ -333,15 +450,24 @@ export default function AccountManager({
             const canEdit = canEditAccount(account);
 
             // Buscar nome do dono
-            let ownerName = '';
+            let ownerFirstName = '';
             if (groupId) {
               const owner = groupMembers.find(m => m.userId === account.userId);
-              ownerName = owner?.user?.firstName ? `${owner.user.firstName} ${owner.user.lastName}` : owner?.user?.email || '';
+              ownerFirstName = owner?.user?.firstName || '';
             }
             return (
               <div
                 key={account.id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                onClick={(e) => {
+                  // avoid navigating when clicking action buttons
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  if (groupId) {
+                    router.push(`/groups/${groupId}/accounts/${account.id}/history`);
+                  } else {
+                    router.push(`/accounts/${account.id}/history`);
+                  }
+                }}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -355,7 +481,7 @@ export default function AccountManager({
                       </p>
                       {groupId && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Dono: {ownerName}
+                          Dono: {ownerFirstName}
                         </p>
                       )}
                     </div>
@@ -471,7 +597,7 @@ export default function AccountManager({
                   </FormControl>
 
                   {groupId && (
-                    <FormControl focused  fullWidth required margin="normal">
+                    <FormControl focused fullWidth required margin="normal">
                       <InputLabel id="account-owner-label">Dono da Conta</InputLabel>
                       {canManageAll ? (
                         <Select
@@ -500,7 +626,7 @@ export default function AccountManager({
                   )}
 
                   {!editingAccount && (
-                    <FormControl focused  fullWidth required margin="normal">
+                    <FormControl focused fullWidth required margin="normal">
                       <TextField
                         label="Saldo Inicial"
                         type="text"
@@ -529,7 +655,7 @@ export default function AccountManager({
                   )}
 
                   {!editingAccount && (
-                    <FormControl   fullWidth required margin="normal">
+                    <FormControl fullWidth required margin="normal">
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
                         <DateTimePicker
                           label="Data e Hora do Saldo Inicial"
@@ -661,6 +787,78 @@ export default function AccountManager({
           </div>
         )
       }
+      {/* Delete Account Modal (move or delete transactions) */}
+      {showDeleteModal && accountToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Conta possui transações vinculadas
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setAccountToDelete(null);
+                  }}
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                A conta "{accountToDelete.name}" possui {deleteTxCount} transação(ões) vinculada(s).
+                Você pode deletar todas as transações ou movê-las para outra conta.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Selecionar conta destino</label>
+                  <select
+                    value={deleteTargetAccountId ?? ''}
+                    onChange={(e) => setDeleteTargetAccountId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full border rounded p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">-- Escolha uma conta --</option>
+                    {accounts.filter(a => a.id !== accountToDelete.id).map(a => (
+                      <option key={a.id} value={a.id}>{a.name} ({getAccountTypeLabel(a.type)})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setAccountToDelete(null);
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={performForceDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Deletar todas as transações
+                  </button>
+                  <button
+                    type="button"
+                    onClick={performMoveAndDelete}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Mover e deletar conta
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 }

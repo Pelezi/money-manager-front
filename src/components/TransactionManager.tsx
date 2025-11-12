@@ -28,6 +28,7 @@ interface TransactionManagerProps {
   canView?: boolean;
   title?: string;
   showUser?: boolean;
+  initialAccountId?: number;
 }
 
 export default function TransactionManager({
@@ -35,9 +36,17 @@ export default function TransactionManager({
   canManage = true,
   canView = true,
   title = 'Transações',
-  showUser = false
+  showUser = false,
+  initialAccountId
 }: TransactionManagerProps) {
   const queryClient = useQueryClient();
+
+  // Current balance for account history (used to compute running balances)
+  const { data: currentAccountBalance } = useQuery({
+    queryKey: initialAccountId ? ['accountBalance', initialAccountId] : ['accountBalance', 'none'],
+    queryFn: () => accountService.getCurrentBalance(initialAccountId!),
+    enabled: !!initialAccountId,
+  });
 
   // Buscar contas disponíveis
   const { data: accounts = [] } = useQuery({
@@ -56,7 +65,7 @@ export default function TransactionManager({
     type: '',
     categoryId: undefined as number | undefined,
     subcategoryId: undefined as number | undefined,
-    accountId: undefined as number | undefined,
+    accountId: initialAccountId ?? undefined as number | undefined,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -345,8 +354,10 @@ export default function TransactionManager({
           onEdit={handleEdit}
           onDelete={handleDelete}
           canManage={canManage}
-          showUser={showUser}
-          groupId={groupId}
+            showUser={showUser}
+            groupId={groupId}
+            initialAccountId={initialAccountId}
+            currentAccountBalanceAmount={currentAccountBalance?.amount}
         />
       </div>
 

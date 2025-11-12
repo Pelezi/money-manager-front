@@ -161,6 +161,19 @@ export default function TransactionForm({
         },
     });
 
+    const getAccountTypeLabel = (type: string) => {
+        switch (type) {
+            case 'CREDIT':
+                return 'Crédito';
+            case 'CASH':
+                return 'Dinheiro';
+            case 'PREPAID':
+                return 'Pré-pago';
+            default:
+                return type;
+        }
+    };
+
     const formRef = useRef<HTMLFormElement>(null);
 
     const submit = (e?: React.FormEvent) => {
@@ -185,6 +198,17 @@ export default function TransactionForm({
             ...(groupId && { groupId }),
             ...(groupId && formData.userId && { userId: formData.userId }),
         };
+
+        // Validate transfer: require destination account and remove category/subcategory
+        if (formData.type === 'TRANSFER') {
+            if (!formData.toAccountId || formData.toAccountId === 0) {
+                alert('Selecione a conta de destino para a transferência');
+                return;
+            }
+            // Remove category/subcategory from payload for transfers
+            delete data.subcategoryId;
+            delete data.categoryId;
+        }
 
         onSave(data);
     };
@@ -216,7 +240,7 @@ export default function TransactionForm({
                     </button>
                     <button
                         type="button"
-                        onClick={() => setFormData(f => ({ ...f, type: 'TRANSFER', categoryId: 0, subcategoryId: 0 }))}
+                        onClick={() => setFormData(f => ({ ...f, type: 'TRANSFER', categoryId: 0, subcategoryId: 0, toAccountId: 0 }))}
                         className={`py-2 rounded-lg border text-sm font-medium transition-colors ${formData.type === 'TRANSFER' ? 'bg-gray-600 text-white border-gray-600' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}
                         style={{ borderWidth: 1 }}
                     >
@@ -245,58 +269,100 @@ export default function TransactionForm({
                     </LocalizationProvider>
                 </div>
 
-                {/* Accounts */}
-                <div>
-                    <FormControl focused fullWidth required margin="normal">
-                        <InputLabel id="account-label">Conta</InputLabel>
-                        <Select
-                            labelId="account-label"
-                            value={formData.accountId}
-                            label="Conta"
-                            onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
-                        >
-                            <MenuItem value={0}>Selecione</MenuItem>
-                            {accounts.map((acc: any) => (
-                                <MenuItem key={acc.id} value={acc.id}>
-                                    {acc.name} - {acc.type}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </div>
+                {/* Accounts: when TRANSFER show source + destination on the same line */}
+                {formData.type === 'TRANSFER' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                        <FormControl focused fullWidth required margin="normal">
+                            <InputLabel id="account-label">Conta origem</InputLabel>
+                            <Select
+                                labelId="account-label"
+                                value={formData.accountId}
+                                label="Conta origem"
+                                onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
+                            >
+                                <MenuItem value={0}>Selecione</MenuItem>
+                                {accounts.map((acc: any) => (
+                                    <MenuItem key={acc.id} value={acc.id}>
+                                        {acc.name} - {getAccountTypeLabel(acc.type)}{acc.user?.firstName ? ` (${acc.user.firstName})` : ''}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
-                {/* Category / Subcategory */}
-                <div className="grid grid-cols-2 gap-2">
-                    <FormControl focused fullWidth required margin="normal">
-                        <InputLabel id="category-label">Categoria</InputLabel>
-                        <Select
-                            labelId="category-label"
-                            value={formData.categoryId}
-                            label="Categoria"
-                            onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
-                        >
-                            <MenuItem value={0}>Selecione</MenuItem>
-                            {categories.filter((cat: any) => cat.type === formData.type).map((cat: any) => (
-                                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+                        <FormControl focused fullWidth required margin="normal">
+                            <InputLabel id="to-account-label-inline">Conta destino</InputLabel>
+                            <Select
+                                labelId="to-account-label-inline"
+                                value={formData.toAccountId}
+                                label="Conta destino"
+                                onChange={(e) => setFormData({ ...formData, toAccountId: Number(e.target.value) })}
+                            >
+                                <MenuItem value={0}>Selecione</MenuItem>
+                                {accounts
+                                    .filter((acc: any) => acc.id !== formData.accountId)
+                                    .map((acc: any) => (
+                                        <MenuItem key={acc.id} value={acc.id}>
+                                            {acc.name} - {getAccountTypeLabel(acc.type)}{acc.user?.firstName ? ` (${acc.user.firstName})` : ''}
+                                        </MenuItem>
+                                    ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                ) : (
+                    <div>
+                        <FormControl focused fullWidth required margin="normal">
+                            <InputLabel id="account-label">Conta</InputLabel>
+                            <Select
+                                labelId="account-label"
+                                value={formData.accountId}
+                                label="Conta"
+                                onChange={(e) => setFormData({ ...formData, accountId: Number(e.target.value) })}
+                            >
+                                <MenuItem value={0}>Selecione</MenuItem>
+                                {accounts.map((acc: any) => (
+                                    <MenuItem key={acc.id} value={acc.id}>
+                                        {acc.name} - {getAccountTypeLabel(acc.type)}{acc.user?.firstName ? ` (${acc.user.firstName})` : ''}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                )}
 
-                    <FormControl focused fullWidth required margin="normal" disabled={!formData.categoryId}>
-                        <InputLabel id="subcategory-label">Subcategoria</InputLabel>
-                        <Select
-                            labelId="subcategory-label"
-                            value={formData.subcategoryId}
-                            label="Subcategoria"
-                            onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
-                        >
-                            <MenuItem value={0}>Selecione</MenuItem>
-                            {availableSubcategories.map((sub: any) => (
-                                <MenuItem key={sub.id} value={sub.id}>{sub.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </div>
+                {/* Category / Subcategory (hidden for TRANSFER) */}
+                {formData.type !== 'TRANSFER' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                        <FormControl focused fullWidth required margin="normal">
+                            <InputLabel id="category-label">Categoria</InputLabel>
+                            <Select
+                                labelId="category-label"
+                                value={formData.categoryId}
+                                label="Categoria"
+                                onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value), subcategoryId: 0 })}
+                            >
+                                <MenuItem value={0}>Selecione</MenuItem>
+                                {categories.filter((cat: any) => cat.type === formData.type).map((cat: any) => (
+                                    <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl focused fullWidth required margin="normal" disabled={!formData.categoryId}>
+                            <InputLabel id="subcategory-label">Subcategoria</InputLabel>
+                            <Select
+                                labelId="subcategory-label"
+                                value={formData.subcategoryId}
+                                label="Subcategoria"
+                                onChange={(e) => setFormData({ ...formData, subcategoryId: Number(e.target.value) })}
+                            >
+                                <MenuItem value={0}>Selecione</MenuItem>
+                                {availableSubcategories.map((sub: any) => (
+                                    <MenuItem key={sub.id} value={sub.id}>{sub.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                ) : null}
 
                 <TextField
                     focused

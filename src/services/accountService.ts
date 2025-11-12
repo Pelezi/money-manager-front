@@ -52,6 +52,21 @@ export const accountService = {
     await api.delete(`/accounts/${id}`);
   },
 
+  // Delete with force option (delete transactions and balances)
+  deleteWithForce: async (id: number): Promise<void> => {
+    await api.delete(`/accounts/${id}?force=true`);
+  },
+
+  getTransactionCount: async (id: number): Promise<number> => {
+    const response = await api.get<{ count: number }>(`/accounts/${id}/transactions/count`);
+    return response.data.count;
+  },
+
+  moveTransactions: async (id: number, targetAccountId: number): Promise<{ movedOrigin: number; movedDestination: number }> => {
+    const response = await api.post<{ movedOrigin: number; movedDestination: number }>(`/accounts/${id}/transactions/move`, { targetAccountId });
+    return response.data;
+  },
+
   addBalance: async (data: {
     accountId: number;
     amount: number;

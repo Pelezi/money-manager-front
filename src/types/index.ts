@@ -1,4 +1,4 @@
-export type EntityType = 'EXPENSE' | 'INCOME' | 'TRANSFER';
+export type EntityType = 'EXPENSE' | 'INCOME' | 'TRANSFER' | 'UPDATE';
 
 export interface Category {
   id: number;
