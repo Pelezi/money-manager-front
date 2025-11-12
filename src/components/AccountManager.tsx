@@ -507,14 +507,18 @@ export default function AccountManager({
                         inputMode="numeric"
                         value={formData.initialBalance}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/\D/g, '');
+                          const raw = e.target.value || '';
+                          const negative = raw.trim().startsWith('-');
+                          const digits = raw.replace(/\D/g, '');
                           const cents = Number(digits || '0');
-                          const formatted = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const formattedNumber = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const formatted = negative ? `-${formattedNumber}` : formattedNumber;
                           setFormData({ ...formData, initialBalance: formatted });
                         }}
                         onKeyDown={(e) => {
                           const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
                           if (allowed.includes(e.key)) return;
+                          if (e.key === '-' || e.key === 'Subtract') return;
                           if (!/^\d$/.test(e.key)) e.preventDefault();
                         }}
                         placeholder="0,00"
