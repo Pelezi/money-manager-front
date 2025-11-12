@@ -392,17 +392,22 @@ export default function TransactionDetailPage() {
           <div
             className={`p-6 ${transaction.type === 'INCOME'
               ? 'bg-green-50 dark:bg-green-900/20'
-              : transaction.type === 'EXPENSE' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-700/20'
+              : transaction.type === 'EXPENSE' 
+              ? 'bg-red-50 dark:bg-red-900/20' 
+              : 'bg-gray-50 dark:bg-gray-700/20'
               }`}
           >
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                {transaction.type === 'INCOME' ? 'Renda' : transaction.type === 'EXPENSE' ? 'Despesa' : 'Transferência'}
+                {transaction.type === 'INCOME' 
+                ? 'Renda' : transaction.type === 'EXPENSE' 
+                ? 'Despesa' : 'Transferência'}
               </div>
               <div
                 className={`text-4xl font-bold ${transaction.type === 'INCOME'
                   ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
+                  : transaction.type === 'EXPENSE' 
+                  ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
                   }`}
               >
                 {transaction.type === 'INCOME' ? '+' : transaction.type === 'EXPENSE' ? '-' : ''}
@@ -497,7 +502,8 @@ export default function TransactionDetailPage() {
                   <div
                     className={`text-base font-medium ${transaction.type === 'INCOME'
                       ? 'text-green-600 dark:text-green-400'
-                      : transaction.type === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+                      : transaction.type === 'EXPENSE' 
+                      ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
                       }`}
                   >
                     {formatCurrency(transaction.amount)}
