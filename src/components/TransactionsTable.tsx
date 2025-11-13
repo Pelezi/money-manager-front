@@ -89,7 +89,8 @@ export function TransactionsTable({
 
   // Group transactions by date
   const groupedTransactions = transactions.reduce((acc, transaction) => {
-    const dateKey = transaction.date.split('T')[0];
+    const transactionDate = formatInUserTimezone(transaction.date, 'YYYY-MM-DD');
+    const dateKey = transactionDate;
     if (!acc[dateKey]) {
       acc[dateKey] = {
         date: dateKey,
