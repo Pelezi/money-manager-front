@@ -379,7 +379,7 @@ export default function TransactionManager({
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 pt-6 sm:pt-10 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[95vh] overflow-hidden shadow-xl flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
             {/* Cabeçalho + selector de tipo */}
             <div className="sticky top-0 z-10 p-4 border-b border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
               <div className="flex items-center justify-between mb-3">
