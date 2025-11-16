@@ -227,6 +227,10 @@ export interface Account {
   groupId?: number;
   name: string;
   type: AccountType;
+  subcategoryId?: number;
+  creditDueDay?: number;
+  creditClosingDay?: number;
+  debitMethod?: 'INVOICE' | 'PER_PURCHASE';
   createdAt: string;
   updatedAt: string;
 }

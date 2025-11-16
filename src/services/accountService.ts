@@ -34,6 +34,10 @@ export const accountService = {
     type: AccountType;
     groupId?: number;
     initialBalance?: number;
+    subcategoryId?: number;
+    creditDueDay?: number;
+    creditClosingDay?: number;
+    debitMethod?: 'INVOICE' | 'PER_PURCHASE';
   }): Promise<Account> => {
     const response = await api.post<Account>('/accounts', data);
     return response.data;
@@ -43,6 +47,10 @@ export const accountService = {
     name?: string;
     type?: AccountType;
     groupId?: number;
+    subcategoryId?: number | null;
+    creditDueDay?: number | null;
+    creditClosingDay?: number | null;
+    debitMethod?: 'INVOICE' | 'PER_PURCHASE' | null;
   }): Promise<Account> => {
     const response = await api.put<Account>(`/accounts/${id}`, data);
     return response.data;

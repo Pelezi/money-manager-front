@@ -3,7 +3,7 @@
 import { User } from 'lucide-react';
 import { Transaction, Account } from '@/types';
 import { useRouter } from 'next/navigation';
-import { toUserTimezone, formatInUserTimezone } from '@/lib/timezone';
+import { toUserTimezone, formatInUserTimezone, getUserTimezone } from '@/lib/timezone';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -100,20 +100,63 @@ export function TransactionsTable({
         total: 0,
       };
     }
-    acc[dateKey].transactions.push(transaction);
-    
+
+    const getAccount = (id?: number) => accounts.find(a => a.id === id);
+
+    const computeEffective = (tx: Transaction) => {
+      if (tx.type === 'INCOME') return 'INCOME';
+      if (tx.type === 'UPDATE') return 'UPDATE';
+
+      if (tx.type === 'EXPENSE') {
+        const src = getAccount(tx.accountId);
+        if (src) {
+          if (src.type === 'PREPAID') return 'TRANSFER_LIKE';
+          if (src.type === 'CREDIT') {
+            const dm = (src as any).debitMethod ?? null;
+            if (dm === 'INVOICE') return 'TRANSFER_LIKE';
+            return 'EXPENSE';
+          }
+        }
+        return 'EXPENSE';
+      }
+
+      // TRANSFER
+      if (tx.type === 'TRANSFER') {
+        const dest = getAccount(tx.toAccountId);
+        if (dest) {
+          if (dest.type === 'PREPAID') return 'EXPENSE';
+          if (dest.type === 'CREDIT') {
+            const dm = (dest as any).debitMethod ?? null;
+            if (dm === 'INVOICE') return 'EXPENSE';
+            if (dm === 'PER_PURCHASE') return 'TRANSFER_LIKE';
+            return 'TRANSFER_LIKE';
+          }
+        }
+        return 'TRANSFER_LIKE';
+      }
+
+      return tx.type;
+    };
+
+    const effectiveType = computeEffective(transaction as Transaction);
+
+    // Push transaction along with effectiveType metadata
+    const txWithMeta = { ...(transaction as any), _effectiveType: effectiveType } as any;
+    acc[dateKey].transactions.push(txWithMeta);
+
     // Balance updates are synthetic entries that should not affect totals
-    if (transaction.type === 'UPDATE') {
+    if (effectiveType === 'UPDATE') {
       // do nothing
-    } else if (transaction.type === 'INCOME') {
+    } else if (effectiveType === 'INCOME') {
       acc[dateKey].totalIncome += transaction.amount;
       acc[dateKey].total += transaction.amount;
-    } else if (transaction.type === 'EXPENSE') {
+    } else if (effectiveType === 'EXPENSE') {
       acc[dateKey].totalExpense += transaction.amount;
       acc[dateKey].total -= transaction.amount;
     } else {
+      // TRANSFER_LIKE -> do not affect totals
     }
-    
+
     return acc;
   }, {} as Record<string, DayGroup>);
 
@@ -121,6 +164,28 @@ export function TransactionsTable({
   const sortedDays = Object.values(groupedTransactions).sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  // Compute month totals for the month of the first displayed day (most recent)
+  let monthTotals: { monthLabel: string; totalIncome: number; totalExpense: number; total: number } | null = null;
+  if (sortedDays.length > 0) {
+    const firstMonthKey = sortedDays[0].date.slice(0, 7); // YYYY-MM
+    let mi = 0;
+    let me = 0;
+    let mt = 0;
+    for (const d of sortedDays) {
+      if (d.date.slice(0, 7) === firstMonthKey) {
+        mi += d.totalIncome;
+        me += d.totalExpense;
+        mt += d.total;
+      }
+    }
+    // Format month label using Intl with pt-BR and user's timezone to ensure localized month name
+    const firstDayDate = toUserTimezone(sortedDays[0].date).toDate();
+    const userTz = getUserTimezone();
+    const rawMonthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: userTz }).format(firstDayDate);
+    const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1);
+    monthTotals = { monthLabel, totalIncome: mi, totalExpense: me, total: mt };
+  }
 
   // Compute running balances per transaction when viewing a single account (initialAccountId)
   const txBalanceAfter: Record<number, number> = {};
@@ -182,6 +247,26 @@ export function TransactionsTable({
 
   return (
     <div className="space-y-4">
+      {monthTotals && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+            <div className="grid grid-cols-3 gap-3 items-center">
+              <div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">{monthTotals.monthLabel}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Resumo do mês</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-gray-500 dark:text-gray-400">Entradas</div>
+                <div className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(monthTotals.totalIncome)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-500 dark:text-gray-400">Saídas</div>
+                <div className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(monthTotals.totalExpense)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {sortedDays.map((dayGroup) => (
         <div key={dayGroup.date} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
           {/* Date Header */}
@@ -292,16 +377,21 @@ export function TransactionsTable({
                 {/* Right: Amount */}
                 <div className="flex flex-col justify-center items-end gap-1">
                   <div
-                    className={`text-sm sm:text-lg font-bold whitespace-nowrap ${
-                      transaction.type === 'UPDATE' ? 'text-blue-600 dark:text-blue-400' :
-                      transaction.type === 'INCOME'
-                        ? 'text-green-600 dark:text-green-400'
-                        : transaction.type === 'EXPENSE'
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-600 dark:text-gray-300'
-                    }`}
+                    className={`text-sm sm:text-lg font-bold whitespace-nowrap ${(() => {
+                      const eff = (transaction as any)._effectiveType || transaction.type;
+                      if (eff === 'UPDATE') return 'text-blue-600 dark:text-blue-400';
+                      if (eff === 'INCOME') return 'text-green-600 dark:text-green-400';
+                      if (eff === 'EXPENSE') return 'text-red-600 dark:text-red-400';
+                      return 'text-gray-600 dark:text-gray-300';
+                    })()}`}
                   >
-                    {transaction.type === 'UPDATE' ? '' : transaction.type === 'INCOME' ? '+' : transaction.type === 'EXPENSE' ? '-' : ''}
+                    {(() => {
+                      const eff = (transaction as any)._effectiveType || transaction.type;
+                      if (eff === 'UPDATE') return '';
+                      if (eff === 'INCOME') return '+';
+                      if (eff === 'EXPENSE') return '-';
+                      return '';
+                    })()}
                     {formatCurrency(transaction.amount)}
                   </div>
                   {showUser && transaction.user && (

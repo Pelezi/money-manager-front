@@ -8,11 +8,14 @@ import timezone from 'dayjs/plugin/timezone';
 import { createInUserTimezone, getUserTimezone } from '@/lib/timezone';
 dayjs.extend(timezone);
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { accountService } from '@/services/accountService';
 import { groupService } from '@/services/groupService';
+import { categoryService } from '@/services/categoryService';
+import { subcategoryService } from '@/services/subcategoryService';
 import { Account, AccountBalance, AccountType } from '@/types';
 import { GroupMember } from '@/types';
+import { Category, Subcategory } from '@/types';
 import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X, Info, Settings } from 'lucide-react';
 import Popover from '@mui/material/Popover';
 import { useRouter } from 'next/navigation';
@@ -54,6 +57,8 @@ export default function AccountManager({
   const infoOpen = Boolean(infoAnchorEl);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [balances, setBalances] = useState<Record<number, AccountBalance | null>>({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -71,12 +76,21 @@ export default function AccountManager({
     initialBalance: '0,00',
     initialBalanceDateTime: createInUserTimezone(),
     userId: currentUserId || undefined,
+    // Prepaid fields
+    prepaidCategoryId: undefined as number | undefined,
+    prepaidSubcategoryId: undefined as number | undefined,
+    // Credit fields
+    creditDueDay: 1 as number | undefined,
+    creditClosingDay: 1 as number | undefined,
+    debitMethod: 'INVOICE', // 'INVOICE' | 'PER_PURCHASE'
   });
 
   const [balanceFormData, setBalanceFormData] = useState({
     amount: 0,
     dateTime: createInUserTimezone(), // Dayjs object
   });
+
+  const formRef = useRef<HTMLFormElement | null>(null);
 
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -94,6 +108,32 @@ export default function AccountManager({
       groupService.getMembers(groupId).then((members: GroupMember[]) => setGroupMembers(members));
     }
   }, [canView, groupId]);
+
+  // Load categories for prepaid selection
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await categoryService.getAll(groupId ? groupId : undefined);
+        setCategories(cats);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    loadCategories();
+  }, [groupId]);
+
+  // Load all subcategories (then filter client-side like TransactionForm)
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      try {
+        const subs = await subcategoryService.getAll(groupId ? groupId : undefined);
+        setSubcategories(subs);
+      } catch (err) {
+        console.error('Failed to load subcategories:', err);
+      }
+    };
+    loadSubcategories();
+  }, [groupId]);
 
   // Listen for changes to Tailwind's dark mode class
   useEffect(() => {
@@ -149,24 +189,74 @@ export default function AccountManager({
     e.preventDefault();
     try {
       if (editingAccount) {
-        await accountService.update(editingAccount.id, {
+        const updatePayload: any = {
           name: formData.name,
           type: formData.type,
-        });
+        };
+
+        // If PREPAID, send selected subcategory id (or null to disconnect)
+        if (formData.type === 'PREPAID') {
+          updatePayload.subcategoryId = formData.prepaidSubcategoryId ?? null;
+          updatePayload.creditDueDay = null;
+          updatePayload.creditClosingDay = null;
+          updatePayload.debitMethod = null;
+        }
+
+        // If CREDIT, send creditDueDay and debitMethod (if present)
+        if (formData.type === 'CREDIT') {
+          if (formData.creditDueDay !== undefined) updatePayload.creditDueDay = formData.creditDueDay;
+          if (formData.creditClosingDay !== undefined) updatePayload.creditClosingDay = formData.creditClosingDay;
+          if (formData.debitMethod !== undefined) updatePayload.debitMethod = formData.debitMethod;
+          // If debit method is INVOICE, allow assigning a subcategory (invoice categorization)
+          if (formData.debitMethod === 'INVOICE') {
+            updatePayload.subcategoryId = formData.prepaidSubcategoryId ?? null;
+          } else {
+            updatePayload.subcategoryId = null;
+          }
+        }
+
+        await accountService.update(editingAccount.id, updatePayload);
         toast.success('Conta atualizada com sucesso!');
       } else {
-        // userId só é enviado se for grupo
-        const payload = groupId ? { ...formData, groupId, userId: formData.userId } : formData;
-        // Remover userId se não for grupo
-        if (!groupId) delete (payload as any).userId;
-        // Enviar saldo inicial e data/hora
+        // Build payload carefully (avoid sending Dayjs objects directly)
         const amountNumber = Number(formData.initialBalance.replace(/\./g, '').replace(',', '.'));
-        await accountService.create({
-          ...payload,
+        const basePayload: any = {
+          name: formData.name,
+          type: formData.type,
           initialBalance: amountNumber,
-          // Se a API suportar, envie initialBalanceDate: formData.initialBalanceDateTime.toDate(),
-          // Caso contrário, apenas envie initialBalance e trate a data/hora no backend
-        });
+        };
+
+        if (groupId) basePayload.groupId = groupId;
+        if (groupId && formData.userId) basePayload.userId = formData.userId;
+
+        // Include initial balance datetime if supported
+        if (formData.initialBalanceDateTime && typeof formData.initialBalanceDateTime.toDate === 'function') {
+          basePayload.initialBalanceDate = (formData.initialBalanceDateTime as Dayjs).toDate();
+        }
+
+        // PREPAID: include subcategory id
+        if (formData.type === 'PREPAID' && formData.prepaidSubcategoryId) {
+          basePayload.subcategoryId = formData.prepaidSubcategoryId;
+        }
+
+        // CREDIT: include due day and debit method
+        if (formData.type === 'CREDIT') {
+          if (formData.creditDueDay) {
+            basePayload.creditDueDay = formData.creditDueDay;
+          }
+          if (formData.creditClosingDay) {
+            basePayload.creditClosingDay = formData.creditClosingDay;
+          }
+          if (formData.debitMethod) {
+            basePayload.debitMethod = formData.debitMethod;
+          }
+          // If invoice debit method, allow category/subcategory to be set for invoice accounting
+          if (formData.debitMethod === 'INVOICE' && formData.prepaidSubcategoryId) {
+            basePayload.subcategoryId = formData.prepaidSubcategoryId;
+          }
+        }
+
+        await accountService.create(basePayload);
         toast.success('Conta criada com sucesso!');
       }
       setShowModal(false);
@@ -261,6 +351,11 @@ export default function AccountManager({
       initialBalance: '0,00',
       initialBalanceDateTime: createInUserTimezone(),
       userId: currentUserId || undefined,
+      prepaidCategoryId: undefined,
+      prepaidSubcategoryId: undefined,
+      creditDueDay: 1,
+      creditClosingDay: 1,
+      debitMethod: 'INVOICE',
     });
     setEditingAccount(null);
   };
@@ -275,12 +370,24 @@ export default function AccountManager({
 
   const openEditModal = (account: Account) => {
     setEditingAccount(account);
+    // Determine prepaid category from account.subcategoryId (if any)
+    let prepaidCategoryId: number | undefined = undefined;
+    if (account.subcategoryId) {
+      const found = subcategories.find(s => s.id === account.subcategoryId);
+      if (found) prepaidCategoryId = found.categoryId;
+    }
+
     setFormData({
       name: account.name,
       type: account.type,
       initialBalance: '0,00',
       initialBalanceDateTime: createInUserTimezone(),
       userId: account.userId,
+      prepaidCategoryId: prepaidCategoryId,
+      prepaidSubcategoryId: account.subcategoryId ?? undefined,
+      creditDueDay: account.creditDueDay ?? 1,
+      creditClosingDay: account.creditClosingDay ?? 1,
+      debitMethod: account.debitMethod ?? 'INVOICE',
     });
     setShowModal(true);
   };
@@ -550,9 +657,10 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
       {/* Create/Edit Account Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
+              <div className="flex items-center justify-between mb-0">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {editingAccount ? 'Editar Conta' : 'Nova Conta'}
                 </h3>
@@ -566,9 +674,11 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
                   <X size={20} />
                 </button>
               </div>
+            </div>
 
-
-              <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Scrollable body */}
+            <div className="p-6 overflow-y-auto">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                 <ThemeProvider theme={muiTheme}>
                   <FormControl fullWidth required margin="normal">
                     <TextField
@@ -595,6 +705,99 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
                       <MenuItem value="PREPAID">💰 Pré-pago</MenuItem>
                     </Select>
                   </FormControl>
+
+                  {formData.type === 'CREDIT' && (
+                    <>
+                      <FormControl focused fullWidth required margin="normal">
+                        <InputLabel id="debit-method-label">Forma de débito</InputLabel>
+                        <Select
+                          labelId="debit-method-label"
+                          value={formData.debitMethod}
+                          label="Forma de débito"
+                          onChange={e => setFormData({ ...formData, debitMethod: String(e.target.value) })}
+                        >
+                          <MenuItem value="INVOICE">Débito no pagamento da fatura</MenuItem>
+                          <MenuItem value="PER_PURCHASE">Débito em cada compra</MenuItem>
+                        </Select>
+                      </FormControl>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormControl fullWidth required margin="normal">
+                          <TextField
+                            label="Dia de Fechamento da Fatura"
+                            type="number"
+                            slotProps={{ htmlInput: { min: 1, max: 31 } }}
+                            value={formData.creditClosingDay ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value ? Number(e.target.value) : undefined;
+                              const clamped = v ? Math.max(1, Math.min(31, v)) : undefined;
+                              setFormData({ ...formData, creditClosingDay: clamped });
+                            }}
+                            placeholder="1"
+                            required
+                            focused
+                          />
+                        </FormControl>
+
+                        <FormControl fullWidth required margin="normal">
+                          <TextField
+                            label="Dia de Vencimento da Fatura"
+                            type="number"
+                            slotProps={{ htmlInput: { min: 1, max: 31 } }}
+                            value={formData.creditDueDay ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value ? Number(e.target.value) : undefined;
+                              const clamped = v ? Math.max(1, Math.min(31, v)) : undefined;
+                              setFormData({ ...formData, creditDueDay: clamped });
+                            }}
+                            placeholder="1"
+                            required
+                            focused
+                          />
+                        </FormControl>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Conditional fields based on account type */}
+                  {(formData.type === 'PREPAID' || (formData.type === 'CREDIT' && formData.debitMethod === 'INVOICE')) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormControl focused fullWidth required margin="normal">
+                        <InputLabel id="prepaid-category-label">{formData.type === 'PREPAID' ? 'Categoria (Pré-pago)' : 'Categoria (Fatura)'}</InputLabel>
+                        <Select
+                          labelId="prepaid-category-label"
+                          value={formData.prepaidCategoryId ?? ''}
+                          label={formData.type === 'PREPAID' ? 'Categoria (Pré-pago)' : 'Categoria (Fatura)'}
+                          onChange={(e) => {
+                            const val = e.target.value ? Number(e.target.value) : undefined;
+                            setFormData({ ...formData, prepaidCategoryId: val, prepaidSubcategoryId: undefined });
+                          }}
+                        >
+                          <MenuItem value="">-- Escolha uma categoria --</MenuItem>
+                          {categories.map(c => (
+                            <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+
+                      <FormControl focused fullWidth required margin="normal" disabled={!formData.prepaidCategoryId}>
+                        <InputLabel id="prepaid-subcategory-label">{formData.type === 'PREPAID' ? 'Subcategoria (Pré-pago)' : 'Subcategoria (Fatura)'}</InputLabel>
+                        <Select
+                          labelId="prepaid-subcategory-label"
+                          value={formData.prepaidSubcategoryId ?? ''}
+                          label={formData.type === 'PREPAID' ? 'Subcategoria (Pré-pago)' : 'Subcategoria (Fatura)'}
+                          onChange={(e) => setFormData({ ...formData, prepaidSubcategoryId: e.target.value ? Number(e.target.value) : undefined })}
+                        >
+                          <MenuItem value="">-- Escolha uma subcategoria --</MenuItem>
+                          {subcategories
+                            .filter(s => s.categoryId === (formData.prepaidCategoryId ?? 0))
+                            .map(s => (
+                              <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                    </div>
+                  )}
 
                   {groupId && (
                     <FormControl focused fullWidth required margin="normal">
@@ -679,26 +882,28 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
                     </FormControl>
                   )}
 
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowModal(false);
-                        resetForm();
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      {editingAccount ? 'Salvar' : 'Criar'}
-                    </button>
-                  </div>
                 </ThemeProvider>
               </form>
+            </div>
+            {/* Sticky footer */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => formRef.current?.requestSubmit()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {editingAccount ? 'Salvar' : 'Criar'}
+              </button>
             </div>
           </div>
         </div>

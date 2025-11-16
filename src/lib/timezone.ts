@@ -2,10 +2,37 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { authService } from '@/services/authService';
+import 'dayjs/locale/pt-br';
+import 'dayjs/locale/en';
 
 // Extend dayjs with plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+// Set default locale to pt-BR, or use user's locale when available
+const _setLocale = () => {
+  try {
+    const user = authService.getCurrentUser();
+    const userLocale = user?.locale as string | undefined;
+    if (userLocale) {
+      const normalized = userLocale.toLowerCase().replace('_', '-');
+      // dayjs uses 'pt-br' for Brazilian Portuguese
+      if (normalized.startsWith('pt')) {
+        dayjs.locale('pt-br');
+        return;
+      }
+      if (normalized.startsWith('en')) {
+        dayjs.locale('en');
+        return;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  dayjs.locale('pt-br');
+};
+
+_setLocale();
 
 /**
  * Get the user's configured timezone from localStorage
