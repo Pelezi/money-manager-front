@@ -148,6 +148,7 @@ export default function TransactionForm({
         EXPENSE: { muiColor: '#ef4444' },
         INCOME: { muiColor: '#22c55e' },
         TRANSFER: { muiColor: '#6b7280' },
+        UPDATE: { muiColor: '#3b82f6' },
     } as const;
 
     const accent = (ACCENTS as any)[formData.type || 'EXPENSE'];

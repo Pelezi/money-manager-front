@@ -86,7 +86,7 @@ export default function AccountManager({
   });
 
   const [balanceFormData, setBalanceFormData] = useState({
-    amount: 0,
+    amount: '0,00',
     dateTime: createInUserTimezone(), // Dayjs object
   });
 
@@ -135,7 +135,6 @@ export default function AccountManager({
     loadSubcategories();
   }, [groupId]);
 
-  // Listen for changes to Tailwind's dark mode class
   useEffect(() => {
     const updateDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -273,9 +272,10 @@ export default function AccountManager({
     if (!selectedAccountId) return;
 
     try {
+      const amountNumber = Number(String(balanceFormData.amount).replace(/\./g, '').replace(',', '.'));
       await accountService.addBalance({
         accountId: selectedAccountId,
-        amount: balanceFormData.amount,
+        amount: amountNumber,
         date: balanceFormData.dateTime.toDate(),
       });
       toast.success('Saldo atualizado com sucesso!');
@@ -362,7 +362,7 @@ export default function AccountManager({
 
   const resetBalanceForm = () => {
     setBalanceFormData({
-      amount: 0,
+      amount: '0,00',
       dateTime: createInUserTimezone(),
     });
     setSelectedAccountId(null);
@@ -396,7 +396,7 @@ export default function AccountManager({
     const currentBalance = balances[accountId];
     setSelectedAccountId(accountId);
     setBalanceFormData({
-      amount: currentBalance?.amount || 0,
+      amount: (currentBalance?.amount ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       dateTime: createInUserTimezone(),
     });
     setShowBalanceModal(true);
@@ -937,10 +937,25 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
                     <FormControl focused fullWidth required margin="normal">
                       <TextField
                         label="Novo Saldo"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         value={balanceFormData.amount}
-                        onChange={(e) => setBalanceFormData({ ...balanceFormData, amount: parseFloat(e.target.value) })}
-                        placeholder="0.00"
+                        onChange={(e) => {
+                          const raw = e.target.value || '';
+                          const negative = raw.trim().startsWith('-');
+                          const digits = raw.replace(/\D/g, '');
+                          const cents = Number(digits || '0');
+                          const formattedNumber = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const formatted = negative ? `-${formattedNumber}` : formattedNumber;
+                          setBalanceFormData({ ...balanceFormData, amount: formatted });
+                        }}
+                        onKeyDown={(e) => {
+                          const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                          if (allowed.includes(e.key)) return;
+                          if (e.key === '-' || e.key === 'Subtract') return;
+                          if (!/^\d$/.test(e.key)) e.preventDefault();
+                        }}
+                        placeholder="0,00"
                         required
                         focused
                       />

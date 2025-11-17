@@ -29,6 +29,11 @@ export const accountService = {
     return response.data;
   },
 
+  getBalanceById: async (id: number): Promise<AccountBalance> => {
+    const response = await api.get<AccountBalance>(`/accounts/balances/${id}`);
+    return response.data;
+  },
+
   create: async (data: {
     name: string;
     type: AccountType;

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,7 @@ import timezone from 'dayjs/plugin/timezone';
 import 'dayjs/locale/pt-br';
 import { toUserTimezone, formatInUserTimezone, createInUserTimezone } from '@/lib/timezone';
 import TransactionForm from '@/components/TransactionForm';
+import BalanceForm from '@/components/BalanceForm';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -49,52 +50,69 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
     userId: undefined as number | undefined,
   });
 
-  // Detect dark mode
   useEffect(() => {
     const updateDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
-
     updateDarkMode();
-
     const observer = new MutationObserver(updateDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
 
   const { data: transaction, isLoading } = useQuery({
     queryKey: ['transaction', transactionId],
-    queryFn: () => transactionService.getById(transactionId!),
+    queryFn: async () => {
+      if (!transactionId) throw new Error('transactionId is required');
+      if (transactionId < 0) {
+        const bal = await accountService.getBalanceById(Math.abs(transactionId));
+        return {
+          id: -bal.id,
+          subcategoryId: null as any,
+          accountId: bal.accountId,
+          title: 'Atualização de Saldo',
+          amount: Number(bal.amount),
+          description: null,
+          date: bal.date,
+          type: 'UPDATE' as EntityType,
+          userId: undefined,
+          createdAt: bal.createdAt,
+        } as any;
+      }
+      return transactionService.getById(transactionId!);
+    },
     enabled: !!transactionId,
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories', groupId],
-    queryFn: () => categoryService.getAll(groupId ?? undefined),
-  });
+  const { data: categories = [] } = useQuery({ queryKey: ['categories', groupId], queryFn: () => categoryService.getAll(groupId ?? undefined) });
+  const { data: subcategories = [] } = useQuery({ queryKey: ['subcategories', groupId], queryFn: () => subcategoryService.getAll(groupId ?? undefined) });
+  const { data: accounts = [] } = useQuery({ queryKey: ['accounts', groupId], queryFn: () => accountService.getAll(groupId ? { groupId } : undefined) });
+  const { data: groupMembers = [] } = useQuery({ queryKey: ['groupMembers', groupId], queryFn: () => groupService.getMembers(groupId!), enabled: !!groupId });
 
-  const { data: subcategories = [] } = useQuery({
-    queryKey: ['subcategories', groupId],
-    queryFn: () => subcategoryService.getAll(groupId ?? undefined),
-  });
-
-  const { data: accounts = [] } = useQuery({
-    queryKey: ['accounts', groupId],
-    queryFn: () => accountService.getAll(groupId ? { groupId } : undefined),
-  });
-
-  const { data: groupMembers = [] } = useQuery({
-    queryKey: ['groupMembers', groupId],
-    queryFn: () => groupService.getMembers(groupId!),
-    enabled: !!groupId,
-  });
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Transaction> }) =>
-      transactionService.update(id, data),
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      if (id < 0) {
+        const amount = data.amount;
+        let dateObj: Date | undefined = undefined;
+        if (data.date) {
+          const time = data.time ?? '00:00:00';
+          dateObj = new Date(`${data.date}T${time}Z`);
+        }
+        const res = await accountService.updateBalance(Math.abs(id), { amount, date: dateObj });
+        return {
+          id: -res.id,
+          subcategoryId: null as any,
+          accountId: res.accountId,
+          title: 'Atualização de Saldo',
+          amount: Number(res.amount),
+          description: null,
+          date: res.date,
+          type: 'UPDATE' as EntityType,
+          createdAt: res.createdAt,
+        } as any;
+      }
+      return transactionService.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transaction', transactionId] });
       queryClient.invalidateQueries({
@@ -104,14 +122,21 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
           if (key[0] !== 'transactions') return false;
           if (groupId == null) return true;
           return key.includes(groupId);
-        },
+        }
       });
+      queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
       setIsEditing(false);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: transactionService.delete,
+    mutationFn: async (id: number) => {
+      if (id < 0) {
+        await accountService.deleteBalance(Math.abs(id));
+        return;
+      }
+      await transactionService.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         predicate: (query) => {
@@ -120,8 +145,9 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
           if (key[0] !== 'transactions') return false;
           if (groupId == null) return true;
           return key.includes(groupId);
-        },
+        }
       });
+      queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
       router.push(backUrl);
     },
   });
@@ -129,7 +155,6 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
   useEffect(() => {
     if (transaction) {
       const subcategory = subcategories.find((s) => s.id === transaction.subcategoryId);
-      // Convert UTC date from backend to user's timezone
       const transactionDate = toUserTimezone(transaction.date);
       setFormData({
         categoryId: subcategory?.categoryId || 0,
@@ -146,53 +171,17 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
     }
   }, [transaction, subcategories]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Convert to UTC for sending to backend
-    const dateInUtc = formData.dateTime.utc();
-    const dateStr = dateInUtc.format('YYYY-MM-DD');
-    const timeStr = dateInUtc.format('HH:mm:ss');
-
-    const data = {
-      subcategoryId: formData.subcategoryId,
-      title: formData.title,
-      amount: parseFloat(formData.amount),
-      description: formData.description,
-      date: dateStr,
-      time: timeStr,
-      type: formData.type,
-    };
-
-    if (transactionId) {
-      updateMutation.mutate({ id: transactionId, data });
-    }
-  };
-
   const handleDelete = () => {
     if (transactionId && confirm('Tem certeza que deseja excluir esta transação?')) {
       deleteMutation.mutate(transactionId);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return formatInUserTimezone(dateString, 'dddd, D [de] MMMM [de] YYYY');
-  };
+  const formatDate = (dateString: string) => formatInUserTimezone(dateString, 'dddd, D [de] MMMM [de] YYYY');
+  const formatTime = (dateString: string) => formatInUserTimezone(dateString, 'HH:mm');
+  const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const formatTime = (dateString: string) => {
-    return formatInUserTimezone(dateString, 'HH:mm');
-  };
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    });
-  };
-
-  const availableSubcategories = subcategories.filter(
-    (sub) => sub.categoryId === formData.categoryId
-  );
+  const availableSubcategories = subcategories.filter((sub) => sub.categoryId === formData.categoryId);
 
   if (isLoading) {
     return (
@@ -206,50 +195,28 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-gray-500 dark:text-gray-400">Transação não encontrada</p>
-        <button
-          onClick={() => router.push(backUrl)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Voltar
-        </button>
+        <button onClick={() => router.push(backUrl)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Voltar</button>
       </div>
     );
   }
 
-  const muiTheme = createTheme({
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-      primary: {
-        main: isDarkMode ? '#ffffffff' : '#000000ff',
-      },
-    },
-  });
+  const muiTheme = createTheme({ palette: { mode: isDarkMode ? 'dark' : 'light', primary: { main: isDarkMode ? '#ffffffff' : '#000000ff' } } });
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => router.push(backUrl)}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-        >
+        <button onClick={() => router.push(backUrl)} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
           <ArrowLeft size={20} />
           <span>Voltar</span>
         </button>
         <div className="flex items-center gap-2">
           {!isEditing && (
             <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <Edit2 size={16} />
                 <span>Editar</span>
               </button>
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
+              <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                 <Trash2 size={16} />
                 <span>Excluir</span>
               </button>
@@ -263,84 +230,62 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
             <div className="sticky top-0 z-10 p-4 border-b border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                   Editar Transação
-                </h2>
-                <button
-                  onClick={() => { setIsEditing(false); }}
-                  className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Fechar
-                </button>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Editar Transação</h2>
+                <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Fechar</button>
               </div>
-            </div>            <div
-              className="flex-1 p-4 space-y-4 overflow-y-auto pb-28 sm:pb-32"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))' }}
-            >
-              <TransactionForm
-                groupId={groupId ?? undefined}
-                accounts={accounts}
-                categories={categories}
-                subcategories={subcategories}
-                groupMembers={groupMembers}
-                initialValues={formData}
-                submitting={updateMutation.isPending}
-                onCancel={() => setIsEditing(false)}
-                onSave={(data: any) => {
-                  if (transactionId) updateMutation.mutate({ id: transactionId, data });
-                }}
-              />
+            </div>
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto pb-28 sm:pb-32" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px))' }}>
+              {transaction?.type === 'UPDATE' ? (
+                <BalanceForm
+                  accountId={transaction.accountId}
+                  initialAmount={formData.amount}
+                  initialDateTime={formData.dateTime as any}
+                  submitting={updateMutation.isPending}
+                  onCancel={() => setIsEditing(false)}
+                  onSave={(data: any) => {
+                    if (transactionId) updateMutation.mutate({ id: transactionId, data });
+                  }}
+                />
+              ) : (
+                <TransactionForm
+                  groupId={groupId ?? undefined}
+                  accounts={accounts}
+                  categories={categories}
+                  subcategories={subcategories}
+                  groupMembers={groupMembers}
+                  initialValues={formData}
+                  submitting={updateMutation.isPending}
+                  onCancel={() => setIsEditing(false)}
+                  onSave={(data: any) => {
+                    if (transactionId) updateMutation.mutate({ id: transactionId, data });
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
       ) : (
-        /* Details View */
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-          {/* Header with amount */}
-          <div
-            className={`p-6 ${transaction.type === 'INCOME'
-              ? 'bg-green-50 dark:bg-green-900/20'
-              : transaction.type === 'EXPENSE'
-                ? 'bg-red-50 dark:bg-red-900/20'
-                : 'bg-gray-50 dark:bg-gray-700/20'
-              }`}
-          >
+          <div className={`p-6 ${transaction.type === 'INCOME' ? 'bg-green-50 dark:bg-green-900/20' : transaction.type === 'EXPENSE' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-700/20'}`}>
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                {transaction.type === 'INCOME'
-                  ? 'Renda' : transaction.type === 'EXPENSE'
-                    ? 'Despesa' : 'Transferência'}
+                {transaction.type === 'INCOME' ? 'Renda' : transaction.type === 'EXPENSE' ? 'Despesa' : transactionId && transactionId < 0 ? 'Atualização de Saldo' : 'Transferência'}
               </div>
-              <div
-                className={`text-4xl font-bold ${transaction.type === 'INCOME'
-                  ? 'text-green-600 dark:text-green-400'
-                  : transaction.type === 'EXPENSE'
-                    ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
-                  }`}
-              >
-                {transaction.type === 'INCOME' ? '+' : transaction.type === 'EXPENSE' ? '-' : ''}
-                {formatCurrency(transaction.amount)}
+              <div className={`text-4xl font-bold ${transaction.type === 'INCOME' ? 'text-green-600 dark:text-green-400' : transaction.type === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                {transaction.type === 'INCOME' ? '+' : transaction.type === 'EXPENSE' ? '-' : ''}{formatCurrency(transaction.amount)}
               </div>
             </div>
           </div>
-
-          {/* Details */}
           <div className="p-6 space-y-6">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                {transaction.title}
-              </h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{transaction.title}</h3>
               {transaction.description && (
                 <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                   <div className="flex items-start gap-2">
                     <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">
-                        Descrição
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                        {transaction.description}
-                      </p>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">Descrição</div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{transaction.description}</p>
                     </div>
                   </div>
                 </div>
@@ -348,87 +293,63 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Conta */}
-              {transaction.accountId && (
-                (() => {
-                  const account = accounts.find(acc => acc.id === transaction.accountId);
-                  return account ? (
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                      <div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Conta</div>
-                        <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                          {account.name}
-                        </div>
-                      </div>
+              {transaction.accountId && (() => {
+                const account = accounts.find(acc => acc.id === transaction.accountId);
+                return account ? (
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
+                    <div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Conta</div>
+                      <div className="text-base font-medium text-gray-900 dark:text-gray-100">{account.name}</div>
                     </div>
-                  ) : null;
-                })()
-              )}
+                  </div>
+                ) : null;
+              })()}
+
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Data e Horário</div>
-                  <div className="text-base font-medium text-gray-900 dark:text-gray-100 capitalize">
-                    {formatDate(transaction.date)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    às {formatTime(transaction.date)}
-                  </div>
+                  <div className="text-base font-medium text-gray-900 dark:text-gray-100 capitalize">{formatDate(transaction.date)}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">às {formatTime(transaction.date)}</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Tag className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Categoria</div>
-                  <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                    {transaction.subcategory?.category?.name || '-'}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {transaction.subcategory?.name || '-'}
+              {transactionId && transactionId > 0 && (
+                <div className="flex items-start gap-3">
+                  <Tag className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
+                  <div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Categoria</div>
+                    <div className="text-base font-medium text-gray-900 dark:text-gray-100">{transaction.subcategory?.category?.name || '-'}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{transaction.subcategory?.name || '-'}</div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {transaction.user && (
                 <div className="flex items-start gap-3">
                   <User className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Criado por</div>
-                    <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                      {transaction.user.firstName} {transaction.user.lastName}
-                    </div>
+                    <div className="text-base font-medium text-gray-900 dark:text-gray-100">{transaction.user.firstName} {transaction.user.lastName}</div>
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
-                <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Valor</div>
-                  <div
-                    className={`text-base font-medium ${transaction.type === 'INCOME'
-                      ? 'text-green-600 dark:text-green-400'
-                      : transaction.type === 'EXPENSE'
-                        ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
-                      }`}
-                  >
-                    {formatCurrency(transaction.amount)}
-                  </div>
-                </div>
+            <div className="flex items-start gap-3">
+              <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
+              <div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Valor</div>
+                <div className={`text-base font-medium ${transaction.type === 'INCOME' ? 'text-green-600 dark:text-green-400' : transaction.type === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>{formatCurrency(transaction.amount)}</div>
               </div>
             </div>
 
             {transaction.createdAt && (
               <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Criado em: {new Date(transaction.createdAt).toLocaleString('pt-BR')}
-                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Criado em: {new Date(transaction.createdAt).toLocaleString('pt-BR')}</div>
                 {transaction.updatedAt && transaction.updatedAt !== transaction.createdAt && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Atualizado em: {new Date(transaction.updatedAt).toLocaleString('pt-BR')}
-                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Atualizado em: {new Date(transaction.updatedAt).toLocaleString('pt-BR')}</div>
                 )}
               </div>
             )}
