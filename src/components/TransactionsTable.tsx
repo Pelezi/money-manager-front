@@ -322,7 +322,7 @@ export function TransactionsTable({
               <div
                 key={transaction.id}
                 onClick={(e) => handleTransactionClick(transaction.id, e)}
-                className="grid grid-cols-[100px_1fr_100px] gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                className="grid grid-cols-[100px_1fr_110px] gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
               >
                 {/* Left: Time, Category & Subcategory */}
                 <div className="flex flex-col justify-center">
