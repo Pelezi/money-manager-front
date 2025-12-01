@@ -40,12 +40,59 @@ export default function TransactionManager({
   initialAccountId
 }: TransactionManagerProps) {
   const queryClient = useQueryClient();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const [filters, setFilters] = useState({
+    year: currentYear,
+    month: currentMonth,
+    type: '',
+    categoryId: undefined as number | undefined,
+    subcategoryId: undefined as number | undefined,
+    accountId: initialAccountId ?? undefined as number | undefined,
+  });
 
   // Current balance for account history (used to compute running balances)
   const { data: currentAccountBalance } = useQuery({
     queryKey: initialAccountId ? ['accountBalance', initialAccountId] : ['accountBalance', 'none'],
     queryFn: () => accountService.getCurrentBalance(initialAccountId!),
     enabled: !!initialAccountId,
+  });
+
+  // Balance history for accurate cross-month balance calculation
+  const { data: balanceHistory = [] } = useQuery({
+    queryKey: initialAccountId ? ['balanceHistory', initialAccountId] : ['balanceHistory', 'none'],
+    queryFn: () => accountService.getBalanceHistory(initialAccountId!),
+    enabled: !!initialAccountId,
+  });
+
+  // Fetch transactions between last balance update and current month start (for accurate balance calculation)
+  const { data: gapTransactions = [] } = useQuery({
+    queryKey: initialAccountId ? ['gapTransactions', initialAccountId, filters.year, filters.month] : ['gapTransactions', 'none'],
+    queryFn: async () => {
+      if (!initialAccountId || balanceHistory.length === 0) return [];
+      
+      const { startDate } = getDateRange();
+      const sortedBalances = balanceHistory.slice().sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      
+      // Find the last balance update before the current month
+      const balanceBeforeMonth = sortedBalances
+        .filter(b => new Date(b.date).getTime() < new Date(startDate).getTime())
+        .pop();
+      
+      if (!balanceBeforeMonth) return [];
+      
+      // Fetch transactions between that balance and the start of current month
+      return transactionService.getAll({
+        startDate: balanceBeforeMonth.date,
+        endDate: startDate,
+        accountId: initialAccountId,
+        ...(groupId && { groupId }),
+      });
+    },
+    enabled: !!initialAccountId && balanceHistory.length > 0,
   });
 
   // Buscar contas disponíveis
@@ -55,18 +102,6 @@ export default function TransactionManager({
     enabled: canView,
   });
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-
-  const [filters, setFilters] = useState({
-    year: currentYear,
-    month: currentMonth,
-    type: '',
-    categoryId: undefined as number | undefined,
-    subcategoryId: undefined as number | undefined,
-    accountId: initialAccountId ?? undefined as number | undefined,
-  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -358,6 +393,8 @@ export default function TransactionManager({
             groupId={groupId}
             initialAccountId={initialAccountId}
             currentAccountBalanceAmount={currentAccountBalance?.amount}
+            balanceHistory={balanceHistory}
+            gapTransactions={gapTransactions}
         />
       </div>
 
