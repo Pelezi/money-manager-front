@@ -4,6 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { groupService } from '@/services/groupService';
+import { userService } from '@/services/userService';
+import { authService } from '@/services/authService';
 import { Group, GroupMember, GroupRole, User } from '@/types';
 import { 
   Users, 
@@ -49,6 +51,7 @@ export default function GroupSettingsPage() {
   const [groupName, setGroupName] = useState(currentGroup?.name || '');
   const [groupDescription, setGroupDescription] = useState(currentGroup?.description || '');
   const [updatingGroup, setUpdatingGroup] = useState(false);
+  const [isDefaultHomepage, setIsDefaultHomepage] = useState(false);
 
   // Role creation/editing state
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -94,6 +97,10 @@ export default function GroupSettingsPage() {
         if (memberRole) {
           setSelectedRoleId(memberRole.id);
         }
+
+        // Check if this group is the default homepage
+        const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+        setIsDefaultHomepage(user.defaultHomepage === `group:${groupId}`);
       } catch (error) {
         console.error('Failed to load group data:', error);
       } finally {
@@ -322,6 +329,24 @@ export default function GroupSettingsPage() {
     }
   };
 
+  const handleSetDefaultHomepage = async (checked: boolean) => {
+    setIsDefaultHomepage(checked);
+    const defaultHomepage = checked ? `group:${groupId}` : undefined;
+    
+    try {
+      await userService.updateProfile({ defaultHomepage });
+      
+      // Update local storage
+      const user = authService.getCurrentUser();
+      if (user) {
+        authService.setCurrentUser({ ...user, defaultHomepage });
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Erro ao atualizar página inicial');
+      setIsDefaultHomepage(!checked); // Revert on error
+    }
+  };
+
   if (!currentGroup) {
     return (
       <div>
@@ -431,6 +456,32 @@ export default function GroupSettingsPage() {
                   {updatingGroup ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Homepage Settings */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-base sm:text-lg">
+              Página Inicial
+            </h2>
+            
+            <div className="space-y-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                Defina este grupo como sua página inicial ao fazer login
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="groupDefaultHomepage"
+                  checked={isDefaultHomepage}
+                  onChange={(e) => handleSetDefaultHomepage(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label htmlFor="groupDefaultHomepage" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                  Usar este grupo como página inicial
+                </label>
+              </div>
             </div>
           </div>
 

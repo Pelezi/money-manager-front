@@ -71,8 +71,8 @@ export interface User {
   lastName?: string;
   phoneNumber?: string;
   firstAccess?: boolean;
-  locale?: string;
   timezone?: string;
+  defaultHomepage?: string;
 }
 
 export interface AuthResponse {

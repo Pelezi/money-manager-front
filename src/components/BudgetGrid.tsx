@@ -169,7 +169,6 @@ export default function BudgetGrid({
   const handleCellBlur = async () => {
     if (!editingCell) return;
 
-    // Locale-safe parse:
     const value = brlToNumber(editValue); // "4.300,00" -> 4300
     const budget = getBudget(editingCell.subcategoryId, editingCell.month);
     const subcategory = subcategories.find((sub) => sub.id === editingCell.subcategoryId);

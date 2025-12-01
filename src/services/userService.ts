@@ -7,8 +7,8 @@ export interface User {
   lastName: string;
   phoneNumber?: string;
   firstAccess: boolean;
-  locale: string;
   timezone?: string;
+  defaultHomepage?: string;
   createdAt: string;
 }
 
@@ -18,12 +18,7 @@ export const userService = {
     return response.data;
   },
 
-  async updateLocale(locale: string): Promise<User> {
-    const response = await apiClient.patch('/users/locale', { locale });
-    return response.data;
-  },
-
-  async updateProfile(data: { timezone?: string; locale?: string; phoneNumber?: string }): Promise<User> {
+  async updateProfile(data: { timezone?: string; phoneNumber?: string; defaultHomepage?: string }): Promise<User> {
     const response = await apiClient.patch('/users/profile', data);
     return response.data;
   },

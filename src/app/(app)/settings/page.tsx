@@ -11,20 +11,20 @@ import { Globe, Phone } from 'lucide-react';
 export default function SettingsPage() {
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [timezone, setTimezone] = useState('UTC');
-  const [locale, setLocale] = useState('pt-BR');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isDefaultHomepage, setIsDefaultHomepage] = useState(true);
 
   useEffect(() => {
     const user = authService.getCurrentUser();
     if (user) {
       setTimezone(user.timezone || 'UTC');
-      setLocale(user.locale || 'pt-BR');
       setPhoneNumber(user.phoneNumber || '');
+      setIsDefaultHomepage(!user.defaultHomepage || user.defaultHomepage === 'personal');
     }
   }, []);
 
   const updateSettingsMutation = useMutation({
-    mutationFn: (data: { timezone?: string; locale?: string; phoneNumber?: string }) => 
+    mutationFn: (data: { timezone?: string; phoneNumber?: string; defaultHomepage?: string }) => 
       userService.updateProfile(data),
     onSuccess: (updatedUser) => {
       // Update local storage with new user data
@@ -49,6 +49,12 @@ export default function SettingsPage() {
 
   const handleSavePhoneNumber = () => {
     updateSettingsMutation.mutate({ phoneNumber });
+  };
+
+  const handleSetDefaultHomepage = (checked: boolean) => {
+    setIsDefaultHomepage(checked);
+    const defaultHomepage = checked ? 'personal' : undefined;
+    updateSettingsMutation.mutate({ defaultHomepage });
   };
 
   const timezones = [
@@ -148,6 +154,34 @@ export default function SettingsPage() {
           >
             {updateSettingsMutation.isPending ? 'Salvando...' : 'Salvar Telefone'}
           </button>
+        </div>
+      </div>
+
+      {/* Homepage Settings */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Página Inicial
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Defina esta página como sua página inicial ao fazer login
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="defaultHomepage"
+              checked={isDefaultHomepage}
+              onChange={(e) => handleSetDefaultHomepage(e.target.checked)}
+              disabled={updateSettingsMutation.isPending}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label htmlFor="defaultHomepage" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              Usar minhas transações pessoais como página inicial
+            </label>
+          </div>
         </div>
       </div>
 

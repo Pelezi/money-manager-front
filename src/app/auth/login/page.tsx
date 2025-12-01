@@ -18,8 +18,22 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/transactions');
+      const user = await login(email, password);
+      
+      // Redirect based on user's default homepage setting
+      if (user.defaultHomepage) {
+        if (user.defaultHomepage.startsWith('group:')) {
+          const groupId = user.defaultHomepage.split(':')[1];
+          router.push(`/groups/${groupId}/transactions`);
+        } else if (user.defaultHomepage === 'personal') {
+          router.push('/transactions');
+        } else {
+          router.push('/transactions');
+        }
+      } else {
+        // Default to personal transactions if no preference set
+        router.push('/transactions');
+      }
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Invalid credentials');
