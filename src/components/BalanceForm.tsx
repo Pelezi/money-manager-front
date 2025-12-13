@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import dayjs from 'dayjs';
 import { createInUserTimezone } from '@/lib/timezone';
+import { PlusCircle, MinusCircle } from 'lucide-react';
 
 type Props = {
     accountId?: number;
@@ -60,7 +61,14 @@ export default function BalanceForm({
     const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
         if (allowed.includes(e.key)) return;
+        if (e.key === '-' || e.key === 'Subtract') return;
         if (!/^\d$/.test(e.key)) e.preventDefault();
+    };
+
+    const toggleSign = () => {
+        const isNegative = amount.startsWith('-');
+        const newValue = isNegative ? amount.substring(1) : `-${amount}`;
+        setAmount(newValue);
     };
 
     const muiTheme = createTheme({
@@ -80,19 +88,33 @@ export default function BalanceForm({
         <form onSubmit={submit} className="space-y-4">
             <ThemeProvider theme={muiTheme}>
                 <FormControl focused fullWidth required margin="normal">
-                    <TextField
-                        label="Novo Saldo"
-                        type="text"
-                        inputMode="numeric"
-                        value={amount}
-                        onChange={handleAmountChange}
-                        onKeyDown={handleAmountKeyDown}
-                        required
-                        fullWidth
-                        margin="normal"
-                        placeholder="0,00"
-                        focused
-                    />
+                    <div className="relative">
+                        <TextField
+                            label="Novo Saldo"
+                            type="text"
+                            inputMode="numeric"
+                            value={amount}
+                            onChange={handleAmountChange}
+                            onKeyDown={handleAmountKeyDown}
+                            required
+                            fullWidth
+                            margin="normal"
+                            placeholder="0,00"
+                            focused
+                        />
+                        <button
+                            type="button"
+                            onClick={toggleSign}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            title="Alternar sinal"
+                        >
+                            {amount.startsWith('-') ? (
+                                <MinusCircle size={20} className="text-red-600 dark:text-red-400" />
+                            ) : (
+                                <PlusCircle size={20} className="text-green-600 dark:text-green-400" />
+                            )}
+                        </button>
+                    </div>
                 </FormControl>
 
                 <FormControl fullWidth required margin="normal">

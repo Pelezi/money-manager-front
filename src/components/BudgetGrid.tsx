@@ -411,7 +411,7 @@ export default function BudgetGrid({
                             key={index}
                             className={`px-1.5 py-1.5 text-center border-r border-gray-200 dark:border-gray-600 ${status}`}
                             onClick={() => !isEditing && handleCellClick(subcategory.id, month)}
-                            title={`Budgeted: $${budgeted.toFixed(2)}, Actual: $${actual.toFixed(2)}`}
+                            title={`Orçamento: $${budgeted.toFixed(2)}, Real: $${actual.toFixed(2)}`}
                           >
                             {isEditing ? (
                               <input

@@ -29,6 +29,7 @@ interface TransactionManagerProps {
   title?: string;
   showUser?: boolean;
   initialAccountId?: number;
+  hideBalanceUpdates?: boolean;
 }
 
 export default function TransactionManager({
@@ -37,7 +38,8 @@ export default function TransactionManager({
   canView = true,
   title = 'Transações',
   showUser = false,
-  initialAccountId
+  initialAccountId,
+  hideBalanceUpdates = false
 }: TransactionManagerProps) {
   const queryClient = useQueryClient();
   const now = new Date();
@@ -148,10 +150,10 @@ export default function TransactionManager({
   };
 
   const { data: transactions = [], isLoading } = useQuery({
-    queryKey: groupId ? ['transactions', filters, groupId] : ['transactions', filters],
-    queryFn: () => {
+    queryKey: groupId ? ['transactions', filters, groupId, hideBalanceUpdates] : ['transactions', filters, hideBalanceUpdates],
+    queryFn: async () => {
       const { startDate, endDate } = getDateRange();
-      return transactionService.getAll({
+      const result = await transactionService.getAll({
         startDate,
         endDate,
         type: filters.type || undefined,
@@ -160,6 +162,11 @@ export default function TransactionManager({
         accountId: filters.accountId,
         ...(groupId && { groupId }),
       });
+      // Filter out UPDATE transactions if hideBalanceUpdates is true
+      if (hideBalanceUpdates) {
+        return result.filter(tx => tx.type !== 'UPDATE');
+      }
+      return result;
     },
     enabled: canView,
   });

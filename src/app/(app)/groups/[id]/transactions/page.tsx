@@ -32,6 +32,7 @@ export default function GroupTransactionsPage() {
       canView={canView}
       title="Transações do Grupo"
       showUser={true}
+      hideBalanceUpdates={true}
     />
   );
 }
