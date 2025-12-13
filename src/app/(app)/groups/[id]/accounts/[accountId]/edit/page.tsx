@@ -86,6 +86,7 @@ export default function GroupEditAccountPage() {
         creditDueDay: data.creditDueDay ?? 1,
         creditClosingDay: data.creditClosingDay ?? 1,
         debitMethod: data.debitMethod ?? 'INVOICE',
+        budgetMonthBasis: data.budgetMonthBasis ?? 'PURCHASE_DATE',
       });
     } catch (error) {
       console.error('Failed to load account:', error);
@@ -118,6 +119,10 @@ export default function GroupEditAccountPage() {
         if (formData.creditDueDay !== undefined) updatePayload.creditDueDay = formData.creditDueDay;
         if (formData.creditClosingDay !== undefined) updatePayload.creditClosingDay = formData.creditClosingDay;
         if (formData.debitMethod !== undefined) updatePayload.debitMethod = formData.debitMethod;
+        // If per purchase debit method, include budget month basis
+        if (formData.debitMethod === 'PER_PURCHASE' && formData.budgetMonthBasis) {
+          updatePayload.budgetMonthBasis = formData.budgetMonthBasis;
+        }
         // If debit method is INVOICE, allow assigning a subcategory (invoice categorization)
         if (formData.debitMethod === 'INVOICE') {
           updatePayload.subcategoryId = formData.prepaidSubcategoryId ?? null;

@@ -26,6 +26,7 @@ export interface AccountFormData {
   creditDueDay?: number;
   creditClosingDay?: number;
   debitMethod?: string;
+  budgetMonthBasis?: 'PURCHASE_DATE' | 'DUE_DATE';
 }
 
 interface AccountFormProps {
@@ -163,6 +164,21 @@ export default function AccountForm({
                 />
               </FormControl>
             </div>
+
+            {formData.debitMethod === 'PER_PURCHASE' && (
+              <FormControl focused fullWidth required margin="normal">
+                <InputLabel id="budget-month-basis-label">Mês de referência no orçamento</InputLabel>
+                <Select
+                  labelId="budget-month-basis-label"
+                  value={formData.budgetMonthBasis ?? 'PURCHASE_DATE'}
+                  label="Mês de referência no orçamento"
+                  onChange={e => setFormData({ ...formData, budgetMonthBasis: e.target.value as 'PURCHASE_DATE' | 'DUE_DATE' })}
+                >
+                  <MenuItem value="PURCHASE_DATE">Mês da compra</MenuItem>
+                  <MenuItem value="DUE_DATE">Mês do vencimento</MenuItem>
+                </Select>
+              </FormControl>
+            )}
           </>
         )}
 

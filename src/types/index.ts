@@ -216,6 +216,7 @@ export interface GroupInvitation {
 
 // Account types
 export type AccountType = 'CREDIT' | 'CASH' | 'PREPAID';
+export type BudgetMonthBasis = 'PURCHASE_DATE' | 'DUE_DATE';
 
 export interface Account {
   id: number;
@@ -231,6 +232,7 @@ export interface Account {
   creditDueDay?: number;
   creditClosingDay?: number;
   debitMethod?: 'INVOICE' | 'PER_PURCHASE';
+  budgetMonthBasis?: BudgetMonthBasis;
   createdAt: string;
   updatedAt: string;
 }

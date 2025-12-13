@@ -110,6 +110,10 @@ export default function CreateAccountPage() {
         if (formData.debitMethod) {
           basePayload.debitMethod = formData.debitMethod;
         }
+        // If per purchase debit method, include budget month basis
+        if (formData.debitMethod === 'PER_PURCHASE' && formData.budgetMonthBasis) {
+          basePayload.budgetMonthBasis = formData.budgetMonthBasis;
+        }
         // If invoice debit method, allow category/subcategory to be set for invoice accounting
         if (formData.debitMethod === 'INVOICE' && formData.prepaidSubcategoryId) {
           basePayload.subcategoryId = formData.prepaidSubcategoryId;
