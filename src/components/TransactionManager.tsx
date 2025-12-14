@@ -10,12 +10,6 @@ import { groupService } from '@/services/groupService';
 import { Transaction, EntityType } from '@/types';
 import { Plus, Filter } from 'lucide-react';
 import { MonthYearPicker } from '@/components/MonthYearPicker';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import FormHelperText from '@mui/material/FormHelperText';
 import { TransactionFilterModal } from '@/components/TransactionFilterModal';
 import { TransactionsTable } from '@/components/TransactionsTable';
 import { createInUserTimezone, toUserTimezone } from '@/lib/timezone';
@@ -220,7 +214,7 @@ export default function TransactionManager({
     setFormData({
       categoryId: 0,
       subcategoryId: 0,
-      accountId: 0,
+      accountId: initialAccountId || 0,
       toAccountId: 0,
       title: '',
       amount: '0,00',
@@ -384,7 +378,6 @@ export default function TransactionManager({
         categories={categories}
         subcategories={subcategories}
         accounts={accounts}
-        showCategoryFilter={!groupId}
       />
 
       {/* Table */}

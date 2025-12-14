@@ -20,7 +20,6 @@ interface FilterModalProps {
   accounts: Array<{ id: number; name: string }>;
   categories: Array<{ id: number; name: string; type: string }>;
   subcategories: Array<{ id: number; name: string; categoryId: number; type: string }>;
-    showCategoryFilter?: boolean;
 }
 
 export function TransactionFilterModal({
@@ -31,7 +30,6 @@ export function TransactionFilterModal({
   categories,
   subcategories,
   accounts,
-  showCategoryFilter = true,
 }: FilterModalProps) {
 
   if (!isOpen) return null;
@@ -112,7 +110,7 @@ export function TransactionFilterModal({
           {/* Type filter */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Filtrar por Tipo
+              Tipo
             </label>
             <select
               value={filters.type}
@@ -128,7 +126,7 @@ export function TransactionFilterModal({
           {/* Account filter - move above category */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Filtrar por Conta
+              Conta
             </label>
             <select
               value={filters.accountId || ''}
@@ -143,10 +141,9 @@ export function TransactionFilterModal({
           </div>
 
           {/* Category filter - only show if enabled */}
-          {showCategoryFilter && (
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                Filtrar por Categoria
+                Categoria
               </label>
               <select
                 value={filters.categoryId || ''}
@@ -165,12 +162,11 @@ export function TransactionFilterModal({
                   ))}
               </select>
             </div>
-          )}
 
           {/* Subcategory filter */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Filtrar por Subcategoria
+              Subcategoria
             </label>
             <select
               value={filters.subcategoryId || ''}
