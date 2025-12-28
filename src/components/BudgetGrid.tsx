@@ -315,7 +315,7 @@ export default function BudgetGrid({
                   {month}
                 </th>
               ))}
-              <th className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 min-w-[100px]">
+              <th className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase border-r border-gray-200 dark:border-gray-600 border-l-2 border-l-gray-300 dark:border-l-gray-500 min-w-[100px]">
                 Total
               </th>
               <th className="px-2 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase min-w-[100px]">
@@ -355,7 +355,7 @@ export default function BudgetGrid({
                         </td>
                       );
                     })}
-                    <td className={`px-2 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${getCategoryActualTotal(category.id) > 0
+                    <td className={`px-2 py-1.5 text-center font-semibold text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 border-l-2 border-l-gray-300 dark:border-l-gray-500 ${getCategoryActualTotal(category.id) > 0
                       ? getBudgetStatus(
                         categorySubs.reduce((sum, sub) => sum + getSubcategoryYearTotal(sub.id), 0),
                         getCategoryActualTotal(category.id),
@@ -444,8 +444,20 @@ export default function BudgetGrid({
                           </td>
                         );
                       })}
-                      <td className="px-2 py-1.5 text-center font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
-                        ${getSubcategoryYearTotal(subcategory.id).toFixed(2)}
+                      <td className={`px-2 py-1.5 text-center font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 border-l-2 border-l-gray-300 dark:border-l-gray-500 ${getSubcategoryActualTotal(subcategory.id) > 0
+                        ? getBudgetStatus(
+                          getSubcategoryYearTotal(subcategory.id),
+                          getSubcategoryActualTotal(subcategory.id),
+                          subcategory.type
+                        )
+                        : ''
+                        }`}>
+                        <div>${getSubcategoryYearTotal(subcategory.id).toFixed(2)}</div>
+                        {getSubcategoryActualTotal(subcategory.id) > 0 && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            ${getSubcategoryActualTotal(subcategory.id).toFixed(2)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-2 py-1.5 text-center font-medium text-gray-900 dark:text-gray-100">
                         <div className="font-medium">${getSubcategoryAverage(subcategory.id).toFixed(2)}</div>
@@ -481,7 +493,7 @@ export default function BudgetGrid({
                   </td>
                 );
               })}
-              <td className={`px-2 py-2 text-center text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 ${MONTHS.some((_, index) => getMonthActualTotal(index + 1) > 0)
+              <td className={`px-2 py-2 text-center text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600 border-l-2 border-l-gray-300 dark:border-l-gray-500 ${MONTHS.some((_, index) => getMonthActualTotal(index + 1) > 0)
                 ? getBudgetStatus(
                   MONTHS.reduce((sum, _, index) => sum + getMonthTotal(index + 1), 0),
                   MONTHS.reduce((sum, _, index) => sum + getMonthActualTotal(index + 1), 0),
