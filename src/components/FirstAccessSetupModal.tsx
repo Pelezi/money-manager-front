@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { defaultCategoriesPT, DefaultCategory } from '@/lib/defaultCategories';
+import { defaultCategories } from '@/lib/defaultCategories';
 import { authService } from '@/services/authService';
 import { categoryService } from '@/services/categoryService';
 import { subcategoryService } from '@/services/subcategoryService';
@@ -28,7 +28,7 @@ export default function FirstAccessSetupModal({ onComplete, isResetup = false }:
   const [accountType, setAccountType] = useState<'CREDIT' | 'CASH' | 'PREPAID'>('CASH');
   const [accountBalance, setAccountBalance] = useState('0,00');
 
-  const allCategories = defaultCategoriesPT;
+  const allCategories = defaultCategories;
   const categories = allCategories.filter(cat => cat.type === activeTab);
 
   // Fetch existing categories and subcategories if this is a resetup
