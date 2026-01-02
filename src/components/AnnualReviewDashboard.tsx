@@ -113,14 +113,14 @@ export default function AnnualReviewDashboard({
 
   // Queries
   const { data: categories = [] } = useQuery({
-    queryKey: ['categories', groupId],
-    queryFn: () => categoryService.getAll(groupId),
+    queryKey: ['categories', groupId, 'all'],
+    queryFn: () => categoryService.getAll(groupId, true),
     enabled: canView,
   });
 
   const { data: subcategories = [] } = useQuery({
-    queryKey: ['subcategories', groupId],
-    queryFn: () => subcategoryService.getAll(groupId),
+    queryKey: ['subcategories', groupId, 'all'],
+    queryFn: () => subcategoryService.getAll(groupId, true),
     enabled: canView,
   });
 
@@ -207,7 +207,17 @@ export default function AnnualReviewDashboard({
     return categories
       .filter((cat: any) => cat.type === 'EXPENSE')
       .map((cat: any) => {
-        const categorySubs = subcategories.filter((sub: any) => sub.categoryId === cat.id);
+        const categorySubs = subcategories.filter((sub: any) => {
+          if (sub.categoryId !== cat.id) return false;
+          // If subcategory is hidden, check if it has transactions for this year
+          if (sub.hidden) {
+            const hasTransactions = aggregatedTransactions.some(
+              (t) => t.subcategoryId === sub.id && t.type === 'EXPENSE'
+            );
+            return hasTransactions;
+          }
+          return true;
+        });
         const total = categorySubs.reduce((sum: number, sub: any) => {
           const subTotal = aggregatedTransactions
             .filter((t) => t.subcategoryId === sub.id && t.type === 'EXPENSE')

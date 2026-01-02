@@ -60,14 +60,14 @@ export default function BudgetGrid({
 
   // Queries
   const { data: categories = [] } = useQuery({
-    queryKey: ['categories', groupId],
-    queryFn: () => categoryService.getAll(groupId),
+    queryKey: ['categories', groupId, 'all'],
+    queryFn: () => categoryService.getAll(groupId, true),
     enabled: canView,
   });
 
   const { data: subcategories = [] } = useQuery({
-    queryKey: ['subcategories', groupId],
-    queryFn: () => subcategoryService.getAll(groupId),
+    queryKey: ['subcategories', groupId, 'all'],
+    queryFn: () => subcategoryService.getAll(groupId, true),
     enabled: canView,
   });
 
@@ -109,10 +109,6 @@ export default function BudgetGrid({
     );
   }
 
-  // Filter data
-  const filteredCategories = categories.filter((cat) => cat.type === activeTab);
-  const filteredSubcategories = subcategories.filter((sub) => sub.type === activeTab);
-
   // Helper functions
   const getBudget = (subcategoryId: number, month: number) => {
     return budgets.find(
@@ -135,6 +131,28 @@ export default function BudgetGrid({
       return transaction?.total || 0;
     }
   };
+
+  // Helper to check if subcategory has data for the selected year
+  const subcategoryHasData = (subcategoryId: number) => {
+    // Check if there are budgets for this year
+    const hasBudget = budgets.some((b) => b.subcategoryId === subcategoryId);
+    if (hasBudget) return true;
+
+    // Check if there are actual transactions for this year
+    for (let month = 1; month <= 12; month++) {
+      if (getActualAmount(subcategoryId, month) > 0) return true;
+    }
+    return false;
+  };
+
+  // Filter data
+  const filteredCategories = categories.filter((cat) => cat.type === activeTab);
+  const filteredSubcategories = subcategories.filter((sub) => {
+    if (sub.type !== activeTab) return false;
+    // If hidden, only show if has data for the selected year
+    if (sub.hidden && !subcategoryHasData(sub.id)) return false;
+    return true;
+  });
 
   const getBudgetStatus = (budgeted: number, actual: number, type: EntityType = 'EXPENSE') => {
     if (budgeted == 0 && actual == 0) return '';    

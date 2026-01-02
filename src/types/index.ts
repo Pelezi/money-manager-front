@@ -7,6 +7,7 @@ export interface Category {
   groupId?: number;
   createdAt?: string;
   updatedAt?: string;
+  hidden?: boolean;
 }
 
 export interface Subcategory {
@@ -17,6 +18,7 @@ export interface Subcategory {
   groupId?: number;
   createdAt?: string;
   updatedAt?: string;
+  hidden?: boolean;
 }
 
 export interface Budget {
