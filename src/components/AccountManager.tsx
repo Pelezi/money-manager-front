@@ -16,7 +16,7 @@ import { subcategoryService } from '@/services/subcategoryService';
 import { Account, AccountBalance, AccountType } from '@/types';
 import { GroupMember } from '@/types';
 import { Category, Subcategory } from '@/types';
-import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X, Info, Settings } from 'lucide-react';
+import { Plus, Pencil, Trash2, Wallet, CreditCard, DollarSign, X, Info, Settings, PlusCircle, MinusCircle } from 'lucide-react';
 import Popover from '@mui/material/Popover';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -250,6 +250,12 @@ export default function AccountManager({
       dateTime: createInUserTimezone(),
     });
     setSelectedAccountId(null);
+  };
+
+  const toggleBalanceSign = () => {
+    const isNegative = balanceFormData.amount.startsWith('-');
+    const newValue = isNegative ? balanceFormData.amount.substring(1) : `-${balanceFormData.amount}`;
+    setBalanceFormData({ ...balanceFormData, amount: newValue });
   };
 
   const openEditPage = (accountId: number) => {
@@ -599,30 +605,44 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
                 <form onSubmit={handleBalanceSubmit} className="space-y-4">
                   <ThemeProvider theme={muiTheme}>
                     <FormControl focused fullWidth required margin="normal">
-                      <TextField
-                        label="Novo Saldo"
-                        type="text"
-                        inputMode="numeric"
-                        value={balanceFormData.amount}
-                        onChange={(e) => {
-                          const raw = e.target.value || '';
-                          const negative = raw.trim().startsWith('-');
-                          const digits = raw.replace(/\D/g, '');
-                          const cents = Number(digits || '0');
-                          const formattedNumber = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                          const formatted = negative ? `-${formattedNumber}` : formattedNumber;
-                          setBalanceFormData({ ...balanceFormData, amount: formatted });
-                        }}
-                        onKeyDown={(e) => {
-                          const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
-                          if (allowed.includes(e.key)) return;
-                          if (e.key === '-' || e.key === 'Subtract') return;
-                          if (!/^\d$/.test(e.key)) e.preventDefault();
-                        }}
-                        placeholder="0,00"
-                        required
-                        focused
-                      />
+                      <div className="relative">
+                        <TextField
+                          label="Novo Saldo"
+                          type="text"
+                          inputMode="numeric"
+                          value={balanceFormData.amount}
+                          onChange={(e) => {
+                            const raw = e.target.value || '';
+                            const negative = raw.trim().startsWith('-');
+                            const digits = raw.replace(/\D/g, '');
+                            const cents = Number(digits || '0');
+                            const formattedNumber = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            const formatted = negative ? `-${formattedNumber}` : formattedNumber;
+                            setBalanceFormData({ ...balanceFormData, amount: formatted });
+                          }}
+                          onKeyDown={(e) => {
+                            const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
+                            if (allowed.includes(e.key)) return;
+                            if (e.key === '-' || e.key === 'Subtract') return;
+                            if (!/^\d$/.test(e.key)) e.preventDefault();
+                          }}
+                          placeholder="0,00"
+                          required
+                          focused
+                        />
+                        <button
+                          type="button"
+                          onClick={toggleBalanceSign}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                          title="Alternar sinal"
+                        >
+                          {balanceFormData.amount.startsWith('-') ? (
+                            <MinusCircle size={20} className="text-red-600 dark:text-red-400" />
+                          ) : (
+                            <PlusCircle size={20} className="text-green-600 dark:text-green-400" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormControl fullWidth required margin="normal">
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
