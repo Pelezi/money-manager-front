@@ -38,6 +38,8 @@ export default function CategoryList({
   const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
   const [deletingSubcategoryId, setDeletingSubcategoryId] = useState<number | null>(null);
   const [deleteTransactionCount, setDeleteTransactionCount] = useState(0);
+  const [deleteBudgetCount, setDeleteBudgetCount] = useState(0);
+  const [deleteAccountCount, setDeleteAccountCount] = useState(0);
   const [deletingItemName, setDeletingItemName] = useState('');
 
   const { data: categories = [] } = useQuery({
@@ -217,6 +219,8 @@ export default function CategoryList({
       setDeletingCategoryId(id);
       setDeletingSubcategoryId(null);
       setDeleteTransactionCount(result.count);
+      setDeleteBudgetCount(result.budgetCount || 0);
+      setDeleteAccountCount(result.accountCount || 0);
       setDeletingItemName(category.name);
       setDeleteModalOpen(true);
     } catch (error) {
@@ -282,6 +286,8 @@ export default function CategoryList({
       setDeletingSubcategoryId(id);
       setDeletingCategoryId(null);
       setDeleteTransactionCount(result.count);
+      setDeleteBudgetCount(result.budgetCount || 0);
+      setDeleteAccountCount(result.accountCount || 0);
       setDeletingItemName(subcategory.name);
       setDeleteModalOpen(true);
     } catch (error) {
@@ -791,6 +797,8 @@ export default function CategoryList({
         onConfirm={handleConfirmDelete}
         categoryName={deletingItemName}
         transactionCount={deleteTransactionCount}
+        budgetCount={deleteBudgetCount}
+        accountCount={deleteAccountCount}
         availableSubcategories={deletingCategoryId !== null 
           ? subcategories.filter(sub => sub.categoryId !== deletingCategoryId)
           : subcategories.filter(sub => sub.id !== deletingSubcategoryId)

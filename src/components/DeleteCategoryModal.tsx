@@ -10,6 +10,8 @@ interface DeleteCategoryModalProps {
   onConfirm: (action: 'delete' | 'hide', deleteTransactions?: boolean, moveToSubcategoryId?: number) => void;
   categoryName: string;
   transactionCount: number;
+  budgetCount?: number;
+  accountCount?: number;
   availableSubcategories: Subcategory[];
   availableCategories: Category[];
   isCategory: boolean; // true for category, false for subcategory
@@ -21,6 +23,8 @@ export default function DeleteCategoryModal({
   onConfirm,
   categoryName,
   transactionCount,
+  budgetCount = 0,
+  accountCount = 0,
   availableSubcategories,
   availableCategories,
   isCategory
@@ -131,11 +135,11 @@ export default function DeleteCategoryModal({
             <span className="font-semibold">{categoryName}</span>.
           </p>
 
-          {transactionCount === 0 ? (
+          {transactionCount === 0 && budgetCount === 0 && accountCount === 0 ? (
             <>
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  Esta {entityType} não possui transações associadas.
+                  Esta {entityType} não possui transações, orçamentos ou contas associadas.
                 </p>
               </div>
 
@@ -187,16 +191,32 @@ export default function DeleteCategoryModal({
             </>
           ) : (
             <>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 space-y-2">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Atenção:</strong> Esta {entityType} possui{' '}
-                  <strong>{transactionCount}</strong> {transactionCount === 1 ? 'transação associada' : 'transações associadas'}.
+                  <strong>Atenção:</strong> Esta {entityType} possui:
                 </p>
+                <ul className="text-sm text-yellow-800 dark:text-yellow-200 list-disc list-inside">
+                  {transactionCount > 0 && (
+                    <li>
+                      <strong>{transactionCount}</strong> {transactionCount === 1 ? 'transação associada' : 'transações associadas'}
+                    </li>
+                  )}
+                  {budgetCount > 0 && (
+                    <li>
+                      <strong>{budgetCount}</strong> {budgetCount === 1 ? 'orçamento cadastrado' : 'orçamentos cadastrados'}
+                    </li>
+                  )}
+                  {accountCount > 0 && (
+                    <li>
+                      <strong>{accountCount}</strong> {accountCount === 1 ? 'conta vinculada' : 'contas vinculadas'}
+                    </li>
+                  )}
+                </ul>
               </div>
 
               <div className="space-y-3">
                 <p className="font-medium text-gray-900 dark:text-gray-100">
-                  O que deseja fazer com {transactionCount === 1 ? 'a transação' : 'as transações'}?
+                  O que deseja fazer?
                 </p>
 
                 {/* Option: Hide */}
@@ -214,7 +234,7 @@ export default function DeleteCategoryModal({
                       Esconder {entityType}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      A {entityType} não será excluída e as transações permanecerão intactas. Ela apenas não aparecerá ao criar novas transações.
+                      A {entityType} não será excluída e tudo permanecerá intacto (transações, orçamentos e contas). Ela apenas não aparecerá ao criar novas transações.
                     </p>
                   </div>
                 </label>
@@ -235,7 +255,7 @@ export default function DeleteCategoryModal({
                         Mover para outra subcategoria e excluir
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        As transações serão transferidas para a subcategoria selecionada
+                        Transações, orçamentos e contas serão transferidos para a subcategoria selecionada. Orçamentos serão somados aos existentes.
                       </p>
                       {action === 'move' && (
                         <div className="space-y-3">
@@ -319,11 +339,10 @@ export default function DeleteCategoryModal({
                   />
                   <div>
                     <p className="font-medium text-red-900 dark:text-red-100">
-                      Excluir {entityType} e todas as transações
+                      Excluir {entityType} e tudo associado
                     </p>
                     <p className="text-sm text-red-700 dark:text-red-300">
-                      <strong>Atenção:</strong> Esta ação é irreversível! A {entityType} e todas as {transactionCount}{' '}
-                      {transactionCount === 1 ? 'transação será permanentemente removida' : 'transações serão permanentemente removidas'}.
+                      <strong>Atenção:</strong> Esta ação é irreversível! A {entityType}, {transactionCount > 0 && `todas as ${transactionCount} ${transactionCount === 1 ? 'transação' : 'transações'}`}{budgetCount > 0 && `, ${budgetCount} ${budgetCount === 1 ? 'orçamento' : 'orçamentos'}`}{accountCount > 0 && ` e ${accountCount} ${accountCount === 1 ? 'conta vinculada será desvinculada' : 'contas vinculadas serão desvinculadas'}`} serão permanentemente {transactionCount > 0 || budgetCount > 0 ? 'removidos' : 'removidas'}.
                     </p>
                   </div>
                 </label>

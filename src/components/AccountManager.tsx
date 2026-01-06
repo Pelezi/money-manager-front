@@ -419,92 +419,141 @@ Pré-pago: o valor é descontado ao transferir dinheiro para a conta; as transa�
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts.map((account) => {
-            const balance = balances[account.id];
-            const canEdit = canEditAccount(account);
+        <div className="space-y-8">
+          {/* Group accounts by type and calculate totals */}
+          {(() => {
+            const accountsByType: Record<AccountType, Account[]> = {
+              CASH: [],
+              CREDIT: [],
+              PREPAID: []
+            };
 
-            // Buscar nome do dono
-            let ownerFirstName = '';
-            if (groupId) {
-              const owner = groupMembers.find(m => m.userId === account.userId);
-              ownerFirstName = owner?.user?.firstName || '';
-            }
-            return (
-              <div
-                key={account.id}
-                onClick={(e) => {
-                  // avoid navigating when clicking action buttons
-                  if ((e.target as HTMLElement).closest('button')) return;
-                  if (groupId) {
-                    router.push(`/groups/${groupId}/accounts/${account.id}/history`);
-                  } else {
-                    router.push(`/accounts/${account.id}/history`);
-                  }
-                }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-4xl">{getAccountTypeEmoji(account.type)}</div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {account.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {getAccountTypeLabel(account.type)}
+            accounts.forEach(account => {
+              accountsByType[account.type].push(account);
+            });
+
+            const typeOrder: AccountType[] = ['CASH', 'CREDIT', 'PREPAID'];
+
+            return typeOrder.map(type => {
+              const typeAccounts = accountsByType[type];
+              if (typeAccounts.length === 0) return null;
+
+              // Calculate total for this type
+              const total = typeAccounts.reduce((sum, account) => {
+                const balance = balances[account.id];
+                return sum + (balance?.amount ?? 0);
+              }, 0);
+
+              return (
+                <div key={type}>
+                  {/* Type Header with Total */}
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{getAccountTypeEmoji(type)}</span>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        {getAccountTypeLabel(type)}
+                      </h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">
+                        R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
-                      {groupId && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Dono: {ownerFirstName}
-                        </p>
-                      )}
                     </div>
                   </div>
-                  {canEdit && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openEditPage(account.id)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                        title="Editar conta"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(account.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        title="Excluir conta"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  )}
-                </div>
 
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Saldo Atual</span>
-                    {canEdit && (
-                      <button
-                        onClick={() => openBalanceModal(account.id)}
-                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        Atualizar
-                      </button>
-                    )}
+                  {/* Accounts Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {typeAccounts.map((account) => {
+                      const balance = balances[account.id];
+                      const canEdit = canEditAccount(account);
+
+                      // Buscar nome do dono
+                      let ownerFirstName = '';
+                      if (groupId) {
+                        const owner = groupMembers.find(m => m.userId === account.userId);
+                        ownerFirstName = owner?.user?.firstName || '';
+                      }
+                      return (
+                        <div
+                          key={account.id}
+                          onClick={(e) => {
+                            // avoid navigating when clicking action buttons
+                            if ((e.target as HTMLElement).closest('button')) return;
+                            if (groupId) {
+                              router.push(`/groups/${groupId}/accounts/${account.id}/history`);
+                            } else {
+                              router.push(`/accounts/${account.id}/history`);
+                            }
+                          }}
+                          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="text-4xl">{getAccountTypeEmoji(account.type)}</div>
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                  {account.name}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {getAccountTypeLabel(account.type)}
+                                </p>
+                                {groupId && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Dono: {ownerFirstName}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {canEdit && (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => openEditPage(account.id)}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                  title="Editar conta"
+                                >
+                                  <Pencil size={18} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(account.id)}
+                                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                  title="Excluir conta"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Saldo Atual</span>
+                              {canEdit && (
+                                <button
+                                  onClick={() => openBalanceModal(account.id)}
+                                  className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                  Atualizar
+                                </button>
+                              )}
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                              R$ {balance?.amount?.toFixed(2) || '0.00'}
+                            </div>
+                            {balance && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Atualizado em {new Date(balance.date).toLocaleString('pt-BR')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    R$ {balance?.amount?.toFixed(2) || '0.00'}
-                  </div>
-                  {balance && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Atualizado em {new Date(balance.date).toLocaleString('pt-BR')}
-                    </p>
-                  )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            }).filter(Boolean);
+          })()}
         </div>
       )}
 
