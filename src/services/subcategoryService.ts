@@ -35,8 +35,22 @@ export const subcategoryService = {
     return response.data;
   },
 
-  checkTransactions: async (id: number): Promise<{ hasTransactions: boolean; count: number }> => {
-    const response = await api.get<{ hasTransactions: boolean; count: number }>(`/subcategories/${id}/check-transactions`);
+  checkTransactions: async (id: number): Promise<{ 
+    hasTransactions: boolean; 
+    count: number;
+    hasBudgets: boolean;
+    budgetCount: number;
+    hasAccounts: boolean;
+    accountCount: number;
+  }> => {
+    const response = await api.get<{ 
+      hasTransactions: boolean; 
+      count: number;
+      hasBudgets: boolean;
+      budgetCount: number;
+      hasAccounts: boolean;
+      accountCount: number;
+    }>(`/subcategories/${id}/check-transactions`);
     return response.data;
   },
 
