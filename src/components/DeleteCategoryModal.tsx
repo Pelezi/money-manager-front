@@ -83,7 +83,7 @@ export default function DeleteCategoryModal({
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (transactionCount === 0) {
+    if (transactionCount === 0 && budgetCount === 0 && accountCount === 0) {
       // No transactions, check if hiding or deleting
       if (action === 'hide') {
         onConfirm('hide');
