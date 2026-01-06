@@ -125,6 +125,8 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
         }
       });
       queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['balanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['gapTransactions'] });
       setIsEditing(false);
     },
   });
@@ -148,6 +150,8 @@ export default function TransactionDetails({ transactionId, backUrl = '/transact
         }
       });
       queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['balanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['gapTransactions'] });
       router.push(backUrl);
     },
   });

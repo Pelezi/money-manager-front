@@ -187,6 +187,9 @@ export default function TransactionManager({
     mutationFn: transactionService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['balanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['gapTransactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
       setIsModalOpen(false);
       resetForm();
     },
@@ -197,6 +200,9 @@ export default function TransactionManager({
       transactionService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['balanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['gapTransactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
       setIsModalOpen(false);
       setEditingTransaction(null);
       resetForm();
@@ -207,6 +213,9 @@ export default function TransactionManager({
     mutationFn: transactionService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['balanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['gapTransactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accountBalance'] });
     },
   });
 
